@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title id="page-title">Carnicería El Corte Supremo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .tab-active { border-bottom: 3px solid #dc2626; color: #dc2626; font-weight: bold; }
+  </style>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen flex flex-col">
+
+  <!-- HEADER -->
+  <header class="bg-red-800 text-white shadow-lg sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center space-x-2 cursor-pointer" onclick="switchMainView('client')">
+        <i class="fa-solid fa-drumstick-bite text-2xl text-amber-400"></i>
+        <span class="text-xl font-extrabold tracking-wide" id="header-store-name">El Corte Supremo</span>
+      </div>
+      
+      <nav class="flex items-center space-x-3">
+        <button id="nav-client-btn" onclick="switchMainView('client')" class="hover:text-amber-300 font-semibold px-2 py-1 text-sm">
+          <i class="fa-solid fa-store mr-1"></i> Tienda
+        </button>
+        <button id="nav-client-stats-btn" onclick="switchMainView('client-stats')" class="hidden hover:text-amber-300 font-semibold px-2 py-1 text-sm">
+          <i class="fa-solid fa-receipt mr-1"></i> Mis Compras
+        </button>
+        <button id="nav-admin-btn" onclick="switchMainView('admin')" class="bg-red-950 hover:bg-black text-amber-400 font-semibold px-3 py-1.5 rounded-lg border border-amber-400/30 text-xs md:text-sm">
+          <i class="fa-solid fa-user-shield mr-1"></i> Panel Dueño
+        </button>
+        <div id="user-auth-badge" class="text-xs bg-red-900 px-2 py-1 rounded"></div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- BANNER DATOS DEL NEGOCIO -->
+  <section class="bg-amber-100 border-b border-amber-200 text-amber-900 text-xs py-2 px-4">
+    <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
+      <div class="flex flex-wrap items-center gap-4">
+        <span><i class="fa-solid fa-location-dot text-red-700 mr-1"></i><strong id="info-address">Av. San Martín 1450</strong></span>
+        <span><i class="fa-solid fa-clock text-amber-700 mr-1"></i><span id="info-hours">Lun a Sáb 08:30 - 20:30 hs</span></span>
+      </div>
+      <div>
+        <span><i class="fa-brands fa-whatsapp text-green-700 font-bold mr-1"></i>WhatsApp: <strong id="info-whatsapp">+5491122334455</strong></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full">
+
+    <!-- ==================== VISTA CLIENTE: TIENDA ==================== -->
+    <section id="view-client" class="space-y-6">
+      
+      <!-- Card Registro / Perfil -->
+      <div id="client-auth-card" class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div>
+          <h2 class="text-lg font-bold text-gray-800" id="welcome-text">¡Bienvenido!</h2>
+          <p class="text-sm text-gray-500" id="welcome-sub">Regístrate para guardar tu dirección, hacer pedidos de 0.5kg en adelante y ver tu historial.</p>
+        </div>
+        <button id="auth-action-btn" onclick="openAuthModal()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg shadow text-sm">
+          Registrarme / Iniciar Sesión
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Catálogo de Productos -->
+        <div class="lg:col-span-2 space-y-4">
+          <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 bg-white p-3 rounded-xl border">
+            <div class="relative flex-1">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400 text-sm"></i>
+              <input type="text" id="client-search" oninput="renderProducts()" placeholder="Buscar corte o producto..." class="w-full pl-9 pr-3 py-1.5 border rounded-lg text-sm">
+            </div>
+            <select id="category-filter" onchange="renderProducts()" class="border rounded-lg px-3 py-1.5 text-sm bg-white">
+              <!-- Render dinámico categorías -->
+            </select>
+          </div>
+
+          <div id="product-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Render dinámico productos -->
+          </div>
+        </div>
+
+        <!-- Carrito de Compras -->
+        <div class="space-y-4">
+          <div class="bg-white p-5 rounded-xl shadow-md border border-gray-200 sticky top-20">
+            <h2 class="text-lg font-bold border-b pb-2 flex items-center justify-between">
+              <span><i class="fa-solid fa-cart-shopping text-red-600 mr-2"></i>Tu Pedido</span>
+              <span id="cart-count" class="bg-red-100 text-red-800 text-xs px-2 py-0.5 rounded-full">0.0 kg</span>
+            </h2>
+
+            <div id="cart-items" class="divide-y my-3 max-h-60 overflow-y-auto text-sm">
+              <p class="text-gray-400 text-center py-6">El carrito está vacío</p>
+            </div>
+
+            <div class="border-t pt-3 space-y-3">
+              <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">Método de entrega:</label>
+                <div class="grid grid-cols-2 gap-2">
+                  <label class="border rounded-lg p-2 text-center cursor-pointer flex items-center justify-center space-x-1 text-xs">
+                    <input type="radio" name="delivery-type" value="takeaway" checked onchange="toggleDeliveryOptions()">
+                    <span>Retiro (Take Away)</span>
+                  </label>
+                  <label class="border rounded-lg p-2 text-center cursor-pointer flex items-center justify-center space-x-1 text-xs">
+                    <input type="radio" name="delivery-type" value="delivery" onchange="toggleDeliveryOptions()">
+                    <span>Envío a Domicilio</span>
+                  </label>
+                </div>
+              </div>
+
+              <div id="delivery-address-container" class="hidden">
+                <label class="block text-xs font-bold text-gray-700 mb-1">Dirección de envío:</label>
+                <textarea id="cart-address" class="w-full text-xs border rounded p-2" rows="2" placeholder="Ingresa tu dirección exacta..."></textarea>
+              </div>
+
+              <div class="flex justify-between text-base font-bold text-gray-900 border-t pt-2">
+                <span>Total estimado:</span>
+                <span id="cart-total">$0</span>
+              </div>
+
+              <button onclick="processOrder()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 rounded-lg shadow flex items-center justify-center space-x-2">
+                <i class="fa-brands fa-whatsapp text-lg"></i>
+                <span>Confirmar por WhatsApp</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VISTA CLIENTE: MIS COMPRAS & ESTADÍSTICAS ==================== -->
+    <section id="view-client-stats" class="hidden space-y-6">
+      <h2 class="text-2xl font-bold text-gray-800">Mis Compras e Historial</h2>
+      
+      <!-- Cards de Métricas de Cliente -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white p-4 rounded-xl border shadow-sm">
+          <p class="text-xs text-gray-500 font-bold uppercase">Total Invertido</p>
+          <p id="cstat-total-spent" class="text-2xl font-extrabold text-red-600">$0</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border shadow-sm">
+          <p class="text-xs text-gray-500 font-bold uppercase">Pedidos Realizados</p>
+          <p id="cstat-orders-count" class="text-2xl font-extrabold text-gray-800">0</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border shadow-sm">
+          <p class="text-xs text-gray-500 font-bold uppercase">Corte Favorito</p>
+          <p id="cstat-favorite" class="text-xl font-bold text-gray-800">-</p>
+        </div>
+      </div>
+
+      <!-- Filtros y Buscador de Mis Pedidos -->
+      <div class="bg-white p-4 rounded-xl border space-y-4">
+        <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+          <h3 class="font-bold text-gray-700">Historial de Pedidos Realizados</h3>
+          <div class="flex gap-2">
+            <input type="text" id="client-orders-search" oninput="renderClientOrders()" placeholder="Buscar por producto..." class="border rounded-lg px-3 py-1.5 text-sm">
+            <select id="client-orders-status-filter" onchange="renderClientOrders()" class="border rounded-lg px-3 py-1.5 text-sm bg-white">
+              <option value="all">Todos los estados</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="client-orders-list" class="space-y-3">
+          <!-- Render dinámico lista de pedidos -->
+        </div>
+      </div>
+
+      <!-- Gráfico de Compras -->
+      <div class="bg-white p-4 rounded-xl border shadow-sm">
+        <h3 class="font-bold text-gray-700 mb-4">Kilogramos Comprados por Producto</h3>
+        <div class="h-64">
+          <canvas id="chartClientProducts"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VISTA ADMIN (DUEÑO) ==================== -->
+    <section id="view-admin" class="hidden space-y-6">
+      <div class="flex flex-wrap border-b border-gray-300 gap-2">
+        <button onclick="switchAdminTab('orders')" id="atab-orders" class="px-4 py-2 font-bold text-sm tab-active">
+          <i class="fa-solid fa-receipt mr-1"></i> Pedidos
+        </button>
+        <button onclick="switchAdminTab('products')" id="atab-products" class="px-4 py-2 font-bold text-sm text-gray-600">
+          <i class="fa-solid fa-drumstick-bite mr-1"></i> Productos
+        </button>
+        <button onclick="switchAdminTab('stats')" id="atab-stats" class="px-4 py-2 font-bold text-sm text-gray-600">
+          <i class="fa-solid fa-chart-pie mr-1"></i> Estadísticas
+        </button>
+        <button onclick="switchAdminTab('marketing')" id="atab-marketing" class="px-4 py-2 font-bold text-sm text-gray-600">
+          <i class="fa-solid fa-bullhorn mr-1"></i> Promos WhatsApp
+        </button>
+        <button onclick="switchAdminTab('config')" id="atab-config" class="px-4 py-2 font-bold text-sm text-gray-600">
+          <i class="fa-solid fa-sliders mr-1"></i> Ajustes / ABM Global
+        </button>
+      </div>
+
+      <!-- TAB ADMIN: PEDIDOS -->
+      <div id="admin-tab-orders" class="space-y-4">
+        <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 bg-white p-4 rounded-xl border">
+          <h2 class="text-xl font-bold text-gray-800">Gestión de Pedidos Recibidos</h2>
+          <div class="flex flex-wrap gap-2">
+            <input type="text" id="admin-orders-search" oninput="renderOrdersAdmin()" placeholder="Buscar por cliente, id o dir..." class="border rounded-lg px-3 py-1.5 text-sm">
+            <select id="admin-orders-status-filter" onchange="renderOrdersAdmin()" class="border rounded-lg px-3 py-1.5 text-sm bg-white">
+              <option value="all">Todos los estados</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="admin-orders-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Render dinámico pedidos dueño -->
+        </div>
+      </div>
+
+      <!-- TAB ADMIN: PRODUCTOS -->
+      <div id="admin-tab-products" class="hidden space-y-6">
+        <div class="flex justify-between items-center">
+          <h2 class="text-xl font-bold text-gray-800">Catálogo de Productos y Precios por Kg</h2>
+          <button onclick="openProductModal()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-sm">
+            + Nuevo Producto
+          </button>
+        </div>
+        <div id="admin-products-table" class="bg-white rounded-xl shadow-sm border overflow-x-auto">
+          <!-- Tabla productos -->
+        </div>
+      </div>
+
+      <!-- TAB ADMIN: ESTADÍSTICAS -->
+      <div id="admin-tab-stats" class="hidden space-y-6">
+        <div class="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-xl border">
+          <h2 class="text-xl font-bold text-gray-800">Métricas Globales de Ventas</h2>
+          <div class="flex items-center space-x-2">
+            <label class="text-xs font-bold">Período:</label>
+            <select id="stats-period" onchange="renderAdminStats()" class="border rounded p-1 text-sm bg-gray-50">
+              <option value="all">Histórico Completo</option>
+              <option value="month">Este Mes</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-white p-4 rounded-xl border shadow-sm">
+            <p class="text-xs text-gray-500 font-bold uppercase">Monto Total Vendido</p>
+            <p id="astat-total-sales" class="text-3xl font-extrabold text-green-600">$0</p>
+          </div>
+          <div class="bg-white p-4 rounded-xl border shadow-sm">
+            <p class="text-xs text-gray-500 font-bold uppercase">Total Pedidos</p>
+            <p id="astat-total-orders" class="text-3xl font-extrabold text-blue-600">0</p>
+          </div>
+          <div class="bg-white p-4 rounded-xl border shadow-sm">
+            <p class="text-xs text-gray-500 font-bold uppercase">Clientes Registrados</p>
+            <p id="astat-total-clients" class="text-3xl font-extrabold text-purple-600">0</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-white p-4 rounded-xl border shadow-sm">
+            <h3 class="font-bold text-gray-700 mb-2 text-sm">Ventas acumuladas por Producto ($)</h3>
+            <div class="h-60"><canvas id="chartAdminProducts"></canvas></div>
+          </div>
+          <div class="bg-white p-4 rounded-xl border shadow-sm">
+            <h3 class="font-bold text-gray-700 mb-2 text-sm">Top Clientes por Consumo ($)</h3>
+            <div class="h-60"><canvas id="chartAdminClients"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB ADMIN: CAMPAÑAS PROMO -->
+      <div id="admin-tab-marketing" class="hidden space-y-6">
+        <h2 class="text-xl font-bold text-gray-800">Enviar Promociones por WhatsApp</h2>
+        <div class="bg-white p-6 rounded-xl border shadow-sm max-w-2xl space-y-4">
+          <div>
+            <label class="block text-sm font-bold text-gray-700 mb-1">URL de Imagen de la Promo:</label>
+            <input type="text" id="promo-img-url" class="w-full border rounded-lg p-2 text-sm" value="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80">
+          </div>
+          <div>
+            <label class="block text-sm font-bold text-gray-700 mb-1">Mensaje Promocional:</label>
+            <textarea id="promo-msg" class="w-full border rounded-lg p-2 text-sm" rows="3">🔥 ¡OFERTA ESPECIAL DE LA SEMANA! Llevando 2kg o más de Asado de Tira obtén un 15% de descuento. ¡Haz tu pedido ahora!</textarea>
+          </div>
+          <div>
+            <label class="block text-sm font-bold text-gray-700 mb-1">Seleccionar Cliente Destino:</label>
+            <select id="promo-client-select" class="w-full border rounded-lg p-2 text-sm bg-white">
+              <!-- Render clientes -->
+            </select>
+          </div>
+          <button onclick="sendWhatsAppPromo()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-4 rounded-lg shadow flex items-center justify-center space-x-2">
+            <i class="fa-brands fa-whatsapp text-lg"></i>
+            <span>Abrir WhatsApp con la Promo</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- TAB ADMIN: PARAMETRIZACIÓN Y CONFIGURACIÓN GLOBAL -->
+      <div id="admin-tab-config" class="hidden space-y-8">
+        
+        <!-- Configuración Datos del Negocio -->
+        <div class="bg-white p-6 rounded-xl border shadow-sm space-y-4 max-w-3xl">
+          <h3 class="text-lg font-bold text-gray-800 border-b pb-2"><i class="fa-solid fa-store mr-2 text-red-600"></i>Datos del Negocio</h3>
+          <form onsubmit="saveStoreSettings(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-gray-700">Nombre de la Carnicería</label>
+              <input type="text" id="cfg-name" required class="w-full border rounded p-2 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-700">WhatsApp de Atención / Pedidos</label>
+              <input type="text" id="cfg-whatsapp" required class="w-full border rounded p-2 text-sm">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-xs font-bold text-gray-700">Dirección</label>
+              <input type="text" id="cfg-address" required class="w-full border rounded p-2 text-sm">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-xs font-bold text-gray-700">Horarios de Atención</label>
+              <input type="text" id="cfg-hours" required class="w-full border rounded p-2 text-sm">
+            </div>
+            <div class="md:col-span-2">
+              <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-sm">Guardar Datos del Negocio</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- ABM Categorías -->
+          <div class="bg-white p-6 rounded-xl border shadow-sm space-y-4">
+            <div class="flex justify-between items-center border-b pb-2">
+              <h3 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-list mr-2 text-red-600"></i>ABM Categoria de Productos</h3>
+              <button onclick="addCategoryPrompt()" class="bg-green-600 text-white font-bold text-xs px-3 py-1.5 rounded">+ Agregar</button>
+            </div>
+            <div id="abm-categories-list" class="divide-y text-sm max-h-52 overflow-y-auto"></div>
+          </div>
+
+          <!-- ABM Estados de Pedido -->
+          <div class="bg-white p-6 rounded-xl border shadow-sm space-y-4">
+            <div class="flex justify-between items-center border-b pb-2">
+              <h3 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-tags mr-2 text-red-600"></i>ABM Estados del Pedido</h3>
+              <button onclick="addStatusPrompt()" class="bg-green-600 text-white font-bold text-xs px-3 py-1.5 rounded">+ Agregar</button>
+            </div>
+            <div id="abm-statuses-list" class="divide-y text-sm max-h-52 overflow-y-auto"></div>
+          </div>
+        </div>
+
+        <!-- ABM Clientes -->
+        <div class="bg-white p-6 rounded-xl border shadow-sm space-y-4">
+          <div class="flex justify-between items-center border-b pb-2">
+            <h3 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-users mr-2 text-red-600"></i>ABM de Clientes Registrados</h3>
+            <button onclick="openClientModal()" class="bg-red-600 text-white font-bold text-xs px-3 py-1.5 rounded">+ Nuevo Cliente</button>
+          </div>
+          <div id="abm-clients-table" class="overflow-x-auto"></div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- MODAL: DETALLE DE PEDIDO (CLIENTE Y DUEÑO) -->
+  <div id="modal-order-detail" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-lg w-full p-6 space-y-4 relative">
+      <button onclick="closeOrderDetailModal()" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+      <h3 class="text-xl font-bold text-gray-800 border-b pb-2" id="mod-detail-title">Detalle del Pedido</h3>
+      
+      <div id="mod-detail-body" class="space-y-3 text-sm text-gray-700 max-h-96 overflow-y-auto"></div>
+
+      <div class="flex justify-end gap-2 border-t pt-3" id="mod-detail-actions">
+        <button onclick="closeOrderDetailModal()" class="bg-gray-200 text-gray-800 font-bold px-4 py-2 rounded-lg text-sm">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: AUTENTICACIÓN / REGISTRO CLIENTE -->
+  <div id="modal-auth" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-md w-full p-6 space-y-4 relative">
+      <button onclick="closeAuthModal()" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+      <h3 class="text-xl font-bold text-gray-800">Registro / Ingreso de Cliente</h3>
+      <form id="auth-form" onsubmit="handleAuth(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-gray-700">Nombre Completo</label>
+          <input type="text" id="reg-name" required class="w-full border rounded p-2 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-700">WhatsApp (con código de país/área)</label>
+          <input type="tel" id="reg-phone" required placeholder="Ej: 5491122334455" class="w-full border rounded p-2 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-700">Dirección Predeterminada</label>
+          <input type="text" id="reg-address" required placeholder="Calle 123, Timbre B" class="w-full border rounded p-2 text-sm">
+        </div>
+        <button type="submit" class="w-full bg-red-600 text-white font-bold py-2 rounded-lg hover:bg-red-700 text-sm">Guardar Datos</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: AGREGAR / EDITAR CLIENTE (ADMIN) -->
+  <div id="modal-client-admin" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-md w-full p-6 space-y-4 relative">
+      <button onclick="closeClientAdminModal()" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+      <h3 class="text-xl font-bold text-gray-800" id="client-modal-title">Guardar Cliente</h3>
+      <form onsubmit="saveClientAdmin(event)" class="space-y-3">
+        <input type="hidden" id="admin-cli-id">
+        <div>
+          <label class="block text-xs font-bold text-gray-700">Nombre Completo</label>
+          <input type="text" id="admin-cli-name" required class="w-full border rounded p-2 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-700">WhatsApp</label>
+          <input type="text" id="admin-cli-phone" required class="w-full border rounded p-2 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-700">Dirección</label>
+          <input type="text" id="admin-cli-address" required class="w-full border rounded p-2 text-sm">
+        </div>
+        <button type="submit" class="w-full bg-red-600 text-white font-bold py-2 rounded-lg text-sm">Guardar Cliente</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: AGREGAR / EDITAR PRODUCTO -->
+  <div id="modal-product" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-md w-full p-6 space-y-4 relative">
+      <button onclick="closeProductModal()" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+      <h3 class="text-xl font-bold text-gray-800" id="product-modal-title">Cargar Producto</h3>
+      <form id="product-form" onsubmit="saveProduct(event)" class="space-y-3">
+        <input type="hidden" id="prod-id">
+        <div>
+          <label class="block text-xs font-bold text-gray-700">Nombre del Corte / Producto</label>
+          <input type="text" id="prod-name" required class="w-full border rounded p-2 text-sm">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-bold text-gray-700">Categoría</label>
+            <select id="prod-category" class="w-full border rounded p-2 text-sm bg-white"></select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-700">Precio por Kg ($)</label>
+            <input type="number" id="prod-price" step="0.01" required class="w-full border rounded p-2 text-sm">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-700">URL Imagen</label>
+          <input type="url" id="prod-img" required class="w-full border rounded p-2 text-sm">
+        </div>
+        <button type="submit" class="w-full bg-red-600 text-white font-bold py-2 rounded-lg text-sm">Guardar Producto</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // ==================== BASE DE DATOS LOCAL ====================
+    const defaultSettings = {
+      name: "El Corte Supremo",
+      address: "Av. San Martín 1450, CABA",
+      hours: "Lun a Sáb 08:30 - 20:30 hs",
+      whatsapp: "+5491122334455"
+    };
+
+    const defaultCategories = [
+      { id: "vacuno", name: "Carne Vacuna" },
+      { id: "cerdo", name: "Cerdo" },
+      { id: "pollo", name: "Pollo" },
+      { id: "embutidos", name: "Embutidos / Achuras" },
+      { id: "promo", name: "Promociones" }
+    ];
+
+    const defaultStatuses = [
+      { id: "Pendiente", name: "Pendiente" },
+      { id: "En Preparación", name: "En Preparación" },
+      { id: "Listo para Entregar", name: "Listo para Entregar" },
+      { id: "Entregado", name: "Entregado" }
+    ];
+
+    const defaultProducts = [
+      { id: 1, name: "Asado de Tira", category: "vacuno", price: 8500, img: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=400&q=80" },
+      { id: 2, name: "Bife de Chorizo", category: "vacuno", price: 9200, img: "https://images.unsplash.com/photo-1603048588665-791ca8aea617?auto=format&fit=crop&w=400&q=80" },
+      { id: 3, name: "Pechuga de Pollo", category: "pollo", price: 4500, img: "https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&w=400&q=80" },
+      { id: 4, name: "Bondiola de Cerdo", category: "cerdo", price: 6800, img: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=400&q=80" },
+      { id: 5, name: "Chorizo Artesanal", category: "embutidos", price: 5200, img: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?auto=format&fit=crop&w=400&q=80" },
+      { id: 6, name: "Combo Parri2026 (Surtido)", category: "promo", price: 18500, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=400&q=80" }
+    ];
+
+    let storeSettings = JSON.parse(localStorage.getItem('carniceria_settings')) || defaultSettings;
+    let categories = JSON.parse(localStorage.getItem('carniceria_categories')) || defaultCategories;
+    let orderStatuses = JSON.parse(localStorage.getItem('carniceria_statuses')) || defaultStatuses;
+    let products = JSON.parse(localStorage.getItem('carniceria_products')) || defaultProducts;
+    let orders = JSON.parse(localStorage.getItem('carniceria_orders')) || [];
+    let users = JSON.parse(localStorage.getItem('carniceria_users')) || [];
+    let currentUser = JSON.parse(localStorage.getItem('carniceria_current_user')) || null;
+    let cart = [];
+
+    // Charts
+    let chartClient = null;
+    let chartAdminProd = null;
+    let chartAdminClient = null;
+
+    function saveData() {
+      localStorage.setItem('carniceria_settings', JSON.stringify(storeSettings));
+      localStorage.setItem('carniceria_categories', JSON.stringify(categories));
+      localStorage.setItem('carniceria_statuses', JSON.stringify(orderStatuses));
+      localStorage.setItem('carniceria_products', JSON.stringify(products));
+      localStorage.setItem('carniceria_orders', JSON.stringify(orders));
+      localStorage.setItem('carniceria_users', JSON.stringify(users));
+      localStorage.setItem('carniceria_current_user', JSON.stringify(currentUser));
+    }
+
+    // ==================== INICIALIZACIÓN ====================
+    window.onload = () => {
+      applyStoreSettings();
+      populateCategorySelects();
+      populateStatusSelects();
+      updateAuthUI();
+      renderProducts();
+      renderCart();
+      renderOrdersAdmin();
+    };
+
+    function applyStoreSettings() {
+      document.getElementById('page-title').textContent = storeSettings.name;
+      document.getElementById('header-store-name').textContent = storeSettings.name;
+      document.getElementById('info-address').textContent = storeSettings.address;
+      document.getElementById('info-hours').textContent = storeSettings.hours;
+      document.getElementById('info-whatsapp').textContent = storeSettings.whatsapp;
+
+      document.getElementById('cfg-name').value = storeSettings.name;
+      document.getElementById('cfg-address').value = storeSettings.address;
+      document.getElementById('cfg-hours').value = storeSettings.hours;
+      document.getElementById('cfg-whatsapp').value = storeSettings.whatsapp;
+    }
+
+    function populateCategorySelects() {
+      const catFilter = document.getElementById('category-filter');
+      const prodCatSelect = document.getElementById('prod-category');
+
+      let optionsFilter = `<option value="all">Todas las categorías</option>`;
+      let optionsForm = ``;
+
+      categories.forEach(c => {
+        optionsFilter += `<option value="${c.id}">${c.name}</option>`;
+        optionsForm += `<option value="${c.id}">${c.name}</option>`;
+      });
+
+      catFilter.innerHTML = optionsFilter;
+      prodCatSelect.innerHTML = optionsForm;
+    }
+
+    function populateStatusSelects() {
+      const clientStatusFilter = document.getElementById('client-orders-status-filter');
+      const adminStatusFilter = document.getElementById('admin-orders-status-filter');
+
+      let options = `<option value="all">Todos los estados</option>`;
+      orderStatuses.forEach(s => {
+        options += `<option value="${s.id}">${s.name}</option>`;
+      });
+
+      clientStatusFilter.innerHTML = options;
+      adminStatusFilter.innerHTML = options;
+    }
+
+    function switchMainView(view) {
+      document.getElementById('view-client').classList.add('hidden');
+      document.getElementById('view-client-stats').classList.add('hidden');
+      document.getElementById('view-admin').classList.add('hidden');
+
+      if (view === 'client') {
+        document.getElementById('view-client').classList.remove('hidden');
+      } else if (view === 'client-stats') {
+        document.getElementById('view-client-stats').classList.remove('hidden');
+        renderClientStats();
+        renderClientOrders();
+      } else if (view === 'admin') {
+        document.getElementById('view-admin').classList.remove('hidden');
+        renderOrdersAdmin();
+        renderAdminProductsTable();
+        renderAdminStats();
+        populatePromoClientSelect();
+        renderABMCategories();
+        renderABMStatuses();
+        renderABMClients();
+      }
+    }
+
+    function switchAdminTab(tab) {
+      ['orders', 'products', 'stats', 'marketing', 'config'].forEach(t => {
+        document.getElementById(`admin-tab-${t}`).classList.add('hidden');
+        document.getElementById(`atab-${t}`).classList.remove('tab-active');
+        document.getElementById(`atab-${t}`).classList.add('text-gray-600');
+      });
+      document.getElementById(`admin-tab-${tab}`).classList.remove('hidden');
+      document.getElementById(`atab-${tab}`).classList.add('tab-active');
+      document.getElementById(`atab-${tab}`).classList.remove('text-gray-600');
+    }
+
+    // ==================== AUTENTICACIÓN Y PERFIL CLIENTE ====================
+    function openAuthModal() { document.getElementById('modal-auth').classList.remove('hidden'); document.getElementById('modal-auth').classList.add('flex'); }
+    function closeAuthModal() { document.getElementById('modal-auth').classList.add('hidden'); document.getElementById('modal-auth').classList.remove('flex'); }
+
+    function handleAuth(e) {
+      e.preventDefault();
+      const name = document.getElementById('reg-name').value;
+      const phone = document.getElementById('reg-phone').value;
+      const address = document.getElementById('reg-address').value;
+
+      let user = users.find(u => u.phone === phone);
+      if (!user) {
+        user = { id: Date.now(), name, phone, address };
+        users.push(user);
+      } else {
+        user.name = name;
+        user.address = address;
+      }
+
+      currentUser = user;
+      saveData();
+      closeAuthModal();
+      updateAuthUI();
+    }
+
+    function updateAuthUI() {
+      const badge = document.getElementById('user-auth-badge');
+      const welcomeText = document.getElementById('welcome-text');
+      const welcomeSub = document.getElementById('welcome-sub');
+      const authBtn = document.getElementById('auth-action-btn');
+      const statsBtn = document.getElementById('nav-client-stats-btn');
+      const cartAddr = document.getElementById('cart-address');
+
+      if (currentUser) {
+        badge.textContent = `Cliente: ${currentUser.name}`;
+        welcomeText.textContent = `¡Hola, ${currentUser.name}! 👋`;
+        welcomeSub.textContent = `Teléfono: ${currentUser.phone} | Dirección: ${currentUser.address}`;
+        authBtn.textContent = "Editar Datos";
+        statsBtn.classList.remove('hidden');
+        cartAddr.value = currentUser.address;
+      } else {
+        badge.textContent = "Invitado";
+        welcomeText.textContent = "¡Bienvenido a nuestra carnicería!";
+        welcomeSub.textContent = "Regístrate para realizar pedidos en pasos de 0.5kg y ver tu historial de compras.";
+        authBtn.textContent = "Registrarme / Iniciar Sesión";
+        statsBtn.classList.add('hidden');
+      }
+    }
+
+    // ==================== CATÁLOGO Y CARRITO (0.5 KG) ====================
+    function renderProducts() {
+      const search = document.getElementById('client-search').value.toLowerCase();
+      const cat = document.getElementById('category-filter').value;
+      const grid = document.getElementById('product-grid');
+      grid.innerHTML = '';
+
+      const filtered = products.filter(p => {
+        const matchesCat = (cat === 'all' || p.category === cat);
+        const matchesSearch = p.name.toLowerCase().includes(search);
+        return matchesCat && matchesSearch;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<p class="col-span-2 text-center text-gray-500 py-6">No se encontraron cortes o productos.</p>`;
+        return;
+      }
+
+      filtered.forEach(p => {
+        const catObj = categories.find(c => c.id === p.category) || { name: p.category };
+        grid.innerHTML += `
+          <div class="bg-white rounded-xl shadow-sm border overflow-hidden flex flex-col justify-between">
+            <img src="${p.img}" alt="${p.name}" class="h-36 w-full object-cover">
+            <div class="p-3 flex-grow flex flex-col justify-between space-y-2">
+              <div>
+                <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 bg-gray-100 text-gray-600 rounded">${catObj.name}</span>
+                <h3 class="font-bold text-gray-800 text-sm mt-1">${p.name}</h3>
+              </div>
+              <div class="flex justify-between items-center pt-2 border-t">
+                <div>
+                  <span class="text-xs text-gray-400 block">Precio por Kg</span>
+                  <span class="text-base font-extrabold text-red-700">$${p.price.toLocaleString()} /kg</span>
+                </div>
+                <button onclick="addToCart(${p.id})" class="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1.5 rounded-lg font-bold flex items-center space-x-1">
+                  <span>+0.5 kg</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function addToCart(prodId) {
+      const prod = products.find(p => p.id === prodId);
+      const item = cart.find(i => i.id === prodId);
+      if (item) {
+        item.qty += 0.5;
+      } else {
+        cart.push({ ...prod, qty: 0.5 });
+      }
+      renderCart();
+    }
+
+    function updateCartQty(prodId, delta) {
+      const item = cart.find(i => i.id === prodId);
+      if (item) {
+        item.qty += delta;
+        if (item.qty <= 0) {
+          cart = cart.filter(i => i.id !== prodId);
+        } else {
+          item.qty = Math.round(item.qty * 10) / 10;
+        }
+      }
+      renderCart();
+    }
+
+    function toggleDeliveryOptions() {
+      const type = document.querySelector('input[name="delivery-type"]:checked').value;
+      const addrContainer = document.getElementById('delivery-address-container');
+      if (type === 'delivery') {
+        addrContainer.classList.remove('hidden');
+      } else {
+        addrContainer.classList.add('hidden');
+      }
+    }
+
+    function renderCart() {
+      const container = document.getElementById('cart-items');
+      const countEl = document.getElementById('cart-count');
+      const totalEl = document.getElementById('cart-total');
+
+      if (cart.length === 0) {
+        container.innerHTML = `<p class="text-gray-400 text-center py-6">El carrito está vacío</p>`;
+        countEl.textContent = '0.0 kg';
+        totalEl.textContent = '$0';
+        return;
+      }
+
+      let total = 0;
+      let totalKg = 0;
+      container.innerHTML = '';
+
+      cart.forEach(item => {
+        const subtotal = item.price * item.qty;
+        total += subtotal;
+        totalKg += item.qty;
+
+        container.innerHTML += `
+          <div class="py-2 flex justify-between items-center">
+            <div class="flex-grow pr-2">
+              <p class="font-bold text-xs">${item.name}</p>
+              <p class="text-[10px] text-gray-500">$${item.price.toLocaleString()}/kg x ${item.qty}kg = <strong class="text-gray-800">$${subtotal.toLocaleString()}</strong></p>
+            </div>
+            <div class="flex items-center space-x-1">
+              <button onclick="updateCartQty(${item.id}, -0.5)" class="w-6 h-6 bg-gray-200 hover:bg-gray-300 rounded text-xs font-bold text-red-600">-</button>
+              <span class="text-xs font-bold px-1 min-w-[32px] text-center">${item.qty} kg</span>
+              <button onclick="updateCartQty(${item.id}, 0.5)" class="w-6 h-6 bg-gray-200 hover:bg-gray-300 rounded text-xs font-bold text-green-600">+</button>
+            </div>
+          </div>
+        `;
+      });
+
+      countEl.textContent = `${totalKg.toFixed(1)} kg`;
+      totalEl.textContent = `$${total.toLocaleString()}`;
+    }
+
+    function processOrder() {
+      if (cart.length === 0) return alert('El carrito está vacío.');
+      if (!currentUser) {
+        alert('Por favor regístrate o inicia sesión para enviar tu pedido.');
+        openAuthModal();
+        return;
+      }
+
+      const deliveryType = document.querySelector('input[name="delivery-type"]:checked').value;
+      const address = deliveryType === 'delivery' ? document.getElementById('cart-address').value : 'Retiro en Local (Take Away)';
+
+      if (deliveryType === 'delivery' && !address.trim()) {
+        return alert('Ingresa una dirección de entrega.');
+      }
+
+      const orderTotal = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
+
+      const newOrder = {
+        id: Date.now(),
+        date: new Date().toISOString(),
+        user: currentUser,
+        items: [...cart],
+        type: deliveryType,
+        address: address,
+        total: orderTotal,
+        status: orderStatuses[0] ? orderStatuses[0].id : 'Pendiente'
+      };
+
+      orders.push(newOrder);
+      saveData();
+
+      // Construir mensaje WhatsApp
+      let itemsMsg = cart.map(i => `- ${i.qty}kg x ${i.name} ($${(i.price * i.qty).toLocaleString()})`).join('\n');
+      let text = `*NUEVO PEDIDO EN ${storeSettings.name.toUpperCase()}*\n\n` +
+                 `*Cliente:* ${currentUser.name}\n` +
+                 `*Teléfono:* ${currentUser.phone}\n` +
+                 `*Tipo:* ${deliveryType === 'delivery' ? 'ENVÍO A DOMICILIO' : 'RETIRO EN LOCAL'}\n` +
+                 (deliveryType === 'delivery' ? `*Dirección:* ${address}\n` : '') +
+                 `\n*Detalle del Pedido:*\n${itemsMsg}\n\n` +
+                 `*TOTAL ESTIMADO:* $${orderTotal.toLocaleString()}`;
+
+      cart = [];
+      renderCart();
+
+      alert('¡Pedido registrado con éxito! Se abrirá WhatsApp para enviarlo al dueño.');
+      const cleanPhone = storeSettings.whatsapp.replace(/[^0-9]/g, '');
+      window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`, '_blank');
+    }
+
+    // ==================== PANEL CLIENTE: VER PEDIDOS Y REPETIR ====================
+    function renderClientOrders() {
+      if (!currentUser) return;
+      const container = document.getElementById('client-orders-list');
+      const search = document.getElementById('client-orders-search').value.toLowerCase();
+      const status = document.getElementById('client-orders-status-filter').value;
+
+      const myOrders = orders.filter(o => o.user.phone === currentUser.phone);
+
+      const filtered = myOrders.filter(o => {
+        const matchesStatus = (status === 'all' || o.status === status);
+        const matchesSearch = o.items.some(i => i.name.toLowerCase().includes(search));
+        return matchesStatus && matchesSearch;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<p class="text-gray-400 text-center py-4 text-sm">No hay pedidos que coincidan con la búsqueda.</p>`;
+        return;
+      }
+
+      container.innerHTML = '';
+      [...filtered].reverse().forEach(o => {
+        const dateStr = new Date(o.date).toLocaleString('es-AR');
+        container.innerHTML += `
+          <div class="border rounded-lg p-3 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 hover:bg-gray-50">
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="font-bold text-sm text-gray-800">Pedido #${o.id.toString().slice(-4)}</span>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-200">${o.status}</span>
+              </div>
+              <p class="text-xs text-gray-500">${dateStr} | ${o.items.length} productos (${o.items.reduce((a,i)=>a+i.qty,0)} kg)</p>
+            </div>
+            <div class="flex items-center space-x-2 w-full md:w-auto justify-end">
+              <span class="font-extrabold text-sm text-red-700 mr-2">$${o.total.toLocaleString()}</span>
+              <button onclick="openOrderDetail(${o.id})" class="bg-blue-600 text-white text-xs px-3 py-1.5 rounded font-bold">Ver Detalle</button>
+              <button onclick="repeatOrder(${o.id})" class="bg-green-600 text-white text-xs px-3 py-1.5 rounded font-bold flex items-center space-x-1">
+                <i class="fa-solid fa-rotate-left"></i> <span>Repetir</span>
+              </button>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function openOrderDetail(orderId) {
+      const o = orders.find(ord => ord.id === orderId);
+      if (!o) return;
+
+      document.getElementById('mod-detail-title').textContent = `Detalle de Pedido #${o.id.toString().slice(-4)}`;
+      
+      let itemsHtml = o.items.map(i => `
+        <tr class="border-b text-xs">
+          <td class="py-2">${i.name}</td>
+          <td class="py-2 text-center">${i.qty} kg</td>
+          <td class="py-2 text-right">$${i.price.toLocaleString()}</td>
+          <td class="py-2 text-right font-bold">$${(i.price * i.qty).toLocaleString()}</td>
+        </tr>
+      `).join('');
+
+      document.getElementById('mod-detail-body').innerHTML = `
+        <div class="bg-gray-50 p-3 rounded-lg border text-xs space-y-1">
+          <p><strong>Cliente:</strong> ${o.user.name} (${o.user.phone})</p>
+          <p><strong>Tipo de Entrega:</strong> ${o.type === 'delivery' ? 'Envío a Domicilio' : 'Retiro en Local'}</p>
+          <p><strong>Dirección:</strong> ${o.address}</p>
+          <p><strong>Estado Actual:</strong> <span class="font-bold text-red-700">${o.status}</span></p>
+          <p><strong>Fecha:</strong> ${new Date(o.date).toLocaleString('es-AR')}</p>
+        </div>
+        <table class="w-full text-left mt-3">
+          <thead>
+            <tr class="border-b text-xs font-bold text-gray-500">
+              <th class="py-1">Producto</th>
+              <th class="py-1 text-center">Cant (Kg)</th>
+              <th class="py-1 text-right">Precio/Kg</th>
+              <th class="py-1 text-right">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>${itemsHtml}</tbody>
+        </table>
+        <div class="text-right pt-2 text-base font-extrabold text-gray-900 border-t">
+          Total: $${o.total.toLocaleString()}
+        </div>
+      `;
+
+      document.getElementById('mod-detail-actions').innerHTML = `
+        <button onclick="repeatOrder(${o.id})" class="bg-green-600 hover:bg-green-700 text-white font-bold px-4 py-2 rounded-lg text-xs flex items-center space-x-1">
+          <i class="fa-solid fa-rotate-left"></i> <span>Repetir este Pedido</span>
+        </button>
+        <button onclick="closeOrderDetailModal()" class="bg-gray-200 text-gray-800 font-bold px-4 py-2 rounded-lg text-xs">Cerrar</button>
+      `;
+
+      document.getElementById('modal-order-detail').classList.remove('hidden');
+      document.getElementById('modal-order-detail').classList.add('flex');
+    }
+
+    function closeOrderDetailModal() {
+      document.getElementById('modal-order-detail').classList.add('hidden');
+      document.getElementById('modal-order-detail').classList.remove('flex');
+    }
+
+    function repeatOrder(orderId) {
+      const o = orders.find(ord => ord.id === orderId);
+      if (!o) return;
+
+      o.items.forEach(item => {
+        const prod = products.find(p => p.id === item.id) || item;
+        const cartItem = cart.find(i => i.id === prod.id);
+        if (cartItem) {
+          cartItem.qty += item.qty;
+        } else {
+          cart.push({ ...prod, qty: item.qty });
+        }
+      });
+
+      closeOrderDetailModal();
+      switchMainView('client');
+      renderCart();
+      alert('¡Se han agregado los productos del pedido anterior al carrito!');
+    }
+
+    function renderClientStats() {
+      if (!currentUser) return;
+      const myOrders = orders.filter(o => o.user.phone === currentUser.phone);
+      const totalSpent = myOrders.reduce((acc, o) => acc + o.total, 0);
+
+      document.getElementById('cstat-total-spent').textContent = `$${totalSpent.toLocaleString()}`;
+      document.getElementById('cstat-orders-count').textContent = myOrders.length;
+
+      const prodKgMap = {};
+      myOrders.forEach(o => {
+        o.items.forEach(i => {
+          prodKgMap[i.name] = (prodKgMap[i.name] || 0) + i.qty;
+        });
+      });
+
+      let favProd = '-';
+      let maxKg = 0;
+      for (const [prod, kg] of Object.entries(prodKgMap)) {
+        if (kg > maxKg) { maxKg = kg; favProd = prod; }
+      }
+      document.getElementById('cstat-favorite').textContent = favProd;
+
+      if (chartClient) chartClient.destroy();
+      chartClient = new Chart(document.getElementById('chartClientProducts'), {
+        type: 'bar',
+        data: {
+          labels: Object.keys(prodKgMap),
+          datasets: [{ label: 'Kilogramos acumulados', data: Object.values(prodKgMap), backgroundColor: '#b91c1c' }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+    }
+
+    // ==================== PANEL DUEÑO: PEDIDOS ====================
+    function renderOrdersAdmin() {
+      const container = document.getElementById('admin-orders-list');
+      const search = document.getElementById('admin-orders-search').value.toLowerCase();
+      const statusFilter = document.getElementById('admin-orders-status-filter').value;
+
+      const filtered = orders.filter(o => {
+        const matchesStatus = (statusFilter === 'all' || o.status === statusFilter);
+        const matchesSearch = o.user.name.toLowerCase().includes(search) || 
+                              o.user.phone.includes(search) || 
+                              o.id.toString().includes(search) ||
+                              o.address.toLowerCase().includes(search);
+        return matchesStatus && matchesSearch;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<p class="text-gray-500 col-span-3 text-center py-8">No hay pedidos que coincidan con los filtros.</p>`;
+        return;
+      }
+
+      container.innerHTML = '';
+      [...filtered].reverse().forEach(o => {
+        let statusOptions = orderStatuses.map(s => 
+          `<option value="${s.id}" ${o.status === s.id ? 'selected' : ''}>${s.name}</option>`
+        ).join('');
+
+        container.innerHTML += `
+          <div class="bg-white p-4 rounded-xl shadow-sm border space-y-3">
+            <div class="flex justify-between items-start border-b pb-2">
+              <div>
+                <span class="text-xs text-gray-400">#${o.id.toString().slice(-4)}</span>
+                <h4 class="font-bold text-sm text-gray-800">${o.user.name}</h4>
+                <p class="text-xs text-gray-500"><i class="fa-solid fa-phone text-[10px]"></i> ${o.user.phone}</p>
+              </div>
+              <button onclick="openOrderDetail(${o.id})" class="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded font-bold">Ver Detalle</button>
+            </div>
+
+            <div class="text-xs text-gray-600 space-y-1">
+              <p><strong>Tipo:</strong> ${o.type === 'delivery' ? '🚚 Envío a Domicilio' : '🛍️ Take Away'}</p>
+              ${o.type === 'delivery' ? `<p><strong>Dir:</strong> ${o.address}</p>` : ''}
+              <p class="text-sm font-extrabold text-gray-900 border-t pt-1">Total: $${o.total.toLocaleString()}</p>
+            </div>
+
+            <div class="border-t pt-2">
+              <label class="block text-[10px] font-bold text-gray-500 mb-1">Cambiar Estado del Pedido:</label>
+              <select onchange="updateOrderStatus(${o.id}, this.value)" class="w-full text-xs border rounded p-1.5 font-bold bg-gray-50">
+                ${statusOptions}
+              </select>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function updateOrderStatus(orderId, newStatus) {
+      const order = orders.find(o => o.id === orderId);
+      if (order) {
+        order.status = newStatus;
+        saveData();
+        renderOrdersAdmin();
+      }
+    }
+
+    // ==================== PANEL DUEÑO: PRODUCTOS (CRUD) ====================
+    function renderAdminProductsTable() {
+      const container = document.getElementById('admin-products-table');
+      let rows = products.map(p => {
+        const catObj = categories.find(c => c.id === p.category) || { name: p.category };
+        return `
+          <tr class="border-b text-xs">
+            <td class="p-3"><img src="${p.img}" class="w-10 h-10 object-cover rounded"></td>
+            <td class="p-3 font-bold">${p.name}</td>
+            <td class="p-3">${catObj.name}</td>
+            <td class="p-3 font-bold text-red-700">$${p.price.toLocaleString()} /kg</td>
+            <td class="p-3 space-x-2">
+              <button onclick="editProduct(${p.id})" class="text-blue-600 font-bold">Editar</button>
+              <button onclick="deleteProduct(${p.id})" class="text-red-600 font-bold">Eliminar</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      container.innerHTML = `
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-gray-50 border-b text-xs font-bold text-gray-500 uppercase">
+              <th class="p-3">Imagen</th>
+              <th class="p-3">Nombre</th>
+              <th class="p-3">Categoría</th>
+              <th class="p-3">Precio por Kg</th>
+              <th class="p-3">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    }
+
+    function openProductModal() {
+      document.getElementById('product-form').reset();
+      document.getElementById('prod-id').value = '';
+      document.getElementById('product-modal-title').textContent = "Nuevo Producto";
+      document.getElementById('modal-product').classList.remove('hidden');
+      document.getElementById('modal-product').classList.add('flex');
+    }
+
+    function closeProductModal() {
+      document.getElementById('modal-product').classList.add('hidden');
+      document.getElementById('modal-product').classList.remove('flex');
+    }
+
+    function editProduct(id) {
+      const p = products.find(prod => prod.id === id);
+      if (!p) return;
+      document.getElementById('prod-id').value = p.id;
+      document.getElementById('prod-name').value = p.name;
+      document.getElementById('prod-category').value = p.category;
+      document.getElementById('prod-price').value = p.price;
+      document.getElementById('prod-img').value = p.img;
+      document.getElementById('product-modal-title').textContent = "Editar Producto";
+      document.getElementById('modal-product').classList.remove('hidden');
+      document.getElementById('modal-product').classList.add('flex');
+    }
+
+    function saveProduct(e) {
+      e.preventDefault();
+      const id = document.getElementById('prod-id').value;
+      const name = document.getElementById('prod-name').value;
+      const category = document.getElementById('prod-category').value;
+      const price = parseFloat(document.getElementById('prod-price').value);
+      const img = document.getElementById('prod-img').value;
+
+      if (id) {
+        const p = products.find(prod => prod.id == id);
+        p.name = name; p.category = category; p.price = price; p.img = img;
+      } else {
+        products.push({ id: Date.now(), name, category, price, img });
+      }
+
+      saveData();
+      closeProductModal();
+      renderProducts();
+      renderAdminProductsTable();
+    }
+
+    function deleteProduct(id) {
+      if (confirm('¿Eliminar este producto?')) {
+        products = products.filter(p => p.id !== id);
+        saveData();
+        renderProducts();
+        renderAdminProductsTable();
+      }
+    }
+
+    // ==================== PANEL DUEÑO: ESTADÍSTICAS ====================
+    function renderAdminStats() {
+      const period = document.getElementById('stats-period').value;
+      let filteredOrders = orders;
+
+      if (period === 'month') {
+        const now = new Date();
+        filteredOrders = orders.filter(o => {
+          const d = new Date(o.date);
+          return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        });
+      }
+
+      const totalSales = filteredOrders.reduce((acc, o) => acc + o.total, 0);
+      document.getElementById('astat-total-sales').textContent = `$${totalSales.toLocaleString()}`;
+      document.getElementById('astat-total-orders').textContent = filteredOrders.length;
+      document.getElementById('astat-total-clients').textContent = users.length;
+
+      const prodMap = {};
+      filteredOrders.forEach(o => {
+        o.items.forEach(i => {
+          prodMap[i.name] = (prodMap[i.name] || 0) + (i.price * i.qty);
+        });
+      });
+
+      const clientMap = {};
+      filteredOrders.forEach(o => {
+        clientMap[o.user.name] = (clientMap[o.user.name] || 0) + o.total;
+      });
+
+      if (chartAdminProd) chartAdminProd.destroy();
+      chartAdminProd = new Chart(document.getElementById('chartAdminProducts'), {
+        type: 'bar',
+        data: {
+          labels: Object.keys(prodMap),
+          datasets: [{ label: 'Ventas ($)', data: Object.values(prodMap), backgroundColor: '#dc2626' }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      if (chartAdminClient) chartAdminClient.destroy();
+      chartAdminClient = new Chart(document.getElementById('chartAdminClients'), {
+        type: 'pie',
+        data: {
+          labels: Object.keys(clientMap),
+          datasets: [{ data: Object.values(clientMap), backgroundColor: ['#ef4444', '#f59e0b', '#10b981', '#6366f1', '#8b5cf6'] }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+    }
+
+    // ==================== CAMPAÑAS DE WHATSAPP ====================
+    function populatePromoClientSelect() {
+      const select = document.getElementById('promo-client-select');
+      select.innerHTML = '';
+      if (users.length === 0) {
+        select.innerHTML = '<option value="">No hay clientes registrados</option>';
+        return;
+      }
+      users.forEach(u => {
+        select.innerHTML += `<option value="${u.phone}">${u.name} (${u.phone})</option>`;
+      });
+    }
+
+    function sendWhatsAppPromo() {
+      const phone = document.getElementById('promo-client-select').value;
+      const imgUrl = document.getElementById('promo-img-url').value;
+      const msg = document.getElementById('promo-msg').value;
+
+      if (!phone) return alert('Selecciona un cliente.');
+
+      const fullMessage = `${msg}\n\nMira la promo aquí: ${imgUrl}`;
+      const cleanPhone = phone.replace(/[^0-9]/g, '');
+      window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(fullMessage)}`, '_blank');
+    }
+
+    // ==================== PANEL DUEÑO: CONFIGURACIÓN & ABM GLOBAL ====================
+    function saveStoreSettings(e) {
+      e.preventDefault();
+      storeSettings.name = document.getElementById('cfg-name').value;
+      storeSettings.address = document.getElementById('cfg-address').value;
+      storeSettings.hours = document.getElementById('cfg-hours').value;
+      storeSettings.whatsapp = document.getElementById('cfg-whatsapp').value;
+
+      saveData();
+      applyStoreSettings();
+      alert('¡Configuración del negocio guardada exitosamente!');
+    }
+
+    // ABM Categorías
+    function renderABMCategories() {
+      const container = document.getElementById('abm-categories-list');
+      container.innerHTML = categories.map(c => `
+        <div class="py-2 flex justify-between items-center">
+          <span class="font-semibold">${c.name} <span class="text-gray-400 font-normal">(${c.id})</span></span>
+          <button onclick="deleteCategory('${c.id}')" class="text-red-600 font-bold hover:underline">Eliminar</button>
+        </div>
+      `).join('');
+    }
+
+    function addCategoryPrompt() {
+      const name = prompt('Ingrese el nombre de la nueva categoría:');
+      if (!name) return;
+      const id = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (categories.some(c => c.id === id)) return alert('Ya existe esa categoría.');
+
+      categories.push({ id, name });
+      saveData();
+      populateCategorySelects();
+      renderABMCategories();
+    }
+
+    function deleteCategory(id) {
+      if (confirm('¿Eliminar esta categoría?')) {
+        categories = categories.filter(c => c.id !== id);
+        saveData();
+        populateCategorySelects();
+        renderABMCategories();
+      }
+    }
+
+    // ABM Estados de Pedido
+    function renderABMStatuses() {
+      const container = document.getElementById('abm-statuses-list');
+      container.innerHTML = orderStatuses.map(s => `
+        <div class="py-2 flex justify-between items-center">
+          <span class="font-semibold">${s.name}</span>
+          <button onclick="deleteStatus('${s.id}')" class="text-red-600 font-bold hover:underline">Eliminar</button>
+        </div>
+      `).join('');
+    }
+
+    function addStatusPrompt() {
+      const name = prompt('Ingrese el nombre del nuevo estado:');
+      if (!name) return;
+      if (orderStatuses.some(s => s.name.toLowerCase() === name.toLowerCase())) return alert('Ya existe ese estado.');
+
+      orderStatuses.push({ id: name, name });
+      saveData();
+      populateStatusSelects();
+      renderABMStatuses();
+    }
+
+    function deleteStatus(id) {
+      if (confirm('¿Eliminar este estado?')) {
+        orderStatuses = orderStatuses.filter(s => s.id !== id);
+        saveData();
+        populateStatusSelects();
+        renderABMStatuses();
+      }
+    }
+
+    // ABM Clientes
+    function renderABMClients() {
+      const container = document.getElementById('abm-clients-table');
+      let rows = users.map(u => `
+        <tr class="border-b text-xs">
+          <td class="p-3 font-bold">${u.name}</td>
+          <td class="p-3">${u.phone}</td>
+          <td class="p-3">${u.address}</td>
+          <td class="p-3 space-x-2">
+            <button onclick="editClientAdmin(${u.id})" class="text-blue-600 font-bold">Editar</button>
+            <button onclick="deleteClientAdmin(${u.id})" class="text-red-600 font-bold">Eliminar</button>
+          </td>
+        </tr>
+      `).join('');
+
+      container.innerHTML = `
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-gray-50 border-b text-xs font-bold text-gray-500 uppercase">
+              <th class="p-3">Nombre</th>
+              <th class="p-3">WhatsApp</th>
+              <th class="p-3">Dirección</th>
+              <th class="p-3">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>${rows.length ? rows : '<tr><td colspan="4" class="p-3 text-center text-gray-400">No hay clientes registrados</td></tr>'}</tbody>
+        </table>
+      `;
+    }
+
+    function openClientModal() {
+      document.getElementById('admin-cli-id').value = '';
+      document.getElementById('admin-cli-name').value = '';
+      document.getElementById('admin-cli-phone').value = '';
+      document.getElementById('admin-cli-address').value = '';
+      document.getElementById('client-modal-title').textContent = "Nuevo Cliente";
+      document.getElementById('modal-client-admin').classList.remove('hidden');
+      document.getElementById('modal-client-admin').classList.add('flex');
+    }
+
+    function closeClientAdminModal() {
+      document.getElementById('modal-client-admin').classList.add('hidden');
+      document.getElementById('modal-client-admin').classList.remove('flex');
+    }
+
+    function editClientAdmin(id) {
+      const u = users.find(usr => usr.id === id);
+      if (!u) return;
+      document.getElementById('admin-cli-id').value = u.id;
+      document.getElementById('admin-cli-name').value = u.name;
+      document.getElementById('admin-cli-phone').value = u.phone;
+      document.getElementById('admin-cli-address').value = u.address;
+      document.getElementById('client-modal-title').textContent = "Editar Cliente";
+      document.getElementById('modal-client-admin').classList.remove('hidden');
+      document.getElementById('modal-client-admin').classList.add('flex');
+    }
+
+    function saveClientAdmin(e) {
+      e.preventDefault();
+      const id = document.getElementById('admin-cli-id').value;
+      const name = document.getElementById('admin-cli-name').value;
+      const phone = document.getElementById('admin-cli-phone').value;
+      const address = document.getElementById('admin-cli-address').value;
+
+      if (id) {
+        const u = users.find(usr => usr.id == id);
+        u.name = name; u.phone = phone; u.address = address;
+      } else {
+        users.push({ id: Date.now(), name, phone, address });
+      }
+
+      saveData();
+      closeClientAdminModal();
+      renderABMClients();
+      populatePromoClientSelect();
+    }
+
+    function deleteClientAdmin(id) {
+      if (confirm('¿Eliminar este cliente?')) {
+        users = users.filter(u => u.id !== id);
+        saveData();
+        renderABMClients();
+        populatePromoClientSelect();
+      }
+    }
+  </script>
+</body>
+</html>

@@ -521,6 +521,28 @@
       <!-- TAB ADMIN: PARAMETRIZACIÓN Y CONFIGURACIÓN GLOBAL -->
       <div id="admin-tab-config" class="hidden space-y-8">
         
+        <!-- Módulo de Copia de Seguridad JSON -->
+        <div class="bg-white p-6 rounded-xl border shadow-sm space-y-4 max-w-3xl">
+          <div class="flex justify-between items-center border-b pb-2">
+            <h3 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-database text-red-600 mr-2"></i>Copia de Seguridad y Respaldo (Backup)</h3>
+            <span class="text-xs text-gray-400 font-semibold">Formato JSON</span>
+          </div>
+          <p class="text-xs text-gray-600">Exporta todos los datos del negocio (Productos, Stock, Pedidos, Clientes, Categorías, Configuración y Plantillas de WhatsApp) a un archivo JSON para tener un respaldo o migrar a otro dispositivo.</p>
+          
+          <div class="flex flex-wrap gap-3 pt-2">
+            <button onclick="exportJSONBackup()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2.5 rounded-lg text-xs flex items-center space-x-2 shadow">
+              <i class="fa-solid fa-file-export text-sm"></i>
+              <span>Exportar Backup (JSON)</span>
+            </button>
+
+            <label class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-lg text-xs flex items-center space-x-2 shadow cursor-pointer">
+              <i class="fa-solid fa-file-import text-sm"></i>
+              <span>Importar Backup (JSON)</span>
+              <input type="file" id="import-json-file" accept=".json" onchange="importJSONBackup(event)" class="hidden">
+            </label>
+          </div>
+        </div>
+
         <!-- Configuración Datos del Negocio -->
         <div class="bg-white p-6 rounded-xl border shadow-sm space-y-4 max-w-3xl">
           <h3 class="text-lg font-bold text-gray-800 border-b pb-2"><i class="fa-solid fa-store mr-2 text-red-600"></i>Datos del Negocio</h3>
@@ -768,6 +790,79 @@
       localStorage.setItem('carniceria_orders', JSON.stringify(orders));
       localStorage.setItem('carniceria_users', JSON.stringify(users));
       localStorage.setItem('carniceria_current_user', JSON.stringify(currentUser));
+    }
+
+    // ==================== COPIA DE SEGURIDAD (EXPORTAR E IMPORTAR JSON) ====================
+    function exportJSONBackup() {
+      const backupData = {
+        version: "1.0",
+        exportDate: new Date().toISOString(),
+        storeSettings: storeSettings,
+        deliveryTypes: deliveryTypes,
+        categories: categories,
+        orderStatuses: orderStatuses,
+        products: products,
+        orders: orders,
+        users: users
+      };
+
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+      const downloadAnchor = document.createElement('a');
+      const filename = `backup_carniceria_${new Date().toISOString().slice(0, 10)}.json`;
+
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", filename);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function importJSONBackup(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+
+          if (!imported.storeSettings || !imported.products || !imported.orders) {
+            return alert('Error: El archivo JSON seleccionado no tiene la estructura de backup válida.');
+          }
+
+          if (confirm('⚠️ ¿Estás seguro de que deseas restaurar la copia de seguridad? Se reemplazarán la configuración, productos, pedidos y clientes actuales.')) {
+            storeSettings = imported.storeSettings || defaultSettings;
+            deliveryTypes = imported.deliveryTypes || defaultDeliveryTypes;
+            categories = imported.categories || defaultCategories;
+            orderStatuses = imported.orderStatuses || defaultStatuses;
+            products = imported.products || defaultProducts;
+            orders = imported.orders || [];
+            users = imported.users || [];
+
+            saveData();
+            applyStoreSettings();
+            populateCategorySelects();
+            populateStatusSelects();
+            populateDeliveryTypeSelects();
+            renderProducts();
+            renderCart();
+            renderOrdersAdmin();
+            renderAdminProductsTable();
+            renderAdminStockTable();
+            renderABMClients();
+            renderAdminStats();
+            renderABMDeliveryTypes();
+            renderABMCategories();
+            renderABMStatuses();
+
+            alert('¡Copia de seguridad importada y restaurada con éxito!');
+          }
+        } catch (err) {
+          alert('Ocurrió un error al leer el archivo JSON: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
     }
 
     // ==================== INICIALIZACIÓN ====================
@@ -1673,7 +1768,7 @@
       if (prod) {
         prod.isOutOfStock = !prod.isOutOfStock;
         if (prod.isOutOfStock && prod.stockKg > 0) {
-          // Opcional: mantener kg o poner en 0 si desea
+          // Mantiene kg o cambia estado
         } else if (!prod.isOutOfStock && prod.stockKg <= 0) {
           prod.stockKg = 10; // Asigna stock básico si estaba en 0 kg al reactivar
         }

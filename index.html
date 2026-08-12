@@ -9,6 +9,31 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     .tab-active { border-bottom: 3px solid #dc2626; color: #dc2626; font-weight: bold; }
+    th.sortable { cursor: pointer; user-select: none; }
+    th.sortable:hover { background-color: #f3f4f6; }
+    
+    /* Cinta / Banner de AGOTADO sobre la imagen en la tienda */
+    .ribbon-wrapper {
+      position: relative;
+      overflow: hidden;
+    }
+    .ribbon-out {
+      position: absolute;
+      top: 22px;
+      right: -35px;
+      transform: rotate(35deg);
+      width: 140px;
+      background-color: #dc2626;
+      color: #ffffff;
+      text-align: center;
+      font-weight: 900;
+      font-size: 11px;
+      letter-spacing: 1px;
+      padding: 4px 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      z-index: 10;
+      text-transform: uppercase;
+    }
   </style>
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans min-h-screen flex flex-col">
@@ -59,7 +84,7 @@
       <div id="client-auth-card" class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
           <h2 class="text-lg font-bold text-gray-800" id="welcome-text">¡Bienvenido!</h2>
-          <p class="text-sm text-gray-500" id="welcome-sub">Regístrate para guardar tu dirección, hacer pedidos de 0.5kg en adelante y ver tu historial.</p>
+          <p class="text-sm text-gray-500" id="welcome-sub">Regístrate para realizar pedidos de 0.5kg en adelante y ver tu historial de compras.</p>
         </div>
         <button id="auth-action-btn" onclick="openAuthModal()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg shadow text-sm">
           Registrarme / Iniciar Sesión
@@ -69,14 +94,26 @@
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Catálogo de Productos -->
         <div class="lg:col-span-2 space-y-4">
-          <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 bg-white p-3 rounded-xl border">
+          <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 bg-white p-3 rounded-xl border shadow-sm">
+            
             <div class="relative flex-1">
               <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400 text-sm"></i>
-              <input type="text" id="client-search" oninput="renderProducts()" placeholder="Buscar corte o producto..." class="w-full pl-9 pr-3 py-1.5 border rounded-lg text-sm">
+              <input type="text" id="client-search" oninput="renderProducts()" placeholder="Buscar por Nombre..." class="w-full pl-9 pr-3 py-1.5 border rounded-lg text-sm">
             </div>
-            <select id="category-filter" onchange="renderProducts()" class="border rounded-lg px-3 py-1.5 text-sm bg-white">
-              <!-- Render dinámico categorías -->
-            </select>
+
+            <div class="flex flex-wrap gap-2 items-center">
+              <select id="category-filter" onchange="renderProducts()" class="border rounded-lg px-3 py-1.5 text-sm bg-white">
+                <!-- Render dinámico categorías -->
+              </select>
+
+              <select id="catalog-sort" onchange="renderProducts()" class="border rounded-lg px-3 py-1.5 text-sm bg-white font-semibold text-gray-700">
+                <option value="name-asc">Nombre (A-Z)</option>
+                <option value="name-desc">Nombre (Z-A)</option>
+                <option value="cat-asc">Categoría (A-Z)</option>
+                <option value="price-asc">Precio por Kg (Menor a Mayor)</option>
+                <option value="price-desc">Precio por Kg (Mayor a Menor)</option>
+              </select>
+            </div>
           </div>
 
           <div id="product-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -99,15 +136,8 @@
             <div class="border-t pt-3 space-y-3">
               <div>
                 <label class="block text-xs font-bold text-gray-700 mb-1">Método de entrega:</label>
-                <div class="grid grid-cols-2 gap-2">
-                  <label class="border rounded-lg p-2 text-center cursor-pointer flex items-center justify-center space-x-1 text-xs">
-                    <input type="radio" name="delivery-type" value="takeaway" checked onchange="toggleDeliveryOptions()">
-                    <span>Retiro (Take Away)</span>
-                  </label>
-                  <label class="border rounded-lg p-2 text-center cursor-pointer flex items-center justify-center space-x-1 text-xs">
-                    <input type="radio" name="delivery-type" value="delivery" onchange="toggleDeliveryOptions()">
-                    <span>Envío a Domicilio</span>
-                  </label>
+                <div id="cart-delivery-types-container" class="grid grid-cols-1 gap-1.5 text-xs">
+                  <!-- Render dinámico opciones de entrega -->
                 </div>
               </div>
 
@@ -131,11 +161,11 @@
       </div>
     </section>
 
-    <!-- ==================== VISTA CLIENTE: MIS COMPRAS & ESTADÍSTICAS ==================== -->
+    <!-- ==================== VISTA CLIENTE: MIS COMPRAS ==================== -->
     <section id="view-client-stats" class="hidden space-y-6">
       <h2 class="text-2xl font-bold text-gray-800">Mis Compras e Historial</h2>
       
-      <!-- Cards de Métricas de Cliente -->
+      <!-- Cards de Métricas -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div class="bg-white p-4 rounded-xl border shadow-sm">
           <p class="text-xs text-gray-500 font-bold uppercase">Total Invertido</p>
@@ -151,24 +181,50 @@
         </div>
       </div>
 
-      <!-- Filtros y Buscador de Mis Pedidos -->
+      <!-- Buscador y Filtros avanzados en Mis Compras -->
       <div class="bg-white p-4 rounded-xl border space-y-4">
-        <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+        <div class="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-3">
           <h3 class="font-bold text-gray-700">Historial de Pedidos Realizados</h3>
-          <div class="flex gap-2">
+          
+          <div class="flex flex-wrap gap-2 items-center">
             <input type="text" id="client-orders-search" oninput="renderClientOrders()" placeholder="Buscar por producto..." class="border rounded-lg px-3 py-1.5 text-sm">
+            
+            <div class="flex items-center space-x-1 text-xs">
+              <span class="font-semibold text-gray-500">Desde:</span>
+              <input type="date" id="client-date-from" onchange="renderClientOrders()" class="border rounded p-1 text-xs">
+            </div>
+            
+            <div class="flex items-center space-x-1 text-xs">
+              <span class="font-semibold text-gray-500">Hasta:</span>
+              <input type="date" id="client-date-to" onchange="renderClientOrders()" class="border rounded p-1 text-xs">
+            </div>
+
             <select id="client-orders-status-filter" onchange="renderClientOrders()" class="border rounded-lg px-3 py-1.5 text-sm bg-white">
               <option value="all">Todos los estados</option>
             </select>
           </div>
         </div>
 
-        <div id="client-orders-list" class="space-y-3">
-          <!-- Render dinámico lista de pedidos -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-gray-100 text-xs font-bold text-gray-600 border-b">
+                <th class="p-3 sortable" onclick="sortClientOrders('id')"># Pedido <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>
+                <th class="p-3 sortable" onclick="sortClientOrders('date')">Fecha <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>
+                <th class="p-3 sortable" onclick="sortClientOrders('items')">Productos <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>
+                <th class="p-3 sortable text-center" onclick="sortClientOrders('kg')">Total Kg <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>
+                <th class="p-3 sortable" onclick="sortClientOrders('status')">Estado <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>
+                <th class="p-3 sortable text-right" onclick="sortClientOrders('total')">Monto Total <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>
+                <th class="p-3 text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="client-orders-tbody" class="divide-y text-xs">
+              <!-- Render dinámico -->
+            </tbody>
+          </table>
         </div>
       </div>
 
-      <!-- Gráfico de Compras -->
       <div class="bg-white p-4 rounded-xl border shadow-sm">
         <h3 class="font-bold text-gray-700 mb-4">Kilogramos Comprados por Producto</h3>
         <div class="h-64">
@@ -181,10 +237,16 @@
     <section id="view-admin" class="hidden space-y-6">
       <div class="flex flex-wrap border-b border-gray-300 gap-2">
         <button onclick="switchAdminTab('orders')" id="atab-orders" class="px-4 py-2 font-bold text-sm tab-active">
-          <i class="fa-solid fa-receipt mr-1"></i> Pedidos
+          <i class="fa-solid fa-receipt mr-1"></i> Pedidos Recibidos
         </button>
         <button onclick="switchAdminTab('products')" id="atab-products" class="px-4 py-2 font-bold text-sm text-gray-600">
           <i class="fa-solid fa-drumstick-bite mr-1"></i> Productos
+        </button>
+        <button onclick="switchAdminTab('stock')" id="atab-stock" class="px-4 py-2 font-bold text-sm text-gray-600">
+          <i class="fa-solid fa-boxes-stacked mr-1"></i> Control de Stock
+        </button>
+        <button onclick="switchAdminTab('clients')" id="atab-clients" class="px-4 py-2 font-bold text-sm text-gray-600">
+          <i class="fa-solid fa-users mr-1"></i> Clientes
         </button>
         <button onclick="switchAdminTab('stats')" id="atab-stats" class="px-4 py-2 font-bold text-sm text-gray-600">
           <i class="fa-solid fa-chart-pie mr-1"></i> Estadísticas
@@ -197,46 +259,206 @@
         </button>
       </div>
 
-      <!-- TAB ADMIN: PEDIDOS -->
+      <!-- TAB ADMIN: GESTIÓN DE PEDIDOS RECIBIDOS -->
       <div id="admin-tab-orders" class="space-y-4">
-        <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 bg-white p-4 rounded-xl border">
-          <h2 class="text-xl font-bold text-gray-800">Gestión de Pedidos Recibidos</h2>
-          <div class="flex flex-wrap gap-2">
-            <input type="text" id="admin-orders-search" oninput="renderOrdersAdmin()" placeholder="Buscar por cliente, id o dir..." class="border rounded-lg px-3 py-1.5 text-sm">
-            <select id="admin-orders-status-filter" onchange="renderOrdersAdmin()" class="border rounded-lg px-3 py-1.5 text-sm bg-white">
-              <option value="all">Todos los estados</option>
-            </select>
+        
+        <!-- Botón para Mostrar/Ocultar Panel de Búsqueda y Filtros -->
+        <div class="flex justify-between items-center bg-white p-3 rounded-xl border shadow-sm">
+          <h2 class="text-lg font-bold text-gray-800">Listado de Pedidos Recibidos</h2>
+          <button onclick="toggleAdminSearchPanel()" class="bg-gray-800 hover:bg-black text-amber-300 font-bold px-4 py-2 rounded-lg text-xs flex items-center space-x-2 shadow">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <span>Buscar / Filtrar Pedidos</span>
+          </button>
+        </div>
+
+        <!-- Panel de Búsqueda y Filtros -->
+        <div id="admin-search-panel" class="hidden bg-white p-4 rounded-xl border shadow-sm space-y-3">
+          <div class="flex justify-between items-center border-b pb-2">
+            <h3 class="text-sm font-bold text-red-700"><i class="fa-solid fa-filter mr-2"></i>Criterios de Búsqueda Avanzada</h3>
+            <button onclick="clearAdminOrderFilters()" class="text-xs text-red-600 font-bold hover:underline">Limpiar Filtros</button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 text-xs">
+            <div>
+              <label class="block font-bold text-gray-600 mb-1">Cliente (Nombre):</label>
+              <input type="text" id="admin-f-client" oninput="renderOrdersAdmin()" placeholder="Ej. Juan Pérez" class="w-full border rounded p-1.5">
+            </div>
+
+            <div>
+              <label class="block font-bold text-gray-600 mb-1">Producto:</label>
+              <input type="text" id="admin-f-product" oninput="renderOrdersAdmin()" placeholder="Ej. Asado, Pollo" class="w-full border rounded p-1.5">
+            </div>
+
+            <div>
+              <label class="block font-bold text-gray-600 mb-1">Domicilio del Cliente:</label>
+              <input type="text" id="admin-f-address" oninput="renderOrdersAdmin()" placeholder="Ej. Calle 123" class="w-full border rounded p-1.5">
+            </div>
+
+            <div>
+              <label class="block font-bold text-gray-600 mb-1">WhatsApp del Cliente:</label>
+              <input type="text" id="admin-f-whatsapp" oninput="renderOrdersAdmin()" placeholder="Ej. 1122334455" class="w-full border rounded p-1.5">
+            </div>
+
+            <div>
+              <label class="block font-bold text-gray-600 mb-1">Tipo de Entrega:</label>
+              <select id="admin-f-type" onchange="renderOrdersAdmin()" class="w-full border rounded p-1.5 bg-white">
+                <option value="all">Todos los tipos</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block font-bold text-gray-600 mb-1">Fecha Desde:</label>
+              <input type="date" id="admin-f-date-from" onchange="renderOrdersAdmin()" class="w-full border rounded p-1.5">
+            </div>
+
+            <div>
+              <label class="block font-bold text-gray-600 mb-1">Fecha Hasta:</label>
+              <input type="date" id="admin-f-date-to" onchange="renderOrdersAdmin()" class="w-full border rounded p-1.5">
+            </div>
+
+            <div>
+              <label class="block font-bold text-gray-600 mb-1">Monto Mínimo (Monto >= $):</label>
+              <input type="number" id="admin-f-min-total" oninput="renderOrdersAdmin()" placeholder="Ej. 10000" class="w-full border rounded p-1.5">
+            </div>
+
+            <div>
+              <label class="block font-bold text-gray-600 mb-1">Estado del Pedido:</label>
+              <select id="admin-orders-status-filter" onchange="renderOrdersAdmin()" class="w-full border rounded p-1.5 bg-white">
+                <option value="all">Todos los estados</option>
+              </select>
+            </div>
           </div>
         </div>
 
-        <div id="admin-orders-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <!-- Render dinámico pedidos dueño -->
+        <!-- Tabla de Pedidos -->
+        <div class="bg-white rounded-xl shadow-sm border overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-gray-100 text-xs font-bold text-gray-600 border-b">
+                <th class="p-3 sortable" onclick="sortAdminOrders('id')"># Pedido <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>
+                <th class="p-3 sortable" onclick="sortAdminOrders('date')">Fecha <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>
+                <th class="p-3 sortable" onclick="sortAdminOrders('client')">Cliente / Tel <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>
+                <th class="p-3 sortable" onclick="sortAdminOrders('items')">Productos <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>
+                <th class="p-3 sortable" onclick="sortAdminOrders('type')">Tipo Entrega <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>
+                <th class="p-3 sortable" onclick="sortAdminOrders('status')">Estado <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>
+                <th class="p-3 sortable text-right" onclick="sortAdminOrders('total')">Monto Total <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>
+                <th class="p-3 text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="admin-orders-tbody" class="divide-y text-xs">
+              <!-- Render dinámico pedidos -->
+            </tbody>
+          </table>
         </div>
       </div>
 
       <!-- TAB ADMIN: PRODUCTOS -->
       <div id="admin-tab-products" class="hidden space-y-6">
-        <div class="flex justify-between items-center">
+        <div class="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
           <h2 class="text-xl font-bold text-gray-800">Catálogo de Productos y Precios por Kg</h2>
-          <button onclick="openProductModal()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-sm">
-            + Nuevo Producto
-          </button>
+          
+          <div class="flex flex-wrap items-center gap-2">
+            <input type="text" id="admin-prod-search" oninput="renderAdminProductsTable()" placeholder="Buscar por nombre..." class="border rounded-lg px-3 py-1.5 text-sm">
+            <select id="admin-prod-category-filter" onchange="renderAdminProductsTable()" class="border rounded-lg px-3 py-1.5 text-sm bg-white">
+              <option value="all">Todas las categorías</option>
+            </select>
+            <button onclick="openProductModal()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-sm">
+              + Nuevo Producto
+            </button>
+          </div>
         </div>
-        <div id="admin-products-table" class="bg-white rounded-xl shadow-sm border overflow-x-auto">
-          <!-- Tabla productos -->
+
+        <div id="admin-products-table-container" class="bg-white rounded-xl shadow-sm border overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-gray-50 border-b text-xs font-bold text-gray-500 uppercase">
+                <th class="p-3 sortable" onclick="sortAdminProducts('img')">Imagen <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>
+                <th class="p-3 sortable" onclick="sortAdminProducts('name')">Nombre del Producto <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>
+                <th class="p-3 sortable" onclick="sortAdminProducts('category')">Categoría <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>
+                <th class="p-3 sortable" onclick="sortAdminProducts('price')">Precio por Kg <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>
+                <th class="p-3">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="admin-products-tbody">
+              <!-- Render dinámico -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB ADMIN: CONTROL DE STOCK -->
+      <div id="admin-tab-stock" class="hidden space-y-6">
+        <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-start space-x-3">
+          <i class="fa-solid fa-lightbulb text-amber-600 text-2xl mt-0.5"></i>
+          <div class="text-xs text-amber-900">
+            <h3 class="font-bold text-sm text-amber-950 mb-1">Gestión de Stock de Carne en Kilogramos</h3>
+            <p>Controla el stock disponible por corte. Cuando marcas un producto como <strong>"Agotado"</strong>, este <strong>continúa viéndose en la tienda</strong> pero con una franja roja inclinada de <strong>AGOTADO</strong> sobre la imagen y en la lista de productos del ABM.</p>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-gray-50 border-b text-xs font-bold text-gray-500 uppercase">
+                <th class="p-3">Corte / Producto</th>
+                <th class="p-3 text-center">Stock Dispon. (kg)</th>
+                <th class="p-3 text-center">Stock Mín. Alerta (kg)</th>
+                <th class="p-3 text-center">Estado de Disponibilidad</th>
+                <th class="p-3 text-center">Acción Rápida</th>
+              </tr>
+            </thead>
+            <tbody id="admin-stock-tbody" class="divide-y text-xs">
+              <!-- Render dinámico stock -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB ADMIN: ABM CLIENTES -->
+      <div id="admin-tab-clients" class="hidden space-y-6">
+        <div class="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 bg-white p-4 rounded-xl border shadow-sm">
+          <h2 class="text-xl font-bold text-gray-800"><i class="fa-solid fa-users text-red-600 mr-2"></i>ABM de Clientes Registrados</h2>
+          
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="relative flex-1 sm:w-64">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400 text-sm"></i>
+              <input type="text" id="admin-client-search" oninput="renderABMClients()" placeholder="Buscar por Nombre, WhatsApp o Dir..." class="w-full pl-9 pr-3 py-1.5 border rounded-lg text-sm">
+            </div>
+            <button onclick="openClientModal()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-sm">
+              + Nuevo Cliente
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-gray-50 border-b text-xs font-bold text-gray-500 uppercase">
+                <th class="p-3">Nombre Completo</th>
+                <th class="p-3">WhatsApp / Teléfono</th>
+                <th class="p-3">Dirección Predeterminada</th>
+                <th class="p-3 text-center">Pedidos Históricos</th>
+                <th class="p-3">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="abm-clients-tbody">
+              <!-- Render dinámico clientes -->
+            </tbody>
+          </table>
         </div>
       </div>
 
       <!-- TAB ADMIN: ESTADÍSTICAS -->
       <div id="admin-tab-stats" class="hidden space-y-6">
-        <div class="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-xl border">
-          <h2 class="text-xl font-bold text-gray-800">Métricas Globales de Ventas</h2>
-          <div class="flex items-center space-x-2">
-            <label class="text-xs font-bold">Período:</label>
-            <select id="stats-period" onchange="renderAdminStats()" class="border rounded p-1 text-sm bg-gray-50">
-              <option value="all">Histórico Completo</option>
-              <option value="month">Este Mes</option>
-            </select>
+        <div class="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-xl border shadow-sm">
+          <h2 class="text-xl font-bold text-gray-800"><i class="fa-solid fa-chart-line text-red-600 mr-2"></i>Estadísticas y Consumos Acumulados</h2>
+          
+          <div class="flex flex-wrap items-center gap-2 text-xs">
+            <span class="font-bold text-gray-600">Período por Rango de Fechas:</span>
+            <input type="date" id="stats-date-from" onchange="renderAdminStats()" class="border rounded p-1.5">
+            <span class="font-bold text-gray-400">-</span>
+            <input type="date" id="stats-date-to" onchange="renderAdminStats()" class="border rounded p-1.5">
+            <button onclick="resetStatsDates()" class="bg-gray-200 hover:bg-gray-300 font-bold px-2 py-1.5 rounded">Ver Todo</button>
           </div>
         </div>
 
@@ -256,13 +478,17 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="bg-white p-4 rounded-xl border shadow-sm">
-            <h3 class="font-bold text-gray-700 mb-2 text-sm">Ventas acumuladas por Producto ($)</h3>
-            <div class="h-60"><canvas id="chartAdminProducts"></canvas></div>
+          <div class="bg-white p-4 rounded-xl border shadow-sm space-y-2">
+            <h3 class="font-bold text-gray-700 text-sm border-b pb-1">Ventas Acumuladas por Mes ($)</h3>
+            <div class="h-56"><canvas id="chartAdminMonth"></canvas></div>
           </div>
-          <div class="bg-white p-4 rounded-xl border shadow-sm">
-            <h3 class="font-bold text-gray-700 mb-2 text-sm">Top Clientes por Consumo ($)</h3>
-            <div class="h-60"><canvas id="chartAdminClients"></canvas></div>
+          <div class="bg-white p-4 rounded-xl border shadow-sm space-y-2">
+            <h3 class="font-bold text-gray-700 text-sm border-b pb-1">Ventas Acumuladas por Tipo de Entrega ($)</h3>
+            <div class="h-56"><canvas id="chartAdminType"></canvas></div>
+          </div>
+          <div class="bg-white p-4 rounded-xl border shadow-sm space-y-2 md:col-span-2">
+            <h3 class="font-bold text-gray-700 text-sm border-b pb-1">Ventas Acumuladas por Domicilio de Entrega ($)</h3>
+            <div class="h-64"><canvas id="chartAdminAddress"></canvas></div>
           </div>
         </div>
       </div>
@@ -281,8 +507,8 @@
           </div>
           <div>
             <label class="block text-sm font-bold text-gray-700 mb-1">Seleccionar Cliente Destino:</label>
-            <select id="promo-client-select" class="w-full border rounded-lg p-2 text-sm bg-white">
-              <!-- Render clientes -->
+            <select id="promo-client-select" class="w-full border rounded-lg p-2 text-sm bg-white font-bold">
+              <!-- Render clientes + Opción Todos -->
             </select>
           </div>
           <button onclick="sendWhatsAppPromo()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-4 rounded-lg shadow flex items-center justify-center space-x-2">
@@ -321,33 +547,39 @@
           </form>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- ABM Tipos de Entrega -->
+          <div class="bg-white p-6 rounded-xl border shadow-sm space-y-4">
+            <div class="flex justify-between items-center border-b pb-2">
+              <h3 class="text-base font-bold text-gray-800"><i class="fa-solid fa-truck-ramp-box mr-1 text-red-600"></i>ABM Tipos de Entrega</h3>
+              <button onclick="addDeliveryTypePrompt()" class="bg-green-600 text-white font-bold text-xs px-2.5 py-1 rounded">+ Agregar</button>
+            </div>
+            <div id="abm-delivery-types-list" class="divide-y text-sm max-h-52 overflow-y-auto"></div>
+          </div>
+
           <!-- ABM Categorías -->
           <div class="bg-white p-6 rounded-xl border shadow-sm space-y-4">
             <div class="flex justify-between items-center border-b pb-2">
-              <h3 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-list mr-2 text-red-600"></i>ABM Categoria de Productos</h3>
-              <button onclick="addCategoryPrompt()" class="bg-green-600 text-white font-bold text-xs px-3 py-1.5 rounded">+ Agregar</button>
+              <h3 class="text-base font-bold text-gray-800"><i class="fa-solid fa-list mr-1 text-red-600"></i>ABM Categorías</h3>
+              <button onclick="addCategoryPrompt()" class="bg-green-600 text-white font-bold text-xs px-2.5 py-1 rounded">+ Agregar</button>
             </div>
             <div id="abm-categories-list" class="divide-y text-sm max-h-52 overflow-y-auto"></div>
           </div>
 
-          <!-- ABM Estados de Pedido -->
-          <div class="bg-white p-6 rounded-xl border shadow-sm space-y-4">
+          <!-- ABM Estados de Pedido con Mensaje Personalizado de WhatsApp -->
+          <div class="bg-white p-6 rounded-xl border shadow-sm space-y-4 lg:col-span-3">
             <div class="flex justify-between items-center border-b pb-2">
-              <h3 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-tags mr-2 text-red-600"></i>ABM Estados del Pedido</h3>
-              <button onclick="addStatusPrompt()" class="bg-green-600 text-white font-bold text-xs px-3 py-1.5 rounded">+ Agregar</button>
+              <div>
+                <h3 class="text-base font-bold text-gray-800"><i class="fa-solid fa-tags mr-1 text-red-600"></i>ABM Estados de Pedido y Mensajes de WhatsApp</h3>
+                <p class="text-xs text-gray-500">Configura el mensaje que se abrirá para enviar por WhatsApp al cliente al cambiar a este estado. Variables soportadas: <code class="bg-gray-100 font-bold text-red-600 px-1">{cliente}</code>, <code class="bg-gray-100 font-bold text-red-600 px-1">{pedido}</code>, <code class="bg-gray-100 font-bold text-red-600 px-1">{tipo}</code>, <code class="bg-gray-100 font-bold text-red-600 px-1">{direccion}</code>, <code class="bg-gray-100 font-bold text-red-600 px-1">{total}</code> y <code class="bg-gray-100 font-bold text-red-600 px-1">{productos}</code> (muestra detalle de productos, kg y monto).</p>
+              </div>
+              <button onclick="addStatusPrompt()" class="bg-green-600 text-white font-bold text-xs px-3 py-1.5 rounded">+ Nuevo Estado</button>
             </div>
-            <div id="abm-statuses-list" class="divide-y text-sm max-h-52 overflow-y-auto"></div>
+            
+            <div id="abm-statuses-container" class="space-y-4">
+              <!-- Render dinámico de estados con sus cajas de texto de mensaje -->
+            </div>
           </div>
-        </div>
-
-        <!-- ABM Clientes -->
-        <div class="bg-white p-6 rounded-xl border shadow-sm space-y-4">
-          <div class="flex justify-between items-center border-b pb-2">
-            <h3 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-users mr-2 text-red-600"></i>ABM de Clientes Registrados</h3>
-            <button onclick="openClientModal()" class="bg-red-600 text-white font-bold text-xs px-3 py-1.5 rounded">+ Nuevo Cliente</button>
-          </div>
-          <div id="abm-clients-table" class="overflow-x-auto"></div>
         </div>
 
       </div>
@@ -356,7 +588,7 @@
 
   </main>
 
-  <!-- MODAL: DETALLE DE PEDIDO (CLIENTE Y DUEÑO) -->
+  <!-- MODAL: DETALLE DE PEDIDO -->
   <div id="modal-order-detail" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-xl max-w-lg w-full p-6 space-y-4 relative">
       <button onclick="closeOrderDetailModal()" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
@@ -406,11 +638,11 @@
         </div>
         <div>
           <label class="block text-xs font-bold text-gray-700">WhatsApp</label>
-          <input type="text" id="admin-cli-phone" required class="w-full border rounded p-2 text-sm">
+          <input type="text" id="admin-cli-phone" required placeholder="Ej: 5491122334455" class="w-full border rounded p-2 text-sm">
         </div>
         <div>
           <label class="block text-xs font-bold text-gray-700">Dirección</label>
-          <input type="text" id="admin-cli-address" required class="w-full border rounded p-2 text-sm">
+          <input type="text" id="admin-cli-address" required placeholder="Calle 123" class="w-full border rounded p-2 text-sm">
         </div>
         <button type="submit" class="w-full bg-red-600 text-white font-bold py-2 rounded-lg text-sm">Guardar Cliente</button>
       </form>
@@ -438,6 +670,16 @@
             <input type="number" id="prod-price" step="0.01" required class="w-full border rounded p-2 text-sm">
           </div>
         </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-bold text-gray-700">Stock Inicial (kg)</label>
+            <input type="number" id="prod-stock" step="0.1" value="50" required class="w-full border rounded p-2 text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-700">Stock Mínimo (kg)</label>
+            <input type="number" id="prod-min-stock" step="0.1" value="10" required class="w-full border rounded p-2 text-sm">
+          </div>
+        </div>
         <div>
           <label class="block text-xs font-bold text-gray-700">URL Imagen</label>
           <input type="url" id="prod-img" required class="w-full border rounded p-2 text-sm">
@@ -456,6 +698,11 @@
       whatsapp: "+5491122334455"
     };
 
+    const defaultDeliveryTypes = [
+      { id: "takeaway", name: "Retiro en Local (Take Away)", requiresAddress: false },
+      { id: "delivery", name: "Envío a Domicilio (Delivery)", requiresAddress: true }
+    ];
+
     const defaultCategories = [
       { id: "vacuno", name: "Carne Vacuna" },
       { id: "cerdo", name: "Cerdo" },
@@ -465,22 +712,23 @@
     ];
 
     const defaultStatuses = [
-      { id: "Pendiente", name: "Pendiente" },
-      { id: "En Preparación", name: "En Preparación" },
-      { id: "Listo para Entregar", name: "Listo para Entregar" },
-      { id: "Entregado", name: "Entregado" }
+      { id: "Pendiente", name: "Pendiente", messageTemplate: "¡Hola {cliente}! Recibimos tu pedido #{pedido}.\n\n🛒 Detalle:\n{productos}\n\nTotal: {total}. Ya lo estamos registrando." },
+      { id: "En Preparación", name: "En Preparación", messageTemplate: "¡Hola {cliente}! Tu pedido #{pedido} de {total} ya se está preparando en la carnicería.\n\n🛒 Ítems:\n{productos}" },
+      { id: "Listo para Entregar", name: "Listo para Entregar", messageTemplate: "¡Hola {cliente}! Tu pedido #{pedido} está LISTO para {tipo}.\nDirección: {direccion}.\n\n🛒 Detalle del pedido:\n{productos}\n\nTotal a abonar: {total}. ¡Muchas gracias!" },
+      { id: "Entregado", name: "Entregado", messageTemplate: "¡Hola {cliente}! Tu pedido #{pedido} por {total} ha sido entregado exitosamente. ¡Que lo disfrutes mucho! 🥩🔥" }
     ];
 
     const defaultProducts = [
-      { id: 1, name: "Asado de Tira", category: "vacuno", price: 8500, img: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=400&q=80" },
-      { id: 2, name: "Bife de Chorizo", category: "vacuno", price: 9200, img: "https://images.unsplash.com/photo-1603048588665-791ca8aea617?auto=format&fit=crop&w=400&q=80" },
-      { id: 3, name: "Pechuga de Pollo", category: "pollo", price: 4500, img: "https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&w=400&q=80" },
-      { id: 4, name: "Bondiola de Cerdo", category: "cerdo", price: 6800, img: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=400&q=80" },
-      { id: 5, name: "Chorizo Artesanal", category: "embutidos", price: 5200, img: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?auto=format&fit=crop&w=400&q=80" },
-      { id: 6, name: "Combo Parri2026 (Surtido)", category: "promo", price: 18500, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=400&q=80" }
+      { id: 1, name: "Asado de Tira", category: "vacuno", price: 8500, stockKg: 45, minStockKg: 10, isOutOfStock: false, img: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=400&q=80" },
+      { id: 2, name: "Bife de Chorizo", category: "vacuno", price: 9200, stockKg: 30, minStockKg: 8, isOutOfStock: false, img: "https://images.unsplash.com/photo-1603048588665-791ca8aea617?auto=format&fit=crop&w=400&q=80" },
+      { id: 3, name: "Pechuga de Pollo", category: "pollo", price: 4500, stockKg: 60, minStockKg: 15, isOutOfStock: false, img: "https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&w=400&q=80" },
+      { id: 4, name: "Bondiola de Cerdo", category: "cerdo", price: 6800, stockKg: 25, minStockKg: 5, isOutOfStock: false, img: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=400&q=80" },
+      { id: 5, name: "Chorizo Artesanal", category: "embutidos", price: 5200, stockKg: 40, minStockKg: 10, isOutOfStock: false, img: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?auto=format&fit=crop&w=400&q=80" },
+      { id: 6, name: "Combo Parri2026 (Surtido)", category: "promo", price: 18500, stockKg: 15, minStockKg: 3, isOutOfStock: false, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=400&q=80" }
     ];
 
     let storeSettings = JSON.parse(localStorage.getItem('carniceria_settings')) || defaultSettings;
+    let deliveryTypes = JSON.parse(localStorage.getItem('carniceria_delivery_types')) || defaultDeliveryTypes;
     let categories = JSON.parse(localStorage.getItem('carniceria_categories')) || defaultCategories;
     let orderStatuses = JSON.parse(localStorage.getItem('carniceria_statuses')) || defaultStatuses;
     let products = JSON.parse(localStorage.getItem('carniceria_products')) || defaultProducts;
@@ -489,13 +737,31 @@
     let currentUser = JSON.parse(localStorage.getItem('carniceria_current_user')) || null;
     let cart = [];
 
+    // Helper Unificado para saber si un producto está agotado
+    function isProductOutOfStock(p) {
+      if (!p) return false;
+      return (p.isOutOfStock === true) || (p.stockKg !== undefined && parseFloat(p.stockKg) <= 0);
+    }
+
+    // Estado de Ordenamiento
+    let clientSortField = 'date';
+    let clientSortAsc = false;
+
+    let adminOrderSortField = 'date';
+    let adminOrderSortAsc = false;
+
+    let adminProdSortField = 'name';
+    let adminProdSortAsc = true;
+
     // Charts
     let chartClient = null;
-    let chartAdminProd = null;
-    let chartAdminClient = null;
+    let chartAdminMonth = null;
+    let chartAdminType = null;
+    let chartAdminAddress = null;
 
     function saveData() {
       localStorage.setItem('carniceria_settings', JSON.stringify(storeSettings));
+      localStorage.setItem('carniceria_delivery_types', JSON.stringify(deliveryTypes));
       localStorage.setItem('carniceria_categories', JSON.stringify(categories));
       localStorage.setItem('carniceria_statuses', JSON.stringify(orderStatuses));
       localStorage.setItem('carniceria_products', JSON.stringify(products));
@@ -509,6 +775,7 @@
       applyStoreSettings();
       populateCategorySelects();
       populateStatusSelects();
+      populateDeliveryTypeSelects();
       updateAuthUI();
       renderProducts();
       renderCart();
@@ -531,6 +798,7 @@
     function populateCategorySelects() {
       const catFilter = document.getElementById('category-filter');
       const prodCatSelect = document.getElementById('prod-category');
+      const adminCatFilter = document.getElementById('admin-prod-category-filter');
 
       let optionsFilter = `<option value="all">Todas las categorías</option>`;
       let optionsForm = ``;
@@ -541,6 +809,7 @@
       });
 
       catFilter.innerHTML = optionsFilter;
+      adminCatFilter.innerHTML = optionsFilter;
       prodCatSelect.innerHTML = optionsForm;
     }
 
@@ -557,6 +826,23 @@
       adminStatusFilter.innerHTML = options;
     }
 
+    function populateDeliveryTypeSelects() {
+      const adminTypeFilter = document.getElementById('admin-f-type');
+      let options = `<option value="all">Todos los tipos</option>`;
+      deliveryTypes.forEach(dt => {
+        options += `<option value="${dt.id}">${dt.name}</option>`;
+      });
+      adminTypeFilter.innerHTML = options;
+
+      const cartContainer = document.getElementById('cart-delivery-types-container');
+      cartContainer.innerHTML = deliveryTypes.map((dt, idx) => `
+        <label class="border rounded-lg p-2 cursor-pointer flex items-center space-x-2 bg-gray-50 hover:bg-white">
+          <input type="radio" name="delivery-type" value="${dt.id}" ${idx === 0 ? 'checked' : ''} onchange="toggleDeliveryOptions()">
+          <span class="font-semibold text-gray-700">${dt.name}</span>
+        </label>
+      `).join('');
+    }
+
     function switchMainView(view) {
       document.getElementById('view-client').classList.add('hidden');
       document.getElementById('view-client-stats').classList.add('hidden');
@@ -564,6 +850,7 @@
 
       if (view === 'client') {
         document.getElementById('view-client').classList.remove('hidden');
+        renderProducts();
       } else if (view === 'client-stats') {
         document.getElementById('view-client-stats').classList.remove('hidden');
         renderClientStats();
@@ -572,16 +859,18 @@
         document.getElementById('view-admin').classList.remove('hidden');
         renderOrdersAdmin();
         renderAdminProductsTable();
+        renderAdminStockTable();
+        renderABMClients();
         renderAdminStats();
         populatePromoClientSelect();
+        renderABMDeliveryTypes();
         renderABMCategories();
         renderABMStatuses();
-        renderABMClients();
       }
     }
 
     function switchAdminTab(tab) {
-      ['orders', 'products', 'stats', 'marketing', 'config'].forEach(t => {
+      ['orders', 'products', 'stock', 'clients', 'stats', 'marketing', 'config'].forEach(t => {
         document.getElementById(`admin-tab-${t}`).classList.add('hidden');
         document.getElementById(`atab-${t}`).classList.remove('tab-active');
         document.getElementById(`atab-${t}`).classList.add('text-gray-600');
@@ -640,17 +929,27 @@
       }
     }
 
-    // ==================== CATÁLOGO Y CARRITO (0.5 KG) ====================
+    // ==================== CATÁLOGO Y CARRITO ====================
     function renderProducts() {
       const search = document.getElementById('client-search').value.toLowerCase();
       const cat = document.getElementById('category-filter').value;
+      const sortVal = document.getElementById('catalog-sort').value;
       const grid = document.getElementById('product-grid');
       grid.innerHTML = '';
 
-      const filtered = products.filter(p => {
+      let filtered = products.filter(p => {
         const matchesCat = (cat === 'all' || p.category === cat);
         const matchesSearch = p.name.toLowerCase().includes(search);
         return matchesCat && matchesSearch;
+      });
+
+      filtered.sort((a, b) => {
+        if (sortVal === 'name-asc') return a.name.localeCompare(b.name);
+        if (sortVal === 'name-desc') return b.name.localeCompare(a.name);
+        if (sortVal === 'cat-asc') return a.category.localeCompare(b.category);
+        if (sortVal === 'price-asc') return a.price - b.price;
+        if (sortVal === 'price-desc') return b.price - a.price;
+        return 0;
       });
 
       if (filtered.length === 0) {
@@ -660,9 +959,14 @@
 
       filtered.forEach(p => {
         const catObj = categories.find(c => c.id === p.category) || { name: p.category };
+        const outOfStock = isProductOutOfStock(p);
+
         grid.innerHTML += `
-          <div class="bg-white rounded-xl shadow-sm border overflow-hidden flex flex-col justify-between">
-            <img src="${p.img}" alt="${p.name}" class="h-36 w-full object-cover">
+          <div class="bg-white rounded-xl shadow-sm border overflow-hidden flex flex-col justify-between ${outOfStock ? 'opacity-85 bg-gray-50' : ''}">
+            <div class="relative ribbon-wrapper h-36 w-full">
+              <img src="${p.img}" alt="${p.name}" class="h-full w-full object-cover ${outOfStock ? 'grayscale contrast-125' : ''}">
+              ${outOfStock ? `<div class="ribbon-out">AGOTADO</div>` : ''}
+            </div>
             <div class="p-3 flex-grow flex flex-col justify-between space-y-2">
               <div>
                 <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 bg-gray-100 text-gray-600 rounded">${catObj.name}</span>
@@ -673,8 +977,9 @@
                   <span class="text-xs text-gray-400 block">Precio por Kg</span>
                   <span class="text-base font-extrabold text-red-700">$${p.price.toLocaleString()} /kg</span>
                 </div>
-                <button onclick="addToCart(${p.id})" class="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1.5 rounded-lg font-bold flex items-center space-x-1">
-                  <span>+0.5 kg</span>
+                <button onclick="addToCart(${p.id})" ${outOfStock ? 'disabled' : ''} class="${outOfStock ? 'bg-gray-400 cursor-not-allowed text-gray-100' : 'bg-red-600 hover:bg-red-700 text-white'} text-xs px-3 py-1.5 rounded-lg font-bold flex items-center space-x-1">
+                  <i class="fa-solid ${outOfStock ? 'fa-ban' : 'fa-cart-plus'} text-xs"></i>
+                  <span>${outOfStock ? 'Agotado' : '+ Agregar'}</span>
                 </button>
               </div>
             </div>
@@ -685,6 +990,8 @@
 
     function addToCart(prodId) {
       const prod = products.find(p => p.id === prodId);
+      if (isProductOutOfStock(prod)) return alert('Este producto está agotado por el momento.');
+
       const item = cart.find(i => i.id === prodId);
       if (item) {
         item.qty += 0.5;
@@ -708,9 +1015,11 @@
     }
 
     function toggleDeliveryOptions() {
-      const type = document.querySelector('input[name="delivery-type"]:checked').value;
+      const selectedTypeVal = document.querySelector('input[name="delivery-type"]:checked').value;
+      const dtObj = deliveryTypes.find(dt => dt.id === selectedTypeVal);
       const addrContainer = document.getElementById('delivery-address-container');
-      if (type === 'delivery') {
+
+      if (dtObj && dtObj.requiresAddress) {
         addrContainer.classList.remove('hidden');
       } else {
         addrContainer.classList.add('hidden');
@@ -765,10 +1074,12 @@
         return;
       }
 
-      const deliveryType = document.querySelector('input[name="delivery-type"]:checked').value;
-      const address = deliveryType === 'delivery' ? document.getElementById('cart-address').value : 'Retiro en Local (Take Away)';
+      const deliveryTypeId = document.querySelector('input[name="delivery-type"]:checked').value;
+      const dtObj = deliveryTypes.find(dt => dt.id === deliveryTypeId) || { name: deliveryTypeId, requiresAddress: false };
+      
+      const address = dtObj.requiresAddress ? document.getElementById('cart-address').value : 'Retiro en Local';
 
-      if (deliveryType === 'delivery' && !address.trim()) {
+      if (dtObj.requiresAddress && !address.trim()) {
         return alert('Ingresa una dirección de entrega.');
       }
 
@@ -779,73 +1090,125 @@
         date: new Date().toISOString(),
         user: currentUser,
         items: [...cart],
-        type: deliveryType,
+        type: dtObj.name,
+        typeId: dtObj.id,
+        requiresAddress: dtObj.requiresAddress,
         address: address,
         total: orderTotal,
         status: orderStatuses[0] ? orderStatuses[0].id : 'Pendiente'
       };
 
+      cart.forEach(cartItem => {
+        const prod = products.find(p => p.id === cartItem.id);
+        if (prod && prod.stockKg !== undefined) {
+          prod.stockKg = Math.max(0, prod.stockKg - cartItem.qty);
+          if (prod.stockKg <= 0) prod.isOutOfStock = true;
+        }
+      });
+
       orders.push(newOrder);
       saveData();
 
-      // Construir mensaje WhatsApp
       let itemsMsg = cart.map(i => `- ${i.qty}kg x ${i.name} ($${(i.price * i.qty).toLocaleString()})`).join('\n');
       let text = `*NUEVO PEDIDO EN ${storeSettings.name.toUpperCase()}*\n\n` +
                  `*Cliente:* ${currentUser.name}\n` +
                  `*Teléfono:* ${currentUser.phone}\n` +
-                 `*Tipo:* ${deliveryType === 'delivery' ? 'ENVÍO A DOMICILIO' : 'RETIRO EN LOCAL'}\n` +
-                 (deliveryType === 'delivery' ? `*Dirección:* ${address}\n` : '') +
+                 `*Método:* ${dtObj.name}\n` +
+                 (dtObj.requiresAddress ? `*Dirección:* ${address}\n` : '') +
                  `\n*Detalle del Pedido:*\n${itemsMsg}\n\n` +
                  `*TOTAL ESTIMADO:* $${orderTotal.toLocaleString()}`;
 
       cart = [];
       renderCart();
+      renderProducts();
 
       alert('¡Pedido registrado con éxito! Se abrirá WhatsApp para enviarlo al dueño.');
       const cleanPhone = storeSettings.whatsapp.replace(/[^0-9]/g, '');
       window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`, '_blank');
     }
 
-    // ==================== PANEL CLIENTE: VER PEDIDOS Y REPETIR ====================
+    // ==================== PANEL CLIENTE: MIS COMPRAS ====================
+    function sortClientOrders(field) {
+      if (clientSortField === field) {
+        clientSortAsc = !clientSortAsc;
+      } else {
+        clientSortField = field;
+        clientSortAsc = true;
+      }
+      renderClientOrders();
+    }
+
     function renderClientOrders() {
       if (!currentUser) return;
-      const container = document.getElementById('client-orders-list');
+
+      const container = document.getElementById('client-orders-tbody');
       const search = document.getElementById('client-orders-search').value.toLowerCase();
+      const dateFrom = document.getElementById('client-date-from').value;
+      const dateTo = document.getElementById('client-date-to').value;
       const status = document.getElementById('client-orders-status-filter').value;
 
-      const myOrders = orders.filter(o => o.user.phone === currentUser.phone);
+      let myOrders = orders.filter(o => o.user.phone === currentUser.phone);
 
-      const filtered = myOrders.filter(o => {
-        const matchesStatus = (status === 'all' || o.status === status);
-        const matchesSearch = o.items.some(i => i.name.toLowerCase().includes(search));
-        return matchesStatus && matchesSearch;
+      if (search) {
+        myOrders = myOrders.filter(o => 
+          o.id.toString().includes(search) || 
+          o.items.some(i => i.name.toLowerCase().includes(search))
+        );
+      }
+
+      if (status !== 'all') {
+        myOrders = myOrders.filter(o => o.status === status);
+      }
+
+      if (dateFrom) {
+        const fromDate = new Date(dateFrom);
+        fromDate.setHours(0,0,0,0);
+        myOrders = myOrders.filter(o => new Date(o.date) >= fromDate);
+      }
+      if (dateTo) {
+        const toDate = new Date(dateTo);
+        toDate.setHours(23,59,59,999);
+        myOrders = myOrders.filter(o => new Date(o.date) <= toDate);
+      }
+
+      myOrders.sort((a, b) => {
+        let valA, valB;
+        if (clientSortField === 'id') { valA = a.id; valB = b.id; }
+        else if (clientSortField === 'date') { valA = new Date(a.date); valB = new Date(b.date); }
+        else if (clientSortField === 'items') { valA = a.items.map(i=>i.name).join(', '); valB = b.items.map(i=>i.name).join(', '); }
+        else if (clientSortField === 'kg') { valA = a.items.reduce((acc,i)=>acc+i.qty,0); valB = b.items.reduce((acc,i)=>acc+i.qty,0); }
+        else if (clientSortField === 'status') { valA = a.status; valB = b.status; }
+        else if (clientSortField === 'total') { valA = a.total; valB = b.total; }
+
+        if (valA < valB) return clientSortAsc ? -1 : 1;
+        if (valA > valB) return clientSortAsc ? 1 : -1;
+        return 0;
       });
 
-      if (filtered.length === 0) {
-        container.innerHTML = `<p class="text-gray-400 text-center py-4 text-sm">No hay pedidos que coincidan con la búsqueda.</p>`;
+      if (myOrders.length === 0) {
+        container.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-gray-400">No se encontraron compras con los filtros seleccionados.</td></tr>`;
         return;
       }
 
       container.innerHTML = '';
-      [...filtered].reverse().forEach(o => {
+      myOrders.forEach(o => {
         const dateStr = new Date(o.date).toLocaleString('es-AR');
+        const prodNames = o.items.map(i => `${i.qty}kg ${i.name}`).join(', ');
+        const totalKg = o.items.reduce((acc, i) => acc + i.qty, 0).toFixed(1);
+
         container.innerHTML += `
-          <div class="border rounded-lg p-3 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 hover:bg-gray-50">
-            <div>
-              <div class="flex items-center space-x-2">
-                <span class="font-bold text-sm text-gray-800">Pedido #${o.id.toString().slice(-4)}</span>
-                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-200">${o.status}</span>
-              </div>
-              <p class="text-xs text-gray-500">${dateStr} | ${o.items.length} productos (${o.items.reduce((a,i)=>a+i.qty,0)} kg)</p>
-            </div>
-            <div class="flex items-center space-x-2 w-full md:w-auto justify-end">
-              <span class="font-extrabold text-sm text-red-700 mr-2">$${o.total.toLocaleString()}</span>
-              <button onclick="openOrderDetail(${o.id})" class="bg-blue-600 text-white text-xs px-3 py-1.5 rounded font-bold">Ver Detalle</button>
-              <button onclick="repeatOrder(${o.id})" class="bg-green-600 text-white text-xs px-3 py-1.5 rounded font-bold flex items-center space-x-1">
-                <i class="fa-solid fa-rotate-left"></i> <span>Repetir</span>
-              </button>
-            </div>
-          </div>
+          <tr class="hover:bg-gray-50 border-b">
+            <td class="p-3 font-bold text-gray-700">#${o.id.toString().slice(-4)}</td>
+            <td class="p-3 text-gray-500">${dateStr}</td>
+            <td class="p-3 max-w-xs truncate" title="${prodNames}">${prodNames}</td>
+            <td class="p-3 text-center font-bold">${totalKg} kg</td>
+            <td class="p-3"><span class="px-2 py-0.5 rounded bg-gray-200 font-bold">${o.status}</span></td>
+            <td class="p-3 text-right font-extrabold text-red-700">$${o.total.toLocaleString()}</td>
+            <td class="p-3 text-center space-x-1">
+              <button onclick="openOrderDetail(${o.id})" class="bg-blue-600 hover:bg-blue-700 text-white text-[11px] px-2 py-1 rounded font-bold">Ver</button>
+              <button onclick="repeatOrder(${o.id})" class="bg-green-600 hover:bg-green-700 text-white text-[11px] px-2 py-1 rounded font-bold"><i class="fa-solid fa-rotate-left"></i> Repetir</button>
+            </td>
+          </tr>
         `;
       });
     }
@@ -868,7 +1231,7 @@
       document.getElementById('mod-detail-body').innerHTML = `
         <div class="bg-gray-50 p-3 rounded-lg border text-xs space-y-1">
           <p><strong>Cliente:</strong> ${o.user.name} (${o.user.phone})</p>
-          <p><strong>Tipo de Entrega:</strong> ${o.type === 'delivery' ? 'Envío a Domicilio' : 'Retiro en Local'}</p>
+          <p><strong>Tipo de Entrega:</strong> ${o.type}</p>
           <p><strong>Dirección:</strong> ${o.address}</p>
           <p><strong>Estado Actual:</strong> <span class="font-bold text-red-700">${o.status}</span></p>
           <p><strong>Fecha:</strong> ${new Date(o.date).toLocaleString('es-AR')}</p>
@@ -958,102 +1321,232 @@
       });
     }
 
-    // ==================== PANEL DUEÑO: PEDIDOS ====================
-    function renderOrdersAdmin() {
-      const container = document.getElementById('admin-orders-list');
-      const search = document.getElementById('admin-orders-search').value.toLowerCase();
-      const statusFilter = document.getElementById('admin-orders-status-filter').value;
+    // ==================== PANEL DUEÑO: GESTIÓN DE PEDIDOS Y NOTIFICACIÓN POR ESTADO ====================
+    function toggleAdminSearchPanel() {
+      const panel = document.getElementById('admin-search-panel');
+      panel.classList.toggle('hidden');
+    }
 
-      const filtered = orders.filter(o => {
-        const matchesStatus = (statusFilter === 'all' || o.status === statusFilter);
-        const matchesSearch = o.user.name.toLowerCase().includes(search) || 
-                              o.user.phone.includes(search) || 
-                              o.id.toString().includes(search) ||
-                              o.address.toLowerCase().includes(search);
-        return matchesStatus && matchesSearch;
+    function clearAdminOrderFilters() {
+      document.getElementById('admin-f-client').value = '';
+      document.getElementById('admin-f-product').value = '';
+      document.getElementById('admin-f-address').value = '';
+      document.getElementById('admin-f-whatsapp').value = '';
+      document.getElementById('admin-f-type').value = 'all';
+      document.getElementById('admin-f-date-from').value = '';
+      document.getElementById('admin-f-date-to').value = '';
+      document.getElementById('admin-f-min-total').value = '';
+      document.getElementById('admin-orders-status-filter').value = 'all';
+      renderOrdersAdmin();
+    }
+
+    function sortAdminOrders(field) {
+      if (adminOrderSortField === field) {
+        adminOrderSortAsc = !adminOrderSortAsc;
+      } else {
+        adminOrderSortField = field;
+        adminOrderSortAsc = true;
+      }
+      renderOrdersAdmin();
+    }
+
+    function renderOrdersAdmin() {
+      const container = document.getElementById('admin-orders-tbody');
+      
+      const fClient = document.getElementById('admin-f-client').value.toLowerCase();
+      const fProduct = document.getElementById('admin-f-product').value.toLowerCase();
+      const fAddress = document.getElementById('admin-f-address').value.toLowerCase();
+      const fWhatsapp = document.getElementById('admin-f-whatsapp').value.trim();
+      const fType = document.getElementById('admin-f-type').value;
+      const fDateFrom = document.getElementById('admin-f-date-from').value;
+      const fDateTo = document.getElementById('admin-f-date-to').value;
+      const fMinTotalInput = document.getElementById('admin-f-min-total').value;
+      const fMinTotal = fMinTotalInput !== "" ? parseFloat(fMinTotalInput) : null;
+      const fStatus = document.getElementById('admin-orders-status-filter').value;
+
+      let filtered = orders.filter(o => {
+        if (fClient && !o.user.name.toLowerCase().includes(fClient)) return false;
+        if (fProduct && !o.items.some(i => i.name.toLowerCase().includes(fProduct))) return false;
+        if (fAddress && !o.address.toLowerCase().includes(fAddress)) return false;
+        if (fWhatsapp && !o.user.phone.includes(fWhatsapp)) return false;
+        if (fType !== 'all' && o.typeId !== fType && o.type !== fType) return false;
+        if (fStatus !== 'all' && o.status !== fStatus) return false;
+        if (fMinTotal !== null && !isNaN(fMinTotal) && o.total < fMinTotal) return false;
+
+        if (fDateFrom) {
+          const fromDate = new Date(fDateFrom);
+          fromDate.setHours(0,0,0,0);
+          if (new Date(o.date) < fromDate) return false;
+        }
+        if (fDateTo) {
+          const toDate = new Date(fDateTo);
+          toDate.setHours(23,59,59,999);
+          if (new Date(o.date) > toDate) return false;
+        }
+
+        return true;
+      });
+
+      filtered.sort((a, b) => {
+        let valA, valB;
+        if (adminOrderSortField === 'id') { valA = a.id; valB = b.id; }
+        else if (adminOrderSortField === 'date') { valA = new Date(a.date); valB = new Date(b.date); }
+        else if (adminOrderSortField === 'client') { valA = a.user.name.toLowerCase(); valB = b.user.name.toLowerCase(); }
+        else if (adminOrderSortField === 'items') { valA = a.items.map(i=>i.name).join(', '); valB = b.items.map(i=>i.name).join(', '); }
+        else if (adminOrderSortField === 'type') { valA = a.type; valB = b.type; }
+        else if (adminOrderSortField === 'status') { valA = a.status; valB = b.status; }
+        else if (adminOrderSortField === 'total') { valA = a.total; valB = b.total; }
+
+        if (valA < valB) return adminOrderSortAsc ? -1 : 1;
+        if (valA > valB) return adminOrderSortAsc ? 1 : -1;
+        return 0;
       });
 
       if (filtered.length === 0) {
-        container.innerHTML = `<p class="text-gray-500 col-span-3 text-center py-8">No hay pedidos que coincidan con los filtros.</p>`;
+        container.innerHTML = `<tr><td colspan="8" class="text-gray-400 text-center py-8">No hay pedidos que coincidan con los filtros seleccionados.</td></tr>`;
         return;
       }
 
       container.innerHTML = '';
-      [...filtered].reverse().forEach(o => {
+      filtered.forEach(o => {
+        const dateStr = new Date(o.date).toLocaleString('es-AR');
+        const prodNames = o.items.map(i => `${i.qty}kg ${i.name}`).join(', ');
+
         let statusOptions = orderStatuses.map(s => 
           `<option value="${s.id}" ${o.status === s.id ? 'selected' : ''}>${s.name}</option>`
         ).join('');
 
         container.innerHTML += `
-          <div class="bg-white p-4 rounded-xl shadow-sm border space-y-3">
-            <div class="flex justify-between items-start border-b pb-2">
-              <div>
-                <span class="text-xs text-gray-400">#${o.id.toString().slice(-4)}</span>
-                <h4 class="font-bold text-sm text-gray-800">${o.user.name}</h4>
-                <p class="text-xs text-gray-500"><i class="fa-solid fa-phone text-[10px]"></i> ${o.user.phone}</p>
-              </div>
-              <button onclick="openOrderDetail(${o.id})" class="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded font-bold">Ver Detalle</button>
-            </div>
-
-            <div class="text-xs text-gray-600 space-y-1">
-              <p><strong>Tipo:</strong> ${o.type === 'delivery' ? '🚚 Envío a Domicilio' : '🛍️ Take Away'}</p>
-              ${o.type === 'delivery' ? `<p><strong>Dir:</strong> ${o.address}</p>` : ''}
-              <p class="text-sm font-extrabold text-gray-900 border-t pt-1">Total: $${o.total.toLocaleString()}</p>
-            </div>
-
-            <div class="border-t pt-2">
-              <label class="block text-[10px] font-bold text-gray-500 mb-1">Cambiar Estado del Pedido:</label>
-              <select onchange="updateOrderStatus(${o.id}, this.value)" class="w-full text-xs border rounded p-1.5 font-bold bg-gray-50">
+          <tr class="hover:bg-gray-50 border-b">
+            <td class="p-3 font-bold text-gray-700">#${o.id.toString().slice(-4)}</td>
+            <td class="p-3 text-gray-500 whitespace-nowrap">${dateStr}</td>
+            <td class="p-3 font-semibold text-gray-800">
+              ${o.user.name}
+              <span class="block text-[10px] text-gray-400 font-normal"><i class="fa-brands fa-whatsapp text-green-600"></i> ${o.user.phone}</span>
+            </td>
+            <td class="p-3 max-w-xs truncate" title="${prodNames}">${prodNames}</td>
+            <td class="p-3"><span class="px-2 py-0.5 rounded bg-amber-100 text-amber-900 font-bold text-[10px]">${o.type}</span></td>
+            <td class="p-3">
+              <select onchange="updateOrderStatus(${o.id}, this.value)" class="text-xs border rounded p-1 font-bold bg-white">
                 ${statusOptions}
               </select>
-            </div>
-          </div>
+            </td>
+            <td class="p-3 text-right font-extrabold text-red-700">$${o.total.toLocaleString()}</td>
+            <td class="p-3 text-center space-x-1">
+              <button onclick="openOrderDetail(${o.id})" class="bg-blue-600 hover:bg-blue-700 text-white text-[11px] px-2 py-1 rounded font-bold">Detalle</button>
+              <button onclick="sendStatusWhatsAppMessage(${o.id}, '${o.status}')" class="bg-green-600 hover:bg-green-700 text-white text-[11px] px-2 py-1 rounded font-bold" title="Enviar WhatsApp con mensaje del Estado Actual"><i class="fa-brands fa-whatsapp"></i> Avisar</button>
+            </td>
+          </tr>
         `;
       });
     }
 
     function updateOrderStatus(orderId, newStatus) {
       const order = orders.find(o => o.id === orderId);
-      if (order) {
-        order.status = newStatus;
-        saveData();
-        renderOrdersAdmin();
+      if (!order) return;
+
+      const previousStatus = order.status;
+      order.status = newStatus;
+      saveData();
+      renderOrdersAdmin();
+
+      // Enviar mensaje de WhatsApp configurado para este estado si cambió
+      if (previousStatus !== newStatus) {
+        sendStatusWhatsAppMessage(orderId, newStatus);
       }
     }
 
-    // ==================== PANEL DUEÑO: PRODUCTOS (CRUD) ====================
+    function sendStatusWhatsAppMessage(orderId, statusId) {
+      const order = orders.find(o => o.id === orderId);
+      if (!order) return;
+
+      const stObj = orderStatuses.find(s => s.id === statusId || s.name === statusId);
+      let template = stObj && stObj.messageTemplate ? stObj.messageTemplate : "¡Hola {cliente}! El estado de tu pedido #{pedido} es: " + statusId + "\n\nDetalle:\n{productos}\n\nTotal: {total}";
+
+      const orderShortId = order.id.toString().slice(-4);
+      const isDelivery = order.requiresAddress || order.type.toLowerCase().includes('delivery') || order.type.toLowerCase().includes('envío') || order.type.toLowerCase().includes('envio');
+      const addressText = isDelivery ? order.address : storeSettings.address;
+
+      // Armar la variable {productos} detallada con peso y monto subtotal por ítem
+      const productsFormattedText = order.items.map(i => {
+        const subtotal = i.price * i.qty;
+        return `- ${i.qty}kg x ${i.name} ($${subtotal.toLocaleString()})`;
+      }).join('\n');
+
+      // Reemplazo de variables
+      let message = template
+        .replace(/\{cliente\}/g, order.user.name)
+        .replace(/\{pedido\}/g, orderShortId)
+        .replace(/\{tipo\}/g, order.type)
+        .replace(/\{direccion\}/g, addressText)
+        .replace(/\{total\}/g, `$${order.total.toLocaleString()}`)
+        .replace(/\{productos\}/g, productsFormattedText);
+
+      const cleanPhone = order.user.phone.replace(/[^0-9]/g, '');
+      
+      alert(`Se abrirá WhatsApp con el mensaje configurado para el estado "${statusId}".`);
+      window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, '_blank');
+    }
+
+    // ==================== PANEL DUEÑO: PRODUCTOS ====================
+    function sortAdminProducts(field) {
+      if (adminProdSortField === field) {
+        adminProdSortAsc = !adminProdSortAsc;
+      } else {
+        adminProdSortField = field;
+        adminProdSortAsc = true;
+      }
+      renderAdminProductsTable();
+    }
+
     function renderAdminProductsTable() {
-      const container = document.getElementById('admin-products-table');
-      let rows = products.map(p => {
+      const container = document.getElementById('admin-products-tbody');
+      const search = document.getElementById('admin-prod-search').value.toLowerCase();
+      const catFilter = document.getElementById('admin-prod-category-filter').value;
+
+      let filtered = products.filter(p => {
+        const matchesCat = (catFilter === 'all' || p.category === catFilter);
+        const matchesSearch = p.name.toLowerCase().includes(search);
+        return matchesCat && matchesSearch;
+      });
+
+      filtered.sort((a, b) => {
+        let valA, valB;
+        if (adminProdSortField === 'img') { valA = a.img; valB = b.img; }
+        else if (adminProdSortField === 'name') { valA = a.name.toLowerCase(); valB = b.name.toLowerCase(); }
+        else if (adminProdSortField === 'category') { valA = a.category.toLowerCase(); valB = b.category.toLowerCase(); }
+        else if (adminProdSortField === 'price') { valA = a.price; valB = b.price; }
+
+        if (valA < valB) return adminProdSortAsc ? -1 : 1;
+        if (valA > valB) return adminProdSortAsc ? 1 : -1;
+        return 0;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400 text-xs">No se encontraron productos en el catálogo.</td></tr>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(p => {
         const catObj = categories.find(c => c.id === p.category) || { name: p.category };
+        const outOfStock = isProductOutOfStock(p);
+
         return `
-          <tr class="border-b text-xs">
+          <tr class="border-b text-xs hover:bg-gray-50">
             <td class="p-3"><img src="${p.img}" class="w-10 h-10 object-cover rounded"></td>
-            <td class="p-3 font-bold">${p.name}</td>
+            <td class="p-3 font-bold">
+              ${p.name} 
+              ${outOfStock ? '<span class="text-[10px] bg-red-600 text-white font-extrabold px-1.5 py-0.5 rounded ml-1 shadow-sm">AGOTADO</span>' : ''}
+            </td>
             <td class="p-3">${catObj.name}</td>
             <td class="p-3 font-bold text-red-700">$${p.price.toLocaleString()} /kg</td>
             <td class="p-3 space-x-2">
-              <button onclick="editProduct(${p.id})" class="text-blue-600 font-bold">Editar</button>
-              <button onclick="deleteProduct(${p.id})" class="text-red-600 font-bold">Eliminar</button>
+              <button onclick="editProduct(${p.id})" class="text-blue-600 font-bold hover:underline">Editar</button>
+              <button onclick="deleteProduct(${p.id})" class="text-red-600 font-bold hover:underline">Eliminar</button>
             </td>
           </tr>
         `;
       }).join('');
-
-      container.innerHTML = `
-        <table class="w-full text-left border-collapse">
-          <thead>
-            <tr class="bg-gray-50 border-b text-xs font-bold text-gray-500 uppercase">
-              <th class="p-3">Imagen</th>
-              <th class="p-3">Nombre</th>
-              <th class="p-3">Categoría</th>
-              <th class="p-3">Precio por Kg</th>
-              <th class="p-3">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
-      `;
     }
 
     function openProductModal() {
@@ -1076,6 +1569,8 @@
       document.getElementById('prod-name').value = p.name;
       document.getElementById('prod-category').value = p.category;
       document.getElementById('prod-price').value = p.price;
+      document.getElementById('prod-stock').value = p.stockKg !== undefined ? p.stockKg : 50;
+      document.getElementById('prod-min-stock').value = p.minStockKg !== undefined ? p.minStockKg : 10;
       document.getElementById('prod-img').value = p.img;
       document.getElementById('product-modal-title').textContent = "Editar Producto";
       document.getElementById('modal-product').classList.remove('hidden');
@@ -1088,19 +1583,28 @@
       const name = document.getElementById('prod-name').value;
       const category = document.getElementById('prod-category').value;
       const price = parseFloat(document.getElementById('prod-price').value);
+      const stockKg = parseFloat(document.getElementById('prod-stock').value);
+      const minStockKg = parseFloat(document.getElementById('prod-min-stock').value);
       const img = document.getElementById('prod-img').value;
 
       if (id) {
         const p = products.find(prod => prod.id == id);
-        p.name = name; p.category = category; p.price = price; p.img = img;
+        p.name = name; 
+        p.category = category; 
+        p.price = price; 
+        p.stockKg = stockKg; 
+        p.minStockKg = minStockKg; 
+        p.img = img;
+        if (stockKg > 0) p.isOutOfStock = false;
       } else {
-        products.push({ id: Date.now(), name, category, price, img });
+        products.push({ id: Date.now(), name, category, price, stockKg, minStockKg, isOutOfStock: stockKg <= 0, img });
       }
 
       saveData();
       closeProductModal();
       renderProducts();
       renderAdminProductsTable();
+      renderAdminStockTable();
     }
 
     function deleteProduct(id) {
@@ -1109,189 +1613,108 @@
         saveData();
         renderProducts();
         renderAdminProductsTable();
+        renderAdminStockTable();
       }
     }
 
-    // ==================== PANEL DUEÑO: ESTADÍSTICAS ====================
-    function renderAdminStats() {
-      const period = document.getElementById('stats-period').value;
-      let filteredOrders = orders;
+    // ==================== PANEL DUEÑO: CONTROL DE STOCK ====================
+    function renderAdminStockTable() {
+      const container = document.getElementById('admin-stock-tbody');
+      container.innerHTML = products.map(p => {
+        const currentStock = p.stockKg !== undefined ? parseFloat(p.stockKg) : 0;
+        const minStock = p.minStockKg !== undefined ? parseFloat(p.minStockKg) : 5;
+        const isOut = isProductOutOfStock(p);
+        const isLow = currentStock <= minStock && !isOut;
 
-      if (period === 'month') {
-        const now = new Date();
-        filteredOrders = orders.filter(o => {
-          const d = new Date(o.date);
-          return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-        });
-      }
+        let badge = `<span class="bg-green-100 text-green-800 font-bold px-2 py-0.5 rounded text-[10px]">EN STOCK</span>`;
+        if (isOut) badge = `<span class="bg-red-100 text-red-800 font-bold px-2 py-0.5 rounded text-[10px]">AGOTADO</span>`;
+        else if (isLow) badge = `<span class="bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded text-[10px]">⚠️ CRÍTICO</span>`;
 
-      const totalSales = filteredOrders.reduce((acc, o) => acc + o.total, 0);
-      document.getElementById('astat-total-sales').textContent = `$${totalSales.toLocaleString()}`;
-      document.getElementById('astat-total-orders').textContent = filteredOrders.length;
-      document.getElementById('astat-total-clients').textContent = users.length;
-
-      const prodMap = {};
-      filteredOrders.forEach(o => {
-        o.items.forEach(i => {
-          prodMap[i.name] = (prodMap[i.name] || 0) + (i.price * i.qty);
-        });
-      });
-
-      const clientMap = {};
-      filteredOrders.forEach(o => {
-        clientMap[o.user.name] = (clientMap[o.user.name] || 0) + o.total;
-      });
-
-      if (chartAdminProd) chartAdminProd.destroy();
-      chartAdminProd = new Chart(document.getElementById('chartAdminProducts'), {
-        type: 'bar',
-        data: {
-          labels: Object.keys(prodMap),
-          datasets: [{ label: 'Ventas ($)', data: Object.values(prodMap), backgroundColor: '#dc2626' }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-      });
-
-      if (chartAdminClient) chartAdminClient.destroy();
-      chartAdminClient = new Chart(document.getElementById('chartAdminClients'), {
-        type: 'pie',
-        data: {
-          labels: Object.keys(clientMap),
-          datasets: [{ data: Object.values(clientMap), backgroundColor: ['#ef4444', '#f59e0b', '#10b981', '#6366f1', '#8b5cf6'] }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-      });
+        return `
+          <tr class="border-b hover:bg-gray-50">
+            <td class="p-3 font-bold text-gray-800 flex items-center space-x-2">
+              <img src="${p.img}" class="w-8 h-8 rounded object-cover">
+              <span>${p.name}</span>
+            </td>
+            <td class="p-3 text-center">
+              <input type="number" step="0.5" value="${currentStock}" onchange="updateStockKg(${p.id}, this.value)" class="w-20 border rounded p-1 text-center font-bold"> kg
+            </td>
+            <td class="p-3 text-center font-semibold text-gray-500">${minStock} kg</td>
+            <td class="p-3 text-center">${badge}</td>
+            <td class="p-3 text-center">
+              <button onclick="toggleOutOfStockFlag(${p.id})" class="text-xs px-3 py-1 rounded font-bold ${isOut ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-red-600 text-white hover:bg-red-700'} shadow">
+                ${isOut ? 'Marcar En Stock' : 'Marcar Agotado'}
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
     }
 
-    // ==================== CAMPAÑAS DE WHATSAPP ====================
-    function populatePromoClientSelect() {
-      const select = document.getElementById('promo-client-select');
-      select.innerHTML = '';
-      if (users.length === 0) {
-        select.innerHTML = '<option value="">No hay clientes registrados</option>';
+    function updateStockKg(prodId, val) {
+      const prod = products.find(p => p.id === prodId);
+      if (prod) {
+        const valNum = parseFloat(val) || 0;
+        prod.stockKg = valNum;
+        if (valNum <= 0) {
+          prod.isOutOfStock = true;
+        } else {
+          prod.isOutOfStock = false;
+        }
+        saveData();
+        renderProducts();
+        renderAdminStockTable();
+        renderAdminProductsTable();
+      }
+    }
+
+    function toggleOutOfStockFlag(prodId) {
+      const prod = products.find(p => p.id === prodId);
+      if (prod) {
+        prod.isOutOfStock = !prod.isOutOfStock;
+        if (prod.isOutOfStock && prod.stockKg > 0) {
+          // Opcional: mantener kg o poner en 0 si desea
+        } else if (!prod.isOutOfStock && prod.stockKg <= 0) {
+          prod.stockKg = 10; // Asigna stock básico si estaba en 0 kg al reactivar
+        }
+        saveData();
+        renderProducts();
+        renderAdminStockTable();
+        renderAdminProductsTable();
+      }
+    }
+
+    // ==================== PANEL DUEÑO: ABM CLIENTES ====================
+    function renderABMClients() {
+      const container = document.getElementById('abm-clients-tbody');
+      const search = document.getElementById('admin-client-search') ? document.getElementById('admin-client-search').value.toLowerCase() : '';
+
+      let filteredUsers = users.filter(u => 
+        u.name.toLowerCase().includes(search) || 
+        u.phone.includes(search) || 
+        u.address.toLowerCase().includes(search)
+      );
+
+      if (filteredUsers.length === 0) {
+        container.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400 text-xs">No se encontraron clientes registrados.</td></tr>`;
         return;
       }
-      users.forEach(u => {
-        select.innerHTML += `<option value="${u.phone}">${u.name} (${u.phone})</option>`;
-      });
-    }
 
-    function sendWhatsAppPromo() {
-      const phone = document.getElementById('promo-client-select').value;
-      const imgUrl = document.getElementById('promo-img-url').value;
-      const msg = document.getElementById('promo-msg').value;
-
-      if (!phone) return alert('Selecciona un cliente.');
-
-      const fullMessage = `${msg}\n\nMira la promo aquí: ${imgUrl}`;
-      const cleanPhone = phone.replace(/[^0-9]/g, '');
-      window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(fullMessage)}`, '_blank');
-    }
-
-    // ==================== PANEL DUEÑO: CONFIGURACIÓN & ABM GLOBAL ====================
-    function saveStoreSettings(e) {
-      e.preventDefault();
-      storeSettings.name = document.getElementById('cfg-name').value;
-      storeSettings.address = document.getElementById('cfg-address').value;
-      storeSettings.hours = document.getElementById('cfg-hours').value;
-      storeSettings.whatsapp = document.getElementById('cfg-whatsapp').value;
-
-      saveData();
-      applyStoreSettings();
-      alert('¡Configuración del negocio guardada exitosamente!');
-    }
-
-    // ABM Categorías
-    function renderABMCategories() {
-      const container = document.getElementById('abm-categories-list');
-      container.innerHTML = categories.map(c => `
-        <div class="py-2 flex justify-between items-center">
-          <span class="font-semibold">${c.name} <span class="text-gray-400 font-normal">(${c.id})</span></span>
-          <button onclick="deleteCategory('${c.id}')" class="text-red-600 font-bold hover:underline">Eliminar</button>
-        </div>
-      `).join('');
-    }
-
-    function addCategoryPrompt() {
-      const name = prompt('Ingrese el nombre de la nueva categoría:');
-      if (!name) return;
-      const id = name.toLowerCase().replace(/[^a-z0-9]/g, '');
-      if (categories.some(c => c.id === id)) return alert('Ya existe esa categoría.');
-
-      categories.push({ id, name });
-      saveData();
-      populateCategorySelects();
-      renderABMCategories();
-    }
-
-    function deleteCategory(id) {
-      if (confirm('¿Eliminar esta categoría?')) {
-        categories = categories.filter(c => c.id !== id);
-        saveData();
-        populateCategorySelects();
-        renderABMCategories();
-      }
-    }
-
-    // ABM Estados de Pedido
-    function renderABMStatuses() {
-      const container = document.getElementById('abm-statuses-list');
-      container.innerHTML = orderStatuses.map(s => `
-        <div class="py-2 flex justify-between items-center">
-          <span class="font-semibold">${s.name}</span>
-          <button onclick="deleteStatus('${s.id}')" class="text-red-600 font-bold hover:underline">Eliminar</button>
-        </div>
-      `).join('');
-    }
-
-    function addStatusPrompt() {
-      const name = prompt('Ingrese el nombre del nuevo estado:');
-      if (!name) return;
-      if (orderStatuses.some(s => s.name.toLowerCase() === name.toLowerCase())) return alert('Ya existe ese estado.');
-
-      orderStatuses.push({ id: name, name });
-      saveData();
-      populateStatusSelects();
-      renderABMStatuses();
-    }
-
-    function deleteStatus(id) {
-      if (confirm('¿Eliminar este estado?')) {
-        orderStatuses = orderStatuses.filter(s => s.id !== id);
-        saveData();
-        populateStatusSelects();
-        renderABMStatuses();
-      }
-    }
-
-    // ABM Clientes
-    function renderABMClients() {
-      const container = document.getElementById('abm-clients-table');
-      let rows = users.map(u => `
-        <tr class="border-b text-xs">
-          <td class="p-3 font-bold">${u.name}</td>
-          <td class="p-3">${u.phone}</td>
-          <td class="p-3">${u.address}</td>
-          <td class="p-3 space-x-2">
-            <button onclick="editClientAdmin(${u.id})" class="text-blue-600 font-bold">Editar</button>
-            <button onclick="deleteClientAdmin(${u.id})" class="text-red-600 font-bold">Eliminar</button>
-          </td>
-        </tr>
-      `).join('');
-
-      container.innerHTML = `
-        <table class="w-full text-left border-collapse">
-          <thead>
-            <tr class="bg-gray-50 border-b text-xs font-bold text-gray-500 uppercase">
-              <th class="p-3">Nombre</th>
-              <th class="p-3">WhatsApp</th>
-              <th class="p-3">Dirección</th>
-              <th class="p-3">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>${rows.length ? rows : '<tr><td colspan="4" class="p-3 text-center text-gray-400">No hay clientes registrados</td></tr>'}</tbody>
-        </table>
-      `;
+      container.innerHTML = filteredUsers.map(u => {
+        const clientOrdersCount = orders.filter(o => o.user.phone === u.phone).length;
+        return `
+          <tr class="border-b text-xs hover:bg-gray-50">
+            <td class="p-3 font-bold text-gray-800">${u.name}</td>
+            <td class="p-3 text-gray-600"><i class="fa-brands fa-whatsapp text-green-600 font-bold"></i> ${u.phone}</td>
+            <td class="p-3 text-gray-600">${u.address}</td>
+            <td class="p-3 text-center font-bold text-gray-700">${clientOrdersCount} pedidos</td>
+            <td class="p-3 space-x-2">
+              <button onclick="editClientAdmin(${u.id})" class="text-blue-600 font-bold hover:underline">Editar</button>
+              <button onclick="deleteClientAdmin(${u.id})" class="text-red-600 font-bold hover:underline">Eliminar</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
     }
 
     function openClientModal() {
@@ -1342,11 +1765,248 @@
     }
 
     function deleteClientAdmin(id) {
-      if (confirm('¿Eliminar este cliente?')) {
+      if (confirm('¿Eliminar este cliente de la base de datos?')) {
         users = users.filter(u => u.id !== id);
         saveData();
         renderABMClients();
         populatePromoClientSelect();
+      }
+    }
+
+    // ==================== PANEL DUEÑO: ESTADÍSTICAS ====================
+    function resetStatsDates() {
+      document.getElementById('stats-date-from').value = '';
+      document.getElementById('stats-date-to').value = '';
+      renderAdminStats();
+    }
+
+    function renderAdminStats() {
+      const dateFromVal = document.getElementById('stats-date-from').value;
+      const dateToVal = document.getElementById('stats-date-to').value;
+
+      let filteredOrders = orders;
+
+      if (dateFromVal) {
+        const fromDate = new Date(dateFromVal);
+        fromDate.setHours(0,0,0,0);
+        filteredOrders = filteredOrders.filter(o => new Date(o.date) >= fromDate);
+      }
+      if (dateToVal) {
+        const toDate = new Date(dateToVal);
+        toDate.setHours(23,59,59,999);
+        filteredOrders = filteredOrders.filter(o => new Date(o.date) <= toDate);
+      }
+
+      const totalSales = filteredOrders.reduce((acc, o) => acc + o.total, 0);
+      document.getElementById('astat-total-sales').textContent = `$${totalSales.toLocaleString()}`;
+      document.getElementById('astat-total-orders').textContent = filteredOrders.length;
+      document.getElementById('astat-total-clients').textContent = users.length;
+
+      const monthMap = {};
+      filteredOrders.forEach(o => {
+        const d = new Date(o.date);
+        const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+        monthMap[key] = (monthMap[key] || 0) + o.total;
+      });
+
+      const typeMap = {};
+      filteredOrders.forEach(o => {
+        typeMap[o.type] = (typeMap[o.type] || 0) + o.total;
+      });
+
+      const addressMap = {};
+      filteredOrders.forEach(o => {
+        const addrKey = o.address.trim() || 'Retiro en Local';
+        addressMap[addrKey] = (addressMap[addrKey] || 0) + o.total;
+      });
+
+      if (chartAdminMonth) chartAdminMonth.destroy();
+      chartAdminMonth = new Chart(document.getElementById('chartAdminMonth'), {
+        type: 'line',
+        data: {
+          labels: Object.keys(monthMap),
+          datasets: [{ label: 'Ventas por Mes ($)', data: Object.values(monthMap), borderColor: '#dc2626', backgroundColor: '#fca5a5', fill: true }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      if (chartAdminType) chartAdminType.destroy();
+      chartAdminType = new Chart(document.getElementById('chartAdminType'), {
+        type: 'pie',
+        data: {
+          labels: Object.keys(typeMap),
+          datasets: [{ data: Object.values(typeMap), backgroundColor: ['#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'] }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      if (chartAdminAddress) chartAdminAddress.destroy();
+      chartAdminAddress = new Chart(document.getElementById('chartAdminAddress'), {
+        type: 'bar',
+        data: {
+          labels: Object.keys(addressMap),
+          datasets: [{ label: 'Ventas por Domicilio ($)', data: Object.values(addressMap), backgroundColor: '#1e293b' }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+    }
+
+    // ==================== CAMPAÑAS DE WHATSAPP ====================
+    function populatePromoClientSelect() {
+      const select = document.getElementById('promo-client-select');
+      select.innerHTML = '<option value="ALL_CLIENTS">📢 TODOS LOS CLIENTES (Envío Masivo)</option>';
+      users.forEach(u => {
+        select.innerHTML += `<option value="${u.phone}">${u.name} (${u.phone})</option>`;
+      });
+    }
+
+    function sendWhatsAppPromo() {
+      const target = document.getElementById('promo-client-select').value;
+      const imgUrl = document.getElementById('promo-img-url').value;
+      const msg = document.getElementById('promo-msg').value;
+
+      if (users.length === 0) return alert('No hay clientes registrados en la base de datos.');
+
+      const fullMessage = `${msg}\n\nMira la promo aquí: ${imgUrl}`;
+
+      if (target === 'ALL_CLIENTS') {
+        alert(`Se abrirán las pestañas de WhatsApp para enviar la promo a los ${users.length} clientes registrados.`);
+        users.forEach(u => {
+          const cleanPhone = u.phone.replace(/[^0-9]/g, '');
+          window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(fullMessage)}`, '_blank');
+        });
+      } else {
+        const cleanPhone = target.replace(/[^0-9]/g, '');
+        window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(fullMessage)}`, '_blank');
+      }
+    }
+
+    // ==================== PANEL DUEÑO: CONFIGURACIÓN & ABM GLOBAL ====================
+    function saveStoreSettings(e) {
+      e.preventDefault();
+      storeSettings.name = document.getElementById('cfg-name').value;
+      storeSettings.address = document.getElementById('cfg-address').value;
+      storeSettings.hours = document.getElementById('cfg-hours').value;
+      storeSettings.whatsapp = document.getElementById('cfg-whatsapp').value;
+
+      saveData();
+      applyStoreSettings();
+      alert('¡Configuración del negocio guardada exitosamente!');
+    }
+
+    // ABM Tipos de Entrega
+    function renderABMDeliveryTypes() {
+      const container = document.getElementById('abm-delivery-types-list');
+      container.innerHTML = deliveryTypes.map(dt => `
+        <div class="py-2 flex justify-between items-center">
+          <div>
+            <span class="font-semibold text-gray-800">${dt.name}</span>
+            <span class="block text-[10px] text-gray-400">${dt.requiresAddress ? 'Pide Dirección' : 'Sin Dirección (Retiro)'}</span>
+          </div>
+          <button onclick="deleteDeliveryType('${dt.id}')" class="text-red-600 font-bold hover:underline text-xs">Eliminar</button>
+        </div>
+      `).join('');
+    }
+
+    function addDeliveryTypePrompt() {
+      const name = prompt('Ingrese el nombre del Tipo de Entrega (ej. Envío Exprés, Moto Local):');
+      if (!name) return;
+      const reqAddr = confirm('¿Este método de entrega requiere pedir dirección al cliente?');
+      const id = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+      if (deliveryTypes.some(dt => dt.id === id)) return alert('Ya existe ese tipo de entrega.');
+
+      deliveryTypes.push({ id, name, requiresAddress: reqAddr });
+      saveData();
+      populateDeliveryTypeSelects();
+      renderABMDeliveryTypes();
+    }
+
+    function deleteDeliveryType(id) {
+      if (deliveryTypes.length <= 1) return alert('Debe existir al menos un tipo de entrega.');
+      if (confirm('¿Eliminar este tipo de entrega?')) {
+        deliveryTypes = deliveryTypes.filter(dt => dt.id !== id);
+        saveData();
+        populateDeliveryTypeSelects();
+        renderABMDeliveryTypes();
+      }
+    }
+
+    // ABM Categorías
+    function renderABMCategories() {
+      const container = document.getElementById('abm-categories-list');
+      container.innerHTML = categories.map(c => `
+        <div class="py-2 flex justify-between items-center">
+          <span class="font-semibold">${c.name} <span class="text-gray-400 font-normal">(${c.id})</span></span>
+          <button onclick="deleteCategory('${c.id}')" class="text-red-600 font-bold hover:underline text-xs">Eliminar</button>
+        </div>
+      `).join('');
+    }
+
+    function addCategoryPrompt() {
+      const name = prompt('Ingrese el nombre de la nueva categoría:');
+      if (!name) return;
+      const id = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (categories.some(c => c.id === id)) return alert('Ya existe esa categoría.');
+
+      categories.push({ id, name });
+      saveData();
+      populateCategorySelects();
+      renderABMCategories();
+    }
+
+    function deleteCategory(id) {
+      if (confirm('¿Eliminar esta categoría?')) {
+        categories = categories.filter(c => c.id !== id);
+        saveData();
+        populateCategorySelects();
+        renderABMCategories();
+      }
+    }
+
+    // ABM Estados de Pedido con Mensajes de WhatsApp
+    function renderABMStatuses() {
+      const container = document.getElementById('abm-statuses-container');
+      container.innerHTML = orderStatuses.map((s, idx) => `
+        <div class="border rounded-xl p-4 bg-gray-50 space-y-2">
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-gray-800 text-sm"><i class="fa-solid fa-tag text-red-600 mr-2"></i>${s.name}</span>
+            <button onclick="deleteStatus('${s.id}')" class="text-red-600 font-bold hover:underline text-xs">Eliminar Estado</button>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-gray-600 mb-1">Mensaje de WhatsApp para este estado:</label>
+            <textarea id="status-msg-${idx}" onchange="updateStatusMessageTemplate('${s.id}', this.value)" class="w-full border rounded-lg p-2 text-xs bg-white" rows="3" placeholder="Plantilla del mensaje...">${s.messageTemplate || ''}</textarea>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateStatusMessageTemplate(statusId, newTemplate) {
+      const st = orderStatuses.find(s => s.id === statusId);
+      if (st) {
+        st.messageTemplate = newTemplate;
+        saveData();
+      }
+    }
+
+    function addStatusPrompt() {
+      const name = prompt('Ingrese el nombre del nuevo estado:');
+      if (!name) return;
+      if (orderStatuses.some(s => s.name.toLowerCase() === name.toLowerCase())) return alert('Ya existe ese estado.');
+
+      const defaultMsg = `¡Hola {cliente}! El estado de tu pedido #{pedido} es ahora: ${name}.\n\nDetalle del Pedido:\n{productos}\n\nTotal: {total}`;
+      orderStatuses.push({ id: name, name, messageTemplate: defaultMsg });
+      saveData();
+      populateStatusSelects();
+      renderABMStatuses();
+    }
+
+    function deleteStatus(id) {
+      if (confirm('¿Eliminar este estado?')) {
+        orderStatuses = orderStatuses.filter(s => s.id !== id);
+        saveData();
+        populateStatusSelects();
+        renderABMStatuses();
       }
     }
   </script>

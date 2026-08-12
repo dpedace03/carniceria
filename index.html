@@ -34,37 +34,46 @@
       z-index: 10;
       text-transform: uppercase;
     }
+
+    /* Animación de rebote para el botón flotante del carrito */
+    @keyframes cartBounce {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.18); }
+    }
+    .animate-cart-bounce {
+      animation: cartBounce 0.35s ease-in-out;
+    }
   </style>
 </head>
-<body class="bg-gray-100 text-gray-800 font-sans min-h-screen flex flex-col">
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen flex flex-col pb-20 md:pb-0">
 
-  <!-- HEADER -->
-  <header class="bg-red-800 text-white shadow-lg sticky top-0 z-50">
+  <!-- HEADER RESPONSIVO -->
+  <header class="bg-red-800 text-white shadow-lg sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
       <div class="flex items-center space-x-2 cursor-pointer" onclick="switchMainView('client')">
         <i class="fa-solid fa-drumstick-bite text-2xl text-amber-400"></i>
-        <span class="text-xl font-extrabold tracking-wide" id="header-store-name">El Corte Supremo</span>
+        <span class="text-lg md:text-xl font-extrabold tracking-wide" id="header-store-name">El Corte Supremo</span>
       </div>
       
-      <nav class="flex items-center space-x-3">
-        <button id="nav-client-btn" onclick="switchMainView('client')" class="hover:text-amber-300 font-semibold px-2 py-1 text-sm">
+      <nav class="flex items-center space-x-2 md:space-x-3">
+        <button id="nav-client-btn" onclick="switchMainView('client')" class="hover:text-amber-300 font-semibold px-2 py-1 text-xs md:text-sm">
           <i class="fa-solid fa-store mr-1"></i> Tienda
         </button>
-        <button id="nav-client-stats-btn" onclick="switchMainView('client-stats')" class="hidden hover:text-amber-300 font-semibold px-2 py-1 text-sm">
+        <button id="nav-client-stats-btn" onclick="switchMainView('client-stats')" class="hidden hover:text-amber-300 font-semibold px-2 py-1 text-xs md:text-sm">
           <i class="fa-solid fa-receipt mr-1"></i> Mis Compras
         </button>
-        <button id="nav-admin-btn" onclick="switchMainView('admin')" class="bg-red-950 hover:bg-black text-amber-400 font-semibold px-3 py-1.5 rounded-lg border border-amber-400/30 text-xs md:text-sm">
+        <button id="nav-admin-btn" onclick="switchMainView('admin')" class="bg-red-950 hover:bg-black text-amber-400 font-semibold px-2.5 py-1.5 rounded-lg border border-amber-400/30 text-xs md:text-sm">
           <i class="fa-solid fa-user-shield mr-1"></i> Panel Dueño
         </button>
-        <div id="user-auth-badge" class="text-xs bg-red-900 px-2 py-1 rounded"></div>
+        <div id="user-auth-badge" class="hidden sm:block text-xs bg-red-900 px-2 py-1 rounded"></div>
       </nav>
     </div>
   </header>
 
   <!-- BANNER DATOS DEL NEGOCIO -->
-  <section class="bg-amber-100 border-b border-amber-200 text-amber-900 text-xs py-2 px-4">
+  <section class="bg-amber-100 border-b border-amber-200 text-amber-900 text-[11px] md:text-xs py-2 px-4">
     <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
-      <div class="flex flex-wrap items-center gap-4">
+      <div class="flex flex-wrap items-center gap-3">
         <span><i class="fa-solid fa-location-dot text-red-700 mr-1"></i><strong id="info-address">Av. San Martín 1450</strong></span>
         <span><i class="fa-solid fa-clock text-amber-700 mr-1"></i><span id="info-hours">Lun a Sáb 08:30 - 20:30 hs</span></span>
       </div>
@@ -75,18 +84,18 @@
   </section>
 
   <!-- CONTENIDO PRINCIPAL -->
-  <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full">
+  <main class="max-w-7xl mx-auto px-4 py-4 md:py-6 flex-grow w-full">
 
     <!-- ==================== VISTA CLIENTE: TIENDA ==================== -->
-    <section id="view-client" class="space-y-6">
+    <section id="view-client" class="space-y-4 md:space-y-6">
       
       <!-- Card Registro / Perfil -->
-      <div id="client-auth-card" class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div id="client-auth-card" class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row justify-between items-center gap-3">
         <div>
-          <h2 class="text-lg font-bold text-gray-800" id="welcome-text">¡Bienvenido!</h2>
-          <p class="text-sm text-gray-500" id="welcome-sub">Regístrate para realizar pedidos de 0.5kg en adelante y ver tu historial de compras.</p>
+          <h2 class="text-base md:text-lg font-bold text-gray-800" id="welcome-text">¡Bienvenido!</h2>
+          <p class="text-xs md:text-sm text-gray-500" id="welcome-sub">Regístrate para realizar pedidos de 0.5kg en adelante y ver tu historial de compras.</p>
         </div>
-        <button id="auth-action-btn" onclick="openAuthModal()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg shadow text-sm">
+        <button id="auth-action-btn" onclick="openAuthModal()" class="w-full md:w-auto bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg shadow text-xs md:text-sm">
           Registrarme / Iniciar Sesión
         </button>
       </div>
@@ -102,53 +111,53 @@
             </div>
 
             <div class="flex flex-wrap gap-2 items-center">
-              <select id="category-filter" onchange="renderProducts()" class="border rounded-lg px-3 py-1.5 text-sm bg-white">
+              <select id="category-filter" onchange="renderProducts()" class="flex-1 sm:flex-none border rounded-lg px-3 py-1.5 text-xs md:text-sm bg-white">
                 <!-- Render dinámico categorías -->
               </select>
 
-              <select id="catalog-sort" onchange="renderProducts()" class="border rounded-lg px-3 py-1.5 text-sm bg-white font-semibold text-gray-700">
+              <select id="catalog-sort" onchange="renderProducts()" class="flex-1 sm:flex-none border rounded-lg px-3 py-1.5 text-xs md:text-sm bg-white font-semibold text-gray-700">
                 <option value="name-asc">Nombre (A-Z)</option>
                 <option value="name-desc">Nombre (Z-A)</option>
                 <option value="cat-asc">Categoría (A-Z)</option>
-                <option value="price-asc">Precio por Kg (Menor a Mayor)</option>
-                <option value="price-desc">Precio por Kg (Mayor a Menor)</option>
+                <option value="price-asc">Precio/Kg (Menor a Mayor)</option>
+                <option value="price-desc">Precio/Kg (Mayor a Menor)</option>
               </select>
             </div>
           </div>
 
-          <div id="product-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <!-- Render dinámico productos -->
           </div>
         </div>
 
-        <!-- Carrito de Compras -->
-        <div class="space-y-4">
+        <!-- Carrito de Compras Lateral (Escritorio) -->
+        <div class="hidden lg:block space-y-4">
           <div class="bg-white p-5 rounded-xl shadow-md border border-gray-200 sticky top-20">
             <h2 class="text-lg font-bold border-b pb-2 flex items-center justify-between">
               <span><i class="fa-solid fa-cart-shopping text-red-600 mr-2"></i>Tu Pedido</span>
-              <span id="cart-count" class="bg-red-100 text-red-800 text-xs px-2 py-0.5 rounded-full">0.0 kg</span>
+              <span id="cart-count-desktop" class="bg-red-100 text-red-800 text-xs px-2 py-0.5 rounded-full font-bold">0.0 kg</span>
             </h2>
 
-            <div id="cart-items" class="divide-y my-3 max-h-60 overflow-y-auto text-sm">
+            <div id="cart-items-desktop" class="divide-y my-3 max-h-60 overflow-y-auto text-sm">
               <p class="text-gray-400 text-center py-6">El carrito está vacío</p>
             </div>
 
             <div class="border-t pt-3 space-y-3">
               <div>
                 <label class="block text-xs font-bold text-gray-700 mb-1">Método de entrega:</label>
-                <div id="cart-delivery-types-container" class="grid grid-cols-1 gap-1.5 text-xs">
+                <div id="cart-delivery-types-container-desktop" class="grid grid-cols-1 gap-1.5 text-xs">
                   <!-- Render dinámico opciones de entrega -->
                 </div>
               </div>
 
-              <div id="delivery-address-container" class="hidden">
+              <div id="delivery-address-container-desktop" class="hidden">
                 <label class="block text-xs font-bold text-gray-700 mb-1">Dirección de envío:</label>
-                <textarea id="cart-address" class="w-full text-xs border rounded p-2" rows="2" placeholder="Ingresa tu dirección exacta..."></textarea>
+                <textarea id="cart-address-desktop" class="w-full text-xs border rounded p-2" rows="2" placeholder="Ingresa tu dirección exacta..."></textarea>
               </div>
 
               <div class="flex justify-between text-base font-bold text-gray-900 border-t pt-2">
                 <span>Total estimado:</span>
-                <span id="cart-total">$0</span>
+                <span id="cart-total-desktop">$0</span>
               </div>
 
               <button onclick="processOrder()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 rounded-lg shadow flex items-center justify-center space-x-2">
@@ -163,10 +172,10 @@
 
     <!-- ==================== VISTA CLIENTE: MIS COMPRAS ==================== -->
     <section id="view-client-stats" class="hidden space-y-6">
-      <h2 class="text-2xl font-bold text-gray-800">Mis Compras e Historial</h2>
+      <h2 class="text-xl md:text-2xl font-bold text-gray-800">Mis Compras e Historial</h2>
       
       <!-- Cards de Métricas -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="bg-white p-4 rounded-xl border shadow-sm">
           <p class="text-xs text-gray-500 font-bold uppercase">Total Invertido</p>
           <p id="cstat-total-spent" class="text-2xl font-extrabold text-red-600">$0</p>
@@ -177,17 +186,17 @@
         </div>
         <div class="bg-white p-4 rounded-xl border shadow-sm">
           <p class="text-xs text-gray-500 font-bold uppercase">Corte Favorito</p>
-          <p id="cstat-favorite" class="text-xl font-bold text-gray-800">-</p>
+          <p id="cstat-favorite" class="text-lg font-bold text-gray-800 truncate">-</p>
         </div>
       </div>
 
       <!-- Buscador y Filtros avanzados en Mis Compras -->
       <div class="bg-white p-4 rounded-xl border space-y-4">
         <div class="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-3">
-          <h3 class="font-bold text-gray-700">Historial de Pedidos Realizados</h3>
+          <h3 class="font-bold text-gray-700 text-sm md:text-base">Historial de Pedidos Realizados</h3>
           
           <div class="flex flex-wrap gap-2 items-center">
-            <input type="text" id="client-orders-search" oninput="renderClientOrders()" placeholder="Buscar por producto..." class="border rounded-lg px-3 py-1.5 text-sm">
+            <input type="text" id="client-orders-search" oninput="renderClientOrders()" placeholder="Buscar por producto..." class="border rounded-lg px-3 py-1.5 text-xs md:text-sm flex-1">
             
             <div class="flex items-center space-x-1 text-xs">
               <span class="font-semibold text-gray-500">Desde:</span>
@@ -199,7 +208,7 @@
               <input type="date" id="client-date-to" onchange="renderClientOrders()" class="border rounded p-1 text-xs">
             </div>
 
-            <select id="client-orders-status-filter" onchange="renderClientOrders()" class="border rounded-lg px-3 py-1.5 text-sm bg-white">
+            <select id="client-orders-status-filter" onchange="renderClientOrders()" class="border rounded-lg px-2 py-1.5 text-xs bg-white">
               <option value="all">Todos los estados</option>
             </select>
           </div>
@@ -209,13 +218,13 @@
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="bg-gray-100 text-xs font-bold text-gray-600 border-b">
-                <th class="p-3 sortable" onclick="sortClientOrders('id')"># Pedido <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>
-                <th class="p-3 sortable" onclick="sortClientOrders('date')">Fecha <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>
-                <th class="p-3 sortable" onclick="sortClientOrders('items')">Productos <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>
-                <th class="p-3 sortable text-center" onclick="sortClientOrders('kg')">Total Kg <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>
-                <th class="p-3 sortable" onclick="sortClientOrders('status')">Estado <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>
-                <th class="p-3 sortable text-right" onclick="sortClientOrders('total')">Monto Total <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>
-                <th class="p-3 text-center">Acciones</th>
+                <th class="p-2 md:p-3 sortable" onclick="sortClientOrders('id')"># Pedido</th>
+                <th class="p-2 md:p-3 sortable" onclick="sortClientOrders('date')">Fecha</th>
+                <th class="p-2 md:p-3 sortable" onclick="sortClientOrders('items')">Productos</th>
+                <th class="p-2 md:p-3 sortable text-center" onclick="sortClientOrders('kg')">Total Kg</th>
+                <th class="p-2 md:p-3 sortable" onclick="sortClientOrders('status')">Estado</th>
+                <th class="p-2 md:p-3 sortable text-right" onclick="sortClientOrders('total')">Monto Total</th>
+                <th class="p-2 md:p-3 text-center">Acciones</th>
               </tr>
             </thead>
             <tbody id="client-orders-tbody" class="divide-y text-xs">
@@ -226,7 +235,7 @@
       </div>
 
       <div class="bg-white p-4 rounded-xl border shadow-sm">
-        <h3 class="font-bold text-gray-700 mb-4">Kilogramos Comprados por Producto</h3>
+        <h3 class="font-bold text-gray-700 text-sm mb-4">Kilogramos Comprados por Producto</h3>
         <div class="h-64">
           <canvas id="chartClientProducts"></canvas>
         </div>
@@ -235,27 +244,27 @@
 
     <!-- ==================== VISTA ADMIN (DUEÑO) ==================== -->
     <section id="view-admin" class="hidden space-y-6">
-      <div class="flex flex-wrap border-b border-gray-300 gap-2">
-        <button onclick="switchAdminTab('orders')" id="atab-orders" class="px-4 py-2 font-bold text-sm tab-active">
-          <i class="fa-solid fa-receipt mr-1"></i> Pedidos Recibidos
+      <div class="flex flex-wrap border-b border-gray-300 gap-1 md:gap-2 overflow-x-auto">
+        <button onclick="switchAdminTab('orders')" id="atab-orders" class="px-3 py-2 font-bold text-xs md:text-sm tab-active whitespace-nowrap">
+          <i class="fa-solid fa-receipt mr-1"></i> Pedidos
         </button>
-        <button onclick="switchAdminTab('products')" id="atab-products" class="px-4 py-2 font-bold text-sm text-gray-600">
+        <button onclick="switchAdminTab('products')" id="atab-products" class="px-3 py-2 font-bold text-xs md:text-sm text-gray-600 whitespace-nowrap">
           <i class="fa-solid fa-drumstick-bite mr-1"></i> Productos
         </button>
-        <button onclick="switchAdminTab('stock')" id="atab-stock" class="px-4 py-2 font-bold text-sm text-gray-600">
-          <i class="fa-solid fa-boxes-stacked mr-1"></i> Control de Stock
+        <button onclick="switchAdminTab('stock')" id="atab-stock" class="px-3 py-2 font-bold text-xs md:text-sm text-gray-600 whitespace-nowrap">
+          <i class="fa-solid fa-boxes-stacked mr-1"></i> Stock (kg)
         </button>
-        <button onclick="switchAdminTab('clients')" id="atab-clients" class="px-4 py-2 font-bold text-sm text-gray-600">
+        <button onclick="switchAdminTab('clients')" id="atab-clients" class="px-3 py-2 font-bold text-xs md:text-sm text-gray-600 whitespace-nowrap">
           <i class="fa-solid fa-users mr-1"></i> Clientes
         </button>
-        <button onclick="switchAdminTab('stats')" id="atab-stats" class="px-4 py-2 font-bold text-sm text-gray-600">
+        <button onclick="switchAdminTab('stats')" id="atab-stats" class="px-3 py-2 font-bold text-xs md:text-sm text-gray-600 whitespace-nowrap">
           <i class="fa-solid fa-chart-pie mr-1"></i> Estadísticas
         </button>
-        <button onclick="switchAdminTab('marketing')" id="atab-marketing" class="px-4 py-2 font-bold text-sm text-gray-600">
-          <i class="fa-solid fa-bullhorn mr-1"></i> Promos WhatsApp
+        <button onclick="switchAdminTab('marketing')" id="atab-marketing" class="px-3 py-2 font-bold text-xs md:text-sm text-gray-600 whitespace-nowrap">
+          <i class="fa-solid fa-bullhorn mr-1"></i> Promos
         </button>
-        <button onclick="switchAdminTab('config')" id="atab-config" class="px-4 py-2 font-bold text-sm text-gray-600">
-          <i class="fa-solid fa-sliders mr-1"></i> Ajustes / ABM Global
+        <button onclick="switchAdminTab('config')" id="atab-config" class="px-3 py-2 font-bold text-xs md:text-sm text-gray-600 whitespace-nowrap">
+          <i class="fa-solid fa-sliders mr-1"></i> Ajustes / ABM
         </button>
       </div>
 
@@ -264,67 +273,62 @@
         
         <!-- Botón para Mostrar/Ocultar Panel de Búsqueda y Filtros -->
         <div class="flex justify-between items-center bg-white p-3 rounded-xl border shadow-sm">
-          <h2 class="text-lg font-bold text-gray-800">Listado de Pedidos Recibidos</h2>
-          <button onclick="toggleAdminSearchPanel()" class="bg-gray-800 hover:bg-black text-amber-300 font-bold px-4 py-2 rounded-lg text-xs flex items-center space-x-2 shadow">
+          <h2 class="text-base md:text-lg font-bold text-gray-800">Pedidos Recibidos</h2>
+          <button onclick="toggleAdminSearchPanel()" class="bg-gray-800 hover:bg-black text-amber-300 font-bold px-3 py-1.5 rounded-lg text-xs flex items-center space-x-1 shadow">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <span>Buscar / Filtrar Pedidos</span>
+            <span>Filtrar</span>
           </button>
         </div>
 
         <!-- Panel de Búsqueda y Filtros -->
         <div id="admin-search-panel" class="hidden bg-white p-4 rounded-xl border shadow-sm space-y-3">
           <div class="flex justify-between items-center border-b pb-2">
-            <h3 class="text-sm font-bold text-red-700"><i class="fa-solid fa-filter mr-2"></i>Criterios de Búsqueda Avanzada</h3>
-            <button onclick="clearAdminOrderFilters()" class="text-xs text-red-600 font-bold hover:underline">Limpiar Filtros</button>
+            <h3 class="text-xs font-bold text-red-700"><i class="fa-solid fa-filter mr-1"></i>Búsqueda Avanzada</h3>
+            <button onclick="clearAdminOrderFilters()" class="text-xs text-red-600 font-bold hover:underline">Limpiar</button>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 text-xs">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-xs">
             <div>
-              <label class="block font-bold text-gray-600 mb-1">Cliente (Nombre):</label>
-              <input type="text" id="admin-f-client" oninput="renderOrdersAdmin()" placeholder="Ej. Juan Pérez" class="w-full border rounded p-1.5">
+              <label class="block font-bold text-gray-600 mb-0.5">Cliente:</label>
+              <input type="text" id="admin-f-client" oninput="renderOrdersAdmin()" placeholder="Ej. Juan" class="w-full border rounded p-1.5">
             </div>
 
             <div>
-              <label class="block font-bold text-gray-600 mb-1">Producto:</label>
-              <input type="text" id="admin-f-product" oninput="renderOrdersAdmin()" placeholder="Ej. Asado, Pollo" class="w-full border rounded p-1.5">
+              <label class="block font-bold text-gray-600 mb-0.5">Producto:</label>
+              <input type="text" id="admin-f-product" oninput="renderOrdersAdmin()" placeholder="Ej. Asado" class="w-full border rounded p-1.5">
             </div>
 
             <div>
-              <label class="block font-bold text-gray-600 mb-1">Domicilio del Cliente:</label>
-              <input type="text" id="admin-f-address" oninput="renderOrdersAdmin()" placeholder="Ej. Calle 123" class="w-full border rounded p-1.5">
+              <label class="block font-bold text-gray-600 mb-0.5">Domicilio:</label>
+              <input type="text" id="admin-f-address" oninput="renderOrdersAdmin()" placeholder="Calle..." class="w-full border rounded p-1.5">
             </div>
 
             <div>
-              <label class="block font-bold text-gray-600 mb-1">WhatsApp del Cliente:</label>
-              <input type="text" id="admin-f-whatsapp" oninput="renderOrdersAdmin()" placeholder="Ej. 1122334455" class="w-full border rounded p-1.5">
+              <label class="block font-bold text-gray-600 mb-0.5">WhatsApp:</label>
+              <input type="text" id="admin-f-whatsapp" oninput="renderOrdersAdmin()" placeholder="Teléfono..." class="w-full border rounded p-1.5">
             </div>
 
             <div>
-              <label class="block font-bold text-gray-600 mb-1">Tipo de Entrega:</label>
+              <label class="block font-bold text-gray-600 mb-0.5">Tipo Entrega:</label>
               <select id="admin-f-type" onchange="renderOrdersAdmin()" class="w-full border rounded p-1.5 bg-white">
-                <option value="all">Todos los tipos</option>
+                <option value="all">Todos</option>
               </select>
             </div>
 
             <div>
-              <label class="block font-bold text-gray-600 mb-1">Fecha Desde:</label>
+              <label class="block font-bold text-gray-600 mb-0.5">Desde:</label>
               <input type="date" id="admin-f-date-from" onchange="renderOrdersAdmin()" class="w-full border rounded p-1.5">
             </div>
 
             <div>
-              <label class="block font-bold text-gray-600 mb-1">Fecha Hasta:</label>
+              <label class="block font-bold text-gray-600 mb-0.5">Hasta:</label>
               <input type="date" id="admin-f-date-to" onchange="renderOrdersAdmin()" class="w-full border rounded p-1.5">
             </div>
 
             <div>
-              <label class="block font-bold text-gray-600 mb-1">Monto Mínimo (Monto >= $):</label>
-              <input type="number" id="admin-f-min-total" oninput="renderOrdersAdmin()" placeholder="Ej. 10000" class="w-full border rounded p-1.5">
-            </div>
-
-            <div>
-              <label class="block font-bold text-gray-600 mb-1">Estado del Pedido:</label>
+              <label class="block font-bold text-gray-600 mb-0.5">Estado:</label>
               <select id="admin-orders-status-filter" onchange="renderOrdersAdmin()" class="w-full border rounded p-1.5 bg-white">
-                <option value="all">Todos los estados</option>
+                <option value="all">Todos</option>
               </select>
             </div>
           </div>
@@ -335,13 +339,13 @@
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="bg-gray-100 text-xs font-bold text-gray-600 border-b">
-                <th class="p-3 sortable" onclick="sortAdminOrders('id')"># Pedido <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>
-                <th class="p-3 sortable" onclick="sortAdminOrders('date')">Fecha <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>
-                <th class="p-3 sortable" onclick="sortAdminOrders('client')">Cliente / Tel <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>
-                <th class="p-3 sortable" onclick="sortAdminOrders('items')">Productos <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>
-                <th class="p-3 sortable" onclick="sortAdminOrders('type')">Tipo Entrega <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>
-                <th class="p-3 sortable" onclick="sortAdminOrders('status')">Estado <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>
-                <th class="p-3 sortable text-right" onclick="sortAdminOrders('total')">Monto Total <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>
+                <th class="p-3 sortable" onclick="sortAdminOrders('id')"># Pedido</th>
+                <th class="p-3 sortable" onclick="sortAdminOrders('date')">Fecha</th>
+                <th class="p-3 sortable" onclick="sortAdminOrders('client')">Cliente</th>
+                <th class="p-3 sortable" onclick="sortAdminOrders('items')">Productos</th>
+                <th class="p-3 sortable" onclick="sortAdminOrders('type')">Tipo</th>
+                <th class="p-3 sortable" onclick="sortAdminOrders('status')">Estado</th>
+                <th class="p-3 sortable text-right" onclick="sortAdminOrders('total')">Total</th>
                 <th class="p-3 text-center">Acciones</th>
               </tr>
             </thead>
@@ -353,17 +357,17 @@
       </div>
 
       <!-- TAB ADMIN: PRODUCTOS -->
-      <div id="admin-tab-products" class="hidden space-y-6">
-        <div class="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
-          <h2 class="text-xl font-bold text-gray-800">Catálogo de Productos y Precios por Kg</h2>
+      <div id="admin-tab-products" class="hidden space-y-4">
+        <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+          <h2 class="text-lg font-bold text-gray-800">Catálogo de Productos</h2>
           
           <div class="flex flex-wrap items-center gap-2">
-            <input type="text" id="admin-prod-search" oninput="renderAdminProductsTable()" placeholder="Buscar por nombre..." class="border rounded-lg px-3 py-1.5 text-sm">
-            <select id="admin-prod-category-filter" onchange="renderAdminProductsTable()" class="border rounded-lg px-3 py-1.5 text-sm bg-white">
-              <option value="all">Todas las categorías</option>
+            <input type="text" id="admin-prod-search" oninput="renderAdminProductsTable()" placeholder="Buscar..." class="border rounded-lg px-3 py-1.5 text-xs flex-1">
+            <select id="admin-prod-category-filter" onchange="renderAdminProductsTable()" class="border rounded-lg px-2 py-1.5 text-xs bg-white">
+              <option value="all">Todas</option>
             </select>
-            <button onclick="openProductModal()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-sm">
-              + Nuevo Producto
+            <button onclick="openProductModal()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs">
+              + Nuevo
             </button>
           </div>
         </div>
@@ -372,10 +376,10 @@
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="bg-gray-50 border-b text-xs font-bold text-gray-500 uppercase">
-                <th class="p-3 sortable" onclick="sortAdminProducts('img')">Imagen <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>
-                <th class="p-3 sortable" onclick="sortAdminProducts('name')">Nombre del Producto <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>
-                <th class="p-3 sortable" onclick="sortAdminProducts('category')">Categoría <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>
-                <th class="p-3 sortable" onclick="sortAdminProducts('price')">Precio por Kg <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>
+                <th class="p-3">Img</th>
+                <th class="p-3 sortable" onclick="sortAdminProducts('name')">Nombre</th>
+                <th class="p-3 sortable" onclick="sortAdminProducts('category')">Categoría</th>
+                <th class="p-3 sortable" onclick="sortAdminProducts('price')">Precio/Kg</th>
                 <th class="p-3">Acciones</th>
               </tr>
             </thead>
@@ -387,12 +391,12 @@
       </div>
 
       <!-- TAB ADMIN: CONTROL DE STOCK -->
-      <div id="admin-tab-stock" class="hidden space-y-6">
-        <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-start space-x-3">
-          <i class="fa-solid fa-lightbulb text-amber-600 text-2xl mt-0.5"></i>
+      <div id="admin-tab-stock" class="hidden space-y-4">
+        <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl flex items-start space-x-2">
+          <i class="fa-solid fa-lightbulb text-amber-600 text-xl mt-0.5"></i>
           <div class="text-xs text-amber-900">
-            <h3 class="font-bold text-sm text-amber-950 mb-1">Gestión de Stock de Carne en Kilogramos</h3>
-            <p>Controla el stock disponible por corte. Cuando marcas un producto como <strong>"Agotado"</strong>, este <strong>continúa viéndose en la tienda</strong> pero con una franja roja inclinada de <strong>AGOTADO</strong> sobre la imagen y en la lista de productos del ABM.</p>
+            <h3 class="font-bold text-amber-950 mb-0.5">Gestión de Stock de Carne en Kg</h3>
+            <p>Al marcar <strong>"Agotado"</strong>, el producto sigue viéndose en la tienda pero con cinta diagonal de <strong>AGOTADO</strong> sobre la foto.</p>
           </div>
         </div>
 
@@ -400,11 +404,11 @@
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="bg-gray-50 border-b text-xs font-bold text-gray-500 uppercase">
-                <th class="p-3">Corte / Producto</th>
-                <th class="p-3 text-center">Stock Dispon. (kg)</th>
-                <th class="p-3 text-center">Stock Mín. Alerta (kg)</th>
-                <th class="p-3 text-center">Estado de Disponibilidad</th>
-                <th class="p-3 text-center">Acción Rápida</th>
+                <th class="p-3">Producto</th>
+                <th class="p-3 text-center">Stock (kg)</th>
+                <th class="p-3 text-center">Stock Mín.</th>
+                <th class="p-3 text-center">Estado</th>
+                <th class="p-3 text-center">Acción</th>
               </tr>
             </thead>
             <tbody id="admin-stock-tbody" class="divide-y text-xs">
@@ -415,17 +419,14 @@
       </div>
 
       <!-- TAB ADMIN: ABM CLIENTES -->
-      <div id="admin-tab-clients" class="hidden space-y-6">
-        <div class="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 bg-white p-4 rounded-xl border shadow-sm">
-          <h2 class="text-xl font-bold text-gray-800"><i class="fa-solid fa-users text-red-600 mr-2"></i>ABM de Clientes Registrados</h2>
+      <div id="admin-tab-clients" class="hidden space-y-4">
+        <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 bg-white p-3 rounded-xl border shadow-sm">
+          <h2 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-users text-red-600 mr-2"></i>ABM Clientes</h2>
           
-          <div class="flex flex-wrap items-center gap-2">
-            <div class="relative flex-1 sm:w-64">
-              <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400 text-sm"></i>
-              <input type="text" id="admin-client-search" oninput="renderABMClients()" placeholder="Buscar por Nombre, WhatsApp o Dir..." class="w-full pl-9 pr-3 py-1.5 border rounded-lg text-sm">
-            </div>
-            <button onclick="openClientModal()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-sm">
-              + Nuevo Cliente
+          <div class="flex items-center gap-2">
+            <input type="text" id="admin-client-search" oninput="renderABMClients()" placeholder="Buscar cliente..." class="w-full sm:w-64 border rounded-lg px-3 py-1.5 text-xs">
+            <button onclick="openClientModal()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs whitespace-nowrap">
+              + Nuevo
             </button>
           </div>
         </div>
@@ -434,10 +435,10 @@
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="bg-gray-50 border-b text-xs font-bold text-gray-500 uppercase">
-                <th class="p-3">Nombre Completo</th>
-                <th class="p-3">WhatsApp / Teléfono</th>
-                <th class="p-3">Dirección Predeterminada</th>
-                <th class="p-3 text-center">Pedidos Históricos</th>
+                <th class="p-3">Nombre</th>
+                <th class="p-3">WhatsApp</th>
+                <th class="p-3">Dirección</th>
+                <th class="p-3 text-center">Pedidos</th>
                 <th class="p-3">Acciones</th>
               </tr>
             </thead>
@@ -450,93 +451,92 @@
 
       <!-- TAB ADMIN: ESTADÍSTICAS -->
       <div id="admin-tab-stats" class="hidden space-y-6">
-        <div class="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-xl border shadow-sm">
-          <h2 class="text-xl font-bold text-gray-800"><i class="fa-solid fa-chart-line text-red-600 mr-2"></i>Estadísticas y Consumos Acumulados</h2>
+        <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-3 rounded-xl border shadow-sm">
+          <h2 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-chart-line text-red-600 mr-2"></i>Estadísticas</h2>
           
           <div class="flex flex-wrap items-center gap-2 text-xs">
-            <span class="font-bold text-gray-600">Período por Rango de Fechas:</span>
-            <input type="date" id="stats-date-from" onchange="renderAdminStats()" class="border rounded p-1.5">
-            <span class="font-bold text-gray-400">-</span>
-            <input type="date" id="stats-date-to" onchange="renderAdminStats()" class="border rounded p-1.5">
-            <button onclick="resetStatsDates()" class="bg-gray-200 hover:bg-gray-300 font-bold px-2 py-1.5 rounded">Ver Todo</button>
+            <span class="font-bold text-gray-600">Período:</span>
+            <input type="date" id="stats-date-from" onchange="renderAdminStats()" class="border rounded p-1">
+            <span>-</span>
+            <input type="date" id="stats-date-to" onchange="renderAdminStats()" class="border rounded p-1">
+            <button onclick="resetStatsDates()" class="bg-gray-200 hover:bg-gray-300 font-bold px-2 py-1 rounded">Ver Todo</button>
           </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div class="bg-white p-4 rounded-xl border shadow-sm">
-            <p class="text-xs text-gray-500 font-bold uppercase">Monto Total Vendido</p>
-            <p id="astat-total-sales" class="text-3xl font-extrabold text-green-600">$0</p>
+            <p class="text-xs text-gray-500 font-bold uppercase">Monto Venta Total</p>
+            <p id="astat-total-sales" class="text-2xl font-extrabold text-green-600">$0</p>
           </div>
           <div class="bg-white p-4 rounded-xl border shadow-sm">
-            <p class="text-xs text-gray-500 font-bold uppercase">Total Pedidos</p>
-            <p id="astat-total-orders" class="text-3xl font-extrabold text-blue-600">0</p>
+            <p class="text-xs text-gray-500 font-bold uppercase">Pedidos Total</p>
+            <p id="astat-total-orders" class="text-2xl font-extrabold text-blue-600">0</p>
           </div>
           <div class="bg-white p-4 rounded-xl border shadow-sm">
-            <p class="text-xs text-gray-500 font-bold uppercase">Clientes Registrados</p>
-            <p id="astat-total-clients" class="text-3xl font-extrabold text-purple-600">0</p>
+            <p class="text-xs text-gray-500 font-bold uppercase">Clientes</p>
+            <p id="astat-total-clients" class="text-2xl font-extrabold text-purple-600">0</p>
           </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div class="bg-white p-4 rounded-xl border shadow-sm space-y-2">
-            <h3 class="font-bold text-gray-700 text-sm border-b pb-1">Ventas Acumuladas por Mes ($)</h3>
-            <div class="h-56"><canvas id="chartAdminMonth"></canvas></div>
+            <h3 class="font-bold text-gray-700 text-xs border-b pb-1">Ventas por Mes ($)</h3>
+            <div class="h-48"><canvas id="chartAdminMonth"></canvas></div>
           </div>
           <div class="bg-white p-4 rounded-xl border shadow-sm space-y-2">
-            <h3 class="font-bold text-gray-700 text-sm border-b pb-1">Ventas Acumuladas por Tipo de Entrega ($)</h3>
-            <div class="h-56"><canvas id="chartAdminType"></canvas></div>
+            <h3 class="font-bold text-gray-700 text-xs border-b pb-1">Ventas por Tipo Entrega ($)</h3>
+            <div class="h-48"><canvas id="chartAdminType"></canvas></div>
           </div>
-          <div class="bg-white p-4 rounded-xl border shadow-sm space-y-2 md:col-span-2">
-            <h3 class="font-bold text-gray-700 text-sm border-b pb-1">Ventas Acumuladas por Domicilio de Entrega ($)</h3>
-            <div class="h-64"><canvas id="chartAdminAddress"></canvas></div>
+          <div class="bg-white p-4 rounded-xl border shadow-sm space-y-2 lg:col-span-2">
+            <h3 class="font-bold text-gray-700 text-xs border-b pb-1">Ventas por Domicilio ($)</h3>
+            <div class="h-56"><canvas id="chartAdminAddress"></canvas></div>
           </div>
         </div>
       </div>
 
       <!-- TAB ADMIN: CAMPAÑAS PROMO -->
       <div id="admin-tab-marketing" class="hidden space-y-6">
-        <h2 class="text-xl font-bold text-gray-800">Enviar Promociones por WhatsApp</h2>
-        <div class="bg-white p-6 rounded-xl border shadow-sm max-w-2xl space-y-4">
+        <h2 class="text-lg font-bold text-gray-800">Promociones por WhatsApp</h2>
+        <div class="bg-white p-5 rounded-xl border shadow-sm max-w-xl space-y-3">
           <div>
-            <label class="block text-sm font-bold text-gray-700 mb-1">URL de Imagen de la Promo:</label>
-            <input type="text" id="promo-img-url" class="w-full border rounded-lg p-2 text-sm" value="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80">
+            <label class="block text-xs font-bold text-gray-700 mb-1">URL Imagen Promo:</label>
+            <input type="text" id="promo-img-url" class="w-full border rounded-lg p-2 text-xs" value="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80">
           </div>
           <div>
-            <label class="block text-sm font-bold text-gray-700 mb-1">Mensaje Promocional:</label>
-            <textarea id="promo-msg" class="w-full border rounded-lg p-2 text-sm" rows="3">🔥 ¡OFERTA ESPECIAL DE LA SEMANA! Llevando 2kg o más de Asado de Tira obtén un 15% de descuento. ¡Haz tu pedido ahora!</textarea>
+            <label class="block text-xs font-bold text-gray-700 mb-1">Mensaje Promocional:</label>
+            <textarea id="promo-msg" class="w-full border rounded-lg p-2 text-xs" rows="3">🔥 ¡OFERTA ESPECIAL DE LA SEMANA! Llevando 2kg o más de Asado de Tira obtén un 15% de descuento. ¡Haz tu pedido ahora!</textarea>
           </div>
           <div>
-            <label class="block text-sm font-bold text-gray-700 mb-1">Seleccionar Cliente Destino:</label>
-            <select id="promo-client-select" class="w-full border rounded-lg p-2 text-sm bg-white font-bold">
-              <!-- Render clientes + Opción Todos -->
+            <label class="block text-xs font-bold text-gray-700 mb-1">Cliente Destino:</label>
+            <select id="promo-client-select" class="w-full border rounded-lg p-2 text-xs bg-white font-bold">
+              <!-- Render clientes -->
             </select>
           </div>
-          <button onclick="sendWhatsAppPromo()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-4 rounded-lg shadow flex items-center justify-center space-x-2">
-            <i class="fa-brands fa-whatsapp text-lg"></i>
-            <span>Abrir WhatsApp con la Promo</span>
+          <button onclick="sendWhatsAppPromo()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow text-xs flex items-center justify-center space-x-2">
+            <i class="fa-brands fa-whatsapp text-base"></i>
+            <span>Enviar Promo por WhatsApp</span>
           </button>
         </div>
       </div>
 
       <!-- TAB ADMIN: PARAMETRIZACIÓN Y CONFIGURACIÓN GLOBAL -->
-      <div id="admin-tab-config" class="hidden space-y-8">
+      <div id="admin-tab-config" class="hidden space-y-6">
         
-        <!-- Módulo de Copia de Seguridad JSON -->
-        <div class="bg-white p-6 rounded-xl border shadow-sm space-y-4 max-w-3xl">
+        <!-- Módulo Backup JSON -->
+        <div class="bg-white p-5 rounded-xl border shadow-sm space-y-3 max-w-2xl">
           <div class="flex justify-between items-center border-b pb-2">
-            <h3 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-database text-red-600 mr-2"></i>Copia de Seguridad y Respaldo (Backup)</h3>
-            <span class="text-xs text-gray-400 font-semibold">Formato JSON</span>
+            <h3 class="text-base font-bold text-gray-800"><i class="fa-solid fa-database text-red-600 mr-2"></i>Copia de Seguridad (Backup JSON)</h3>
           </div>
-          <p class="text-xs text-gray-600">Exporta todos los datos del negocio (Productos, Stock, Pedidos, Clientes, Categorías, Configuración y Plantillas de WhatsApp) a un archivo JSON para tener un respaldo o migrar a otro dispositivo.</p>
+          <p class="text-xs text-gray-600">Exporta o importa todos los datos del negocio (Productos, Stock, Pedidos, Clientes, Configuración y WhatsApp).</p>
           
-          <div class="flex flex-wrap gap-3 pt-2">
-            <button onclick="exportJSONBackup()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2.5 rounded-lg text-xs flex items-center space-x-2 shadow">
-              <i class="fa-solid fa-file-export text-sm"></i>
+          <div class="flex flex-wrap gap-2 pt-1">
+            <button onclick="exportJSONBackup()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-2 rounded-lg text-xs flex items-center space-x-1 shadow">
+              <i class="fa-solid fa-file-export"></i>
               <span>Exportar Backup (JSON)</span>
             </button>
 
-            <label class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-lg text-xs flex items-center space-x-2 shadow cursor-pointer">
-              <i class="fa-solid fa-file-import text-sm"></i>
+            <label class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-2 rounded-lg text-xs flex items-center space-x-1 shadow cursor-pointer">
+              <i class="fa-solid fa-file-import"></i>
               <span>Importar Backup (JSON)</span>
               <input type="file" id="import-json-file" accept=".json" onchange="importJSONBackup(event)" class="hidden">
             </label>
@@ -544,62 +544,62 @@
         </div>
 
         <!-- Configuración Datos del Negocio -->
-        <div class="bg-white p-6 rounded-xl border shadow-sm space-y-4 max-w-3xl">
-          <h3 class="text-lg font-bold text-gray-800 border-b pb-2"><i class="fa-solid fa-store mr-2 text-red-600"></i>Datos del Negocio</h3>
-          <form onsubmit="saveStoreSettings(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-white p-5 rounded-xl border shadow-sm space-y-3 max-w-2xl">
+          <h3 class="text-base font-bold text-gray-800 border-b pb-2"><i class="fa-solid fa-store mr-2 text-red-600"></i>Datos del Negocio</h3>
+          <form onsubmit="saveStoreSettings(event)" class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
             <div>
-              <label class="block text-xs font-bold text-gray-700">Nombre de la Carnicería</label>
-              <input type="text" id="cfg-name" required class="w-full border rounded p-2 text-sm">
+              <label class="block font-bold text-gray-700 mb-1">Nombre Carnicería</label>
+              <input type="text" id="cfg-name" required class="w-full border rounded p-1.5">
             </div>
             <div>
-              <label class="block text-xs font-bold text-gray-700">WhatsApp de Atención / Pedidos</label>
-              <input type="text" id="cfg-whatsapp" required class="w-full border rounded p-2 text-sm">
+              <label class="block font-bold text-gray-700 mb-1">WhatsApp Pedidos</label>
+              <input type="text" id="cfg-whatsapp" required class="w-full border rounded p-1.5">
             </div>
-            <div class="md:col-span-2">
-              <label class="block text-xs font-bold text-gray-700">Dirección</label>
-              <input type="text" id="cfg-address" required class="w-full border rounded p-2 text-sm">
+            <div class="sm:col-span-2">
+              <label class="block font-bold text-gray-700 mb-1">Dirección</label>
+              <input type="text" id="cfg-address" required class="w-full border rounded p-1.5">
             </div>
-            <div class="md:col-span-2">
-              <label class="block text-xs font-bold text-gray-700">Horarios de Atención</label>
-              <input type="text" id="cfg-hours" required class="w-full border rounded p-2 text-sm">
+            <div class="sm:col-span-2">
+              <label class="block font-bold text-gray-700 mb-1">Horarios</label>
+              <input type="text" id="cfg-hours" required class="w-full border rounded p-1.5">
             </div>
-            <div class="md:col-span-2">
-              <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-sm">Guardar Datos del Negocio</button>
+            <div class="sm:col-span-2 pt-1">
+              <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-xs">Guardar Cambios</button>
             </div>
           </form>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <!-- ABM Tipos de Entrega -->
-          <div class="bg-white p-6 rounded-xl border shadow-sm space-y-4">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- ABM Tipos Entrega -->
+          <div class="bg-white p-5 rounded-xl border shadow-sm space-y-3">
             <div class="flex justify-between items-center border-b pb-2">
-              <h3 class="text-base font-bold text-gray-800"><i class="fa-solid fa-truck-ramp-box mr-1 text-red-600"></i>ABM Tipos de Entrega</h3>
-              <button onclick="addDeliveryTypePrompt()" class="bg-green-600 text-white font-bold text-xs px-2.5 py-1 rounded">+ Agregar</button>
+              <h3 class="text-sm font-bold text-gray-800">ABM Tipos de Entrega</h3>
+              <button onclick="addDeliveryTypePrompt()" class="bg-green-600 text-white font-bold text-xs px-2 py-1 rounded">+ Agregar</button>
             </div>
-            <div id="abm-delivery-types-list" class="divide-y text-sm max-h-52 overflow-y-auto"></div>
+            <div id="abm-delivery-types-list" class="divide-y text-xs max-h-48 overflow-y-auto"></div>
           </div>
 
           <!-- ABM Categorías -->
-          <div class="bg-white p-6 rounded-xl border shadow-sm space-y-4">
+          <div class="bg-white p-5 rounded-xl border shadow-sm space-y-3">
             <div class="flex justify-between items-center border-b pb-2">
-              <h3 class="text-base font-bold text-gray-800"><i class="fa-solid fa-list mr-1 text-red-600"></i>ABM Categorías</h3>
-              <button onclick="addCategoryPrompt()" class="bg-green-600 text-white font-bold text-xs px-2.5 py-1 rounded">+ Agregar</button>
+              <h3 class="text-sm font-bold text-gray-800">ABM Categorías</h3>
+              <button onclick="addCategoryPrompt()" class="bg-green-600 text-white font-bold text-xs px-2 py-1 rounded">+ Agregar</button>
             </div>
-            <div id="abm-categories-list" class="divide-y text-sm max-h-52 overflow-y-auto"></div>
+            <div id="abm-categories-list" class="divide-y text-xs max-h-48 overflow-y-auto"></div>
           </div>
 
-          <!-- ABM Estados de Pedido con Mensaje Personalizado de WhatsApp -->
-          <div class="bg-white p-6 rounded-xl border shadow-sm space-y-4 lg:col-span-3">
+          <!-- ABM Estados de Pedido -->
+          <div class="bg-white p-5 rounded-xl border shadow-sm space-y-3 lg:col-span-2">
             <div class="flex justify-between items-center border-b pb-2">
               <div>
-                <h3 class="text-base font-bold text-gray-800"><i class="fa-solid fa-tags mr-1 text-red-600"></i>ABM Estados de Pedido y Mensajes de WhatsApp</h3>
-                <p class="text-xs text-gray-500">Configura el mensaje que se abrirá para enviar por WhatsApp al cliente al cambiar a este estado. Variables soportadas: <code class="bg-gray-100 font-bold text-red-600 px-1">{cliente}</code>, <code class="bg-gray-100 font-bold text-red-600 px-1">{pedido}</code>, <code class="bg-gray-100 font-bold text-red-600 px-1">{tipo}</code>, <code class="bg-gray-100 font-bold text-red-600 px-1">{direccion}</code>, <code class="bg-gray-100 font-bold text-red-600 px-1">{total}</code> y <code class="bg-gray-100 font-bold text-red-600 px-1">{productos}</code> (muestra detalle de productos, kg y monto).</p>
+                <h3 class="text-sm font-bold text-gray-800">ABM Estados de Pedido y Plantillas WhatsApp</h3>
+                <p class="text-[11px] text-gray-500">Variables: <code class="text-red-600 font-bold">{cliente}</code>, <code class="text-red-600 font-bold">{pedido}</code>, <code class="text-red-600 font-bold">{tipo}</code>, <code class="text-red-600 font-bold">{direccion}</code>, <code class="text-red-600 font-bold">{total}</code> y <code class="text-red-600 font-bold">{productos}</code>.</p>
               </div>
-              <button onclick="addStatusPrompt()" class="bg-green-600 text-white font-bold text-xs px-3 py-1.5 rounded">+ Nuevo Estado</button>
+              <button onclick="addStatusPrompt()" class="bg-green-600 text-white font-bold text-xs px-2.5 py-1 rounded">+ Nuevo</button>
             </div>
             
-            <div id="abm-statuses-container" class="space-y-4">
-              <!-- Render dinámico de estados con sus cajas de texto de mensaje -->
+            <div id="abm-statuses-container" class="space-y-3">
+              <!-- Render dinámico -->
             </div>
           </div>
         </div>
@@ -610,103 +610,156 @@
 
   </main>
 
+  <!-- ==================== BOTÓN FLOTANTE CARRITO (MÓVIL / CELULAR) ==================== -->
+  <div id="floating-cart-fab" class="fixed bottom-4 right-4 z-40 flex items-center gap-2">
+    <button onclick="openMobileCartModal()" id="fab-cart-btn" class="bg-green-600 hover:bg-green-700 text-white p-3.5 rounded-full shadow-2xl flex items-center justify-center relative border-2 border-white">
+      <i class="fa-solid fa-cart-shopping text-xl"></i>
+      <span id="fab-cart-badge" class="absolute -top-2 -right-2 bg-red-600 text-white text-[11px] font-extrabold px-2 py-0.5 rounded-full border border-white shadow">0.0 kg</span>
+    </button>
+    <div onclick="openMobileCartModal()" class="bg-gray-900/90 backdrop-blur text-white px-3 py-1.5 rounded-full text-xs font-extrabold shadow-lg cursor-pointer hidden sm:block border border-gray-700">
+      <span id="fab-cart-total">$0</span>
+    </div>
+  </div>
+
+  <!-- MODAL / DRAWER DE CARRITO DESPLEGABLE EN MÓVIL -->
+  <div id="modal-mobile-cart" class="fixed inset-0 bg-black/60 hidden items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+    <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-lg w-full p-5 space-y-4 relative max-h-[90vh] flex flex-col justify-between">
+      <div>
+        <div class="flex justify-between items-center border-b pb-3">
+          <h3 class="text-lg font-bold text-gray-800 flex items-center">
+            <i class="fa-solid fa-cart-shopping text-red-600 mr-2"></i> Tu Pedido
+          </h3>
+          <button onclick="closeMobileCartModal()" class="text-gray-400 hover:text-gray-600 text-xl font-bold p-1"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div id="cart-items-mobile" class="divide-y my-3 max-h-60 overflow-y-auto text-sm">
+          <p class="text-gray-400 text-center py-6">El carrito está vacío</p>
+        </div>
+      </div>
+
+      <div class="border-t pt-3 space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-1">Método de entrega:</label>
+          <div id="cart-delivery-types-container-mobile" class="grid grid-cols-1 gap-1.5 text-xs">
+            <!-- Render dinámico -->
+          </div>
+        </div>
+
+        <div id="delivery-address-container-mobile" class="hidden">
+          <label class="block text-xs font-bold text-gray-700 mb-1">Dirección de envío:</label>
+          <textarea id="cart-address-mobile" class="w-full text-xs border rounded p-2" rows="2" placeholder="Ingresa tu dirección exacta..."></textarea>
+        </div>
+
+        <div class="flex justify-between text-base font-bold text-gray-900 border-t pt-2">
+          <span>Total estimado:</span>
+          <span id="cart-total-mobile">$0</span>
+        </div>
+
+        <button onclick="processOrder()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow flex items-center justify-center space-x-2 text-sm">
+          <i class="fa-brands fa-whatsapp text-xl"></i>
+          <span>Confirmar por WhatsApp</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL: DETALLE DE PEDIDO -->
   <div id="modal-order-detail" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-xl max-w-lg w-full p-6 space-y-4 relative">
+    <div class="bg-white rounded-xl max-w-lg w-full p-5 space-y-4 relative">
       <button onclick="closeOrderDetailModal()" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
-      <h3 class="text-xl font-bold text-gray-800 border-b pb-2" id="mod-detail-title">Detalle del Pedido</h3>
+      <h3 class="text-lg font-bold text-gray-800 border-b pb-2" id="mod-detail-title">Detalle del Pedido</h3>
       
-      <div id="mod-detail-body" class="space-y-3 text-sm text-gray-700 max-h-96 overflow-y-auto"></div>
+      <div id="mod-detail-body" class="space-y-3 text-xs text-gray-700 max-h-96 overflow-y-auto"></div>
 
       <div class="flex justify-end gap-2 border-t pt-3" id="mod-detail-actions">
-        <button onclick="closeOrderDetailModal()" class="bg-gray-200 text-gray-800 font-bold px-4 py-2 rounded-lg text-sm">Cerrar</button>
+        <button onclick="closeOrderDetailModal()" class="bg-gray-200 text-gray-800 font-bold px-3 py-1.5 rounded-lg text-xs">Cerrar</button>
       </div>
     </div>
   </div>
 
   <!-- MODAL: AUTENTICACIÓN / REGISTRO CLIENTE -->
   <div id="modal-auth" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-xl max-w-md w-full p-6 space-y-4 relative">
+    <div class="bg-white rounded-xl max-w-md w-full p-5 space-y-3 relative">
       <button onclick="closeAuthModal()" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
-      <h3 class="text-xl font-bold text-gray-800">Registro / Ingreso de Cliente</h3>
+      <h3 class="text-lg font-bold text-gray-800">Registro / Ingreso de Cliente</h3>
       <form id="auth-form" onsubmit="handleAuth(event)" class="space-y-3">
         <div>
-          <label class="block text-xs font-bold text-gray-700">Nombre Completo</label>
-          <input type="text" id="reg-name" required class="w-full border rounded p-2 text-sm">
+          <label class="block text-xs font-bold text-gray-700 mb-0.5">Nombre Completo</label>
+          <input type="text" id="reg-name" required class="w-full border rounded p-2 text-xs">
         </div>
         <div>
-          <label class="block text-xs font-bold text-gray-700">WhatsApp (con código de país/área)</label>
-          <input type="tel" id="reg-phone" required placeholder="Ej: 5491122334455" class="w-full border rounded p-2 text-sm">
+          <label class="block text-xs font-bold text-gray-700 mb-0.5">WhatsApp (con código de país/área)</label>
+          <input type="tel" id="reg-phone" required placeholder="Ej: 5491122334455" class="w-full border rounded p-2 text-xs">
         </div>
         <div>
-          <label class="block text-xs font-bold text-gray-700">Dirección Predeterminada</label>
-          <input type="text" id="reg-address" required placeholder="Calle 123, Timbre B" class="w-full border rounded p-2 text-sm">
+          <label class="block text-xs font-bold text-gray-700 mb-0.5">Dirección Predeterminada</label>
+          <input type="text" id="reg-address" required placeholder="Calle 123, Timbre B" class="w-full border rounded p-2 text-xs">
         </div>
-        <button type="submit" class="w-full bg-red-600 text-white font-bold py-2 rounded-lg hover:bg-red-700 text-sm">Guardar Datos</button>
+        <button type="submit" class="w-full bg-red-600 text-white font-bold py-2 rounded-lg hover:bg-red-700 text-xs">Guardar Datos</button>
       </form>
     </div>
   </div>
 
-  <!-- MODAL: AGREGAR / EDITAR CLIENTE (ADMIN) -->
+  <!-- MODAL: CLIENTE (ADMIN) -->
   <div id="modal-client-admin" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-xl max-w-md w-full p-6 space-y-4 relative">
+    <div class="bg-white rounded-xl max-w-md w-full p-5 space-y-3 relative">
       <button onclick="closeClientAdminModal()" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
-      <h3 class="text-xl font-bold text-gray-800" id="client-modal-title">Guardar Cliente</h3>
+      <h3 class="text-lg font-bold text-gray-800" id="client-modal-title">Guardar Cliente</h3>
       <form onsubmit="saveClientAdmin(event)" class="space-y-3">
         <input type="hidden" id="admin-cli-id">
         <div>
-          <label class="block text-xs font-bold text-gray-700">Nombre Completo</label>
-          <input type="text" id="admin-cli-name" required class="w-full border rounded p-2 text-sm">
+          <label class="block text-xs font-bold text-gray-700 mb-0.5">Nombre Completo</label>
+          <input type="text" id="admin-cli-name" required class="w-full border rounded p-2 text-xs">
         </div>
         <div>
-          <label class="block text-xs font-bold text-gray-700">WhatsApp</label>
-          <input type="text" id="admin-cli-phone" required placeholder="Ej: 5491122334455" class="w-full border rounded p-2 text-sm">
+          <label class="block text-xs font-bold text-gray-700 mb-0.5">WhatsApp</label>
+          <input type="text" id="admin-cli-phone" required placeholder="Ej: 5491122334455" class="w-full border rounded p-2 text-xs">
         </div>
         <div>
-          <label class="block text-xs font-bold text-gray-700">Dirección</label>
-          <input type="text" id="admin-cli-address" required placeholder="Calle 123" class="w-full border rounded p-2 text-sm">
+          <label class="block text-xs font-bold text-gray-700 mb-0.5">Dirección</label>
+          <input type="text" id="admin-cli-address" required placeholder="Calle 123" class="w-full border rounded p-2 text-xs">
         </div>
-        <button type="submit" class="w-full bg-red-600 text-white font-bold py-2 rounded-lg text-sm">Guardar Cliente</button>
+        <button type="submit" class="w-full bg-red-600 text-white font-bold py-2 rounded-lg text-xs">Guardar Cliente</button>
       </form>
     </div>
   </div>
 
-  <!-- MODAL: AGREGAR / EDITAR PRODUCTO -->
+  <!-- MODAL: PRODUCTO -->
   <div id="modal-product" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-xl max-w-md w-full p-6 space-y-4 relative">
+    <div class="bg-white rounded-xl max-w-md w-full p-5 space-y-3 relative">
       <button onclick="closeProductModal()" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
-      <h3 class="text-xl font-bold text-gray-800" id="product-modal-title">Cargar Producto</h3>
+      <h3 class="text-lg font-bold text-gray-800" id="product-modal-title">Cargar Producto</h3>
       <form id="product-form" onsubmit="saveProduct(event)" class="space-y-3">
         <input type="hidden" id="prod-id">
         <div>
-          <label class="block text-xs font-bold text-gray-700">Nombre del Corte / Producto</label>
-          <input type="text" id="prod-name" required class="w-full border rounded p-2 text-sm">
+          <label class="block text-xs font-bold text-gray-700 mb-0.5">Nombre del Corte / Producto</label>
+          <input type="text" id="prod-name" required class="w-full border rounded p-2 text-xs">
         </div>
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <label class="block text-xs font-bold text-gray-700">Categoría</label>
-            <select id="prod-category" class="w-full border rounded p-2 text-sm bg-white"></select>
+            <label class="block text-xs font-bold text-gray-700 mb-0.5">Categoría</label>
+            <select id="prod-category" class="w-full border rounded p-2 text-xs bg-white"></select>
           </div>
           <div>
-            <label class="block text-xs font-bold text-gray-700">Precio por Kg ($)</label>
-            <input type="number" id="prod-price" step="0.01" required class="w-full border rounded p-2 text-sm">
+            <label class="block text-xs font-bold text-gray-700 mb-0.5">Precio por Kg ($)</label>
+            <input type="number" id="prod-price" step="0.01" required class="w-full border rounded p-2 text-xs">
           </div>
         </div>
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <label class="block text-xs font-bold text-gray-700">Stock Inicial (kg)</label>
-            <input type="number" id="prod-stock" step="0.1" value="50" required class="w-full border rounded p-2 text-sm">
+            <label class="block text-xs font-bold text-gray-700 mb-0.5">Stock Inicial (kg)</label>
+            <input type="number" id="prod-stock" step="0.1" value="50" required class="w-full border rounded p-2 text-xs">
           </div>
           <div>
-            <label class="block text-xs font-bold text-gray-700">Stock Mínimo (kg)</label>
-            <input type="number" id="prod-min-stock" step="0.1" value="10" required class="w-full border rounded p-2 text-sm">
+            <label class="block text-xs font-bold text-gray-700 mb-0.5">Stock Mínimo (kg)</label>
+            <input type="number" id="prod-min-stock" step="0.1" value="10" required class="w-full border rounded p-2 text-xs">
           </div>
         </div>
         <div>
-          <label class="block text-xs font-bold text-gray-700">URL Imagen</label>
-          <input type="url" id="prod-img" required class="w-full border rounded p-2 text-sm">
+          <label class="block text-xs font-bold text-gray-700 mb-0.5">URL Imagen</label>
+          <input type="url" id="prod-img" required class="w-full border rounded p-2 text-xs">
         </div>
-        <button type="submit" class="w-full bg-red-600 text-white font-bold py-2 rounded-lg text-sm">Guardar Producto</button>
+        <button type="submit" class="w-full bg-red-600 text-white font-bold py-2 rounded-lg text-xs">Guardar Producto</button>
       </form>
     </div>
   </div>
@@ -759,13 +812,11 @@
     let currentUser = JSON.parse(localStorage.getItem('carniceria_current_user')) || null;
     let cart = [];
 
-    // Helper Unificado para saber si un producto está agotado
     function isProductOutOfStock(p) {
       if (!p) return false;
       return (p.isOutOfStock === true) || (p.stockKg !== undefined && parseFloat(p.stockKg) <= 0);
     }
 
-    // Estado de Ordenamiento
     let clientSortField = 'date';
     let clientSortAsc = false;
 
@@ -775,7 +826,6 @@
     let adminProdSortField = 'name';
     let adminProdSortAsc = true;
 
-    // Charts
     let chartClient = null;
     let chartAdminMonth = null;
     let chartAdminType = null;
@@ -790,6 +840,25 @@
       localStorage.setItem('carniceria_orders', JSON.stringify(orders));
       localStorage.setItem('carniceria_users', JSON.stringify(users));
       localStorage.setItem('carniceria_current_user', JSON.stringify(currentUser));
+    }
+
+    // ==================== MODAL DE CARRITO FLOTANTE EN CELULARES ====================
+    function openMobileCartModal() {
+      renderCart();
+      document.getElementById('modal-mobile-cart').classList.remove('hidden');
+      document.getElementById('modal-mobile-cart').classList.add('flex');
+    }
+
+    function closeMobileCartModal() {
+      document.getElementById('modal-mobile-cart').classList.add('hidden');
+      document.getElementById('modal-mobile-cart').classList.remove('flex');
+    }
+
+    function animateCartFAB() {
+      const btn = document.getElementById('fab-cart-btn');
+      btn.classList.remove('animate-cart-bounce');
+      void btn.offsetWidth; // Trigger reflow
+      btn.classList.add('animate-cart-bounce');
     }
 
     // ==================== COPIA DE SEGURIDAD (EXPORTAR E IMPORTAR JSON) ====================
@@ -827,10 +896,10 @@
           const imported = JSON.parse(e.target.result);
 
           if (!imported.storeSettings || !imported.products || !imported.orders) {
-            return alert('Error: El archivo JSON seleccionado no tiene la estructura de backup válida.');
+            return alert('Error: El archivo JSON no posee la estructura de respaldo requerida.');
           }
 
-          if (confirm('⚠️ ¿Estás seguro de que deseas restaurar la copia de seguridad? Se reemplazarán la configuración, productos, pedidos y clientes actuales.')) {
+          if (confirm('⚠️ ¿Deseas restaurar la copia de seguridad? Se reemplazarán los datos actuales.')) {
             storeSettings = imported.storeSettings || defaultSettings;
             deliveryTypes = imported.deliveryTypes || defaultDeliveryTypes;
             categories = imported.categories || defaultCategories;
@@ -855,10 +924,10 @@
             renderABMCategories();
             renderABMStatuses();
 
-            alert('¡Copia de seguridad importada y restaurada con éxito!');
+            alert('¡Copia de seguridad restaurada con éxito!');
           }
         } catch (err) {
-          alert('Ocurrió un error al leer el archivo JSON: ' + err.message);
+          alert('Error al procesar el archivo JSON: ' + err.message);
         }
       };
       reader.readAsText(file);
@@ -923,19 +992,25 @@
 
     function populateDeliveryTypeSelects() {
       const adminTypeFilter = document.getElementById('admin-f-type');
-      let options = `<option value="all">Todos los tipos</option>`;
+      let options = `<option value="all">Todos</option>`;
       deliveryTypes.forEach(dt => {
         options += `<option value="${dt.id}">${dt.name}</option>`;
       });
       adminTypeFilter.innerHTML = options;
 
-      const cartContainer = document.getElementById('cart-delivery-types-container');
-      cartContainer.innerHTML = deliveryTypes.map((dt, idx) => `
-        <label class="border rounded-lg p-2 cursor-pointer flex items-center space-x-2 bg-gray-50 hover:bg-white">
-          <input type="radio" name="delivery-type" value="${dt.id}" ${idx === 0 ? 'checked' : ''} onchange="toggleDeliveryOptions()">
-          <span class="font-semibold text-gray-700">${dt.name}</span>
-        </label>
-      `).join('');
+      const renderDT = (containerId) => {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        container.innerHTML = deliveryTypes.map((dt, idx) => `
+          <label class="border rounded-lg p-2 cursor-pointer flex items-center space-x-2 bg-gray-50 hover:bg-white">
+            <input type="radio" name="${containerId}-radio" value="${dt.id}" ${idx === 0 ? 'checked' : ''} onchange="toggleDeliveryOptions()">
+            <span class="font-semibold text-gray-700 text-xs">${dt.name}</span>
+          </label>
+        `).join('');
+      };
+
+      renderDT('cart-delivery-types-container-desktop');
+      renderDT('cart-delivery-types-container-mobile');
     }
 
     function switchMainView(view) {
@@ -945,13 +1020,16 @@
 
       if (view === 'client') {
         document.getElementById('view-client').classList.remove('hidden');
+        document.getElementById('floating-cart-fab').classList.remove('hidden');
         renderProducts();
       } else if (view === 'client-stats') {
         document.getElementById('view-client-stats').classList.remove('hidden');
+        document.getElementById('floating-cart-fab').classList.add('hidden');
         renderClientStats();
         renderClientOrders();
       } else if (view === 'admin') {
         document.getElementById('view-admin').classList.remove('hidden');
+        document.getElementById('floating-cart-fab').classList.add('hidden');
         renderOrdersAdmin();
         renderAdminProductsTable();
         renderAdminStockTable();
@@ -1006,7 +1084,8 @@
       const welcomeSub = document.getElementById('welcome-sub');
       const authBtn = document.getElementById('auth-action-btn');
       const statsBtn = document.getElementById('nav-client-stats-btn');
-      const cartAddr = document.getElementById('cart-address');
+      const cartAddrD = document.getElementById('cart-address-desktop');
+      const cartAddrM = document.getElementById('cart-address-mobile');
 
       if (currentUser) {
         badge.textContent = `Cliente: ${currentUser.name}`;
@@ -1014,7 +1093,8 @@
         welcomeSub.textContent = `Teléfono: ${currentUser.phone} | Dirección: ${currentUser.address}`;
         authBtn.textContent = "Editar Datos";
         statsBtn.classList.remove('hidden');
-        cartAddr.value = currentUser.address;
+        if (cartAddrD) cartAddrD.value = currentUser.address;
+        if (cartAddrM) cartAddrM.value = currentUser.address;
       } else {
         badge.textContent = "Invitado";
         welcomeText.textContent = "¡Bienvenido a nuestra carnicería!";
@@ -1069,10 +1149,10 @@
               </div>
               <div class="flex justify-between items-center pt-2 border-t">
                 <div>
-                  <span class="text-xs text-gray-400 block">Precio por Kg</span>
-                  <span class="text-base font-extrabold text-red-700">$${p.price.toLocaleString()} /kg</span>
+                  <span class="text-[10px] text-gray-400 block">Precio/Kg</span>
+                  <span class="text-sm md:text-base font-extrabold text-red-700">$${p.price.toLocaleString()} /kg</span>
                 </div>
-                <button onclick="addToCart(${p.id})" ${outOfStock ? 'disabled' : ''} class="${outOfStock ? 'bg-gray-400 cursor-not-allowed text-gray-100' : 'bg-red-600 hover:bg-red-700 text-white'} text-xs px-3 py-1.5 rounded-lg font-bold flex items-center space-x-1">
+                <button onclick="addToCart(${p.id})" ${outOfStock ? 'disabled' : ''} class="${outOfStock ? 'bg-gray-400 cursor-not-allowed text-gray-100' : 'bg-red-600 hover:bg-red-700 text-white'} text-xs px-2.5 py-1.5 rounded-lg font-bold flex items-center space-x-1 shadow">
                   <i class="fa-solid ${outOfStock ? 'fa-ban' : 'fa-cart-plus'} text-xs"></i>
                   <span>${outOfStock ? 'Agotado' : '+ Agregar'}</span>
                 </button>
@@ -1094,6 +1174,7 @@
         cart.push({ ...prod, qty: 0.5 });
       }
       renderCart();
+      animateCartFAB();
     }
 
     function updateCartQty(prodId, delta) {
@@ -1107,72 +1188,109 @@
         }
       }
       renderCart();
+      animateCartFAB();
     }
 
     function toggleDeliveryOptions() {
-      const selectedTypeVal = document.querySelector('input[name="delivery-type"]:checked').value;
-      const dtObj = deliveryTypes.find(dt => dt.id === selectedTypeVal);
-      const addrContainer = document.getElementById('delivery-address-container');
+      const getSelectedValue = (name) => {
+        const el = document.querySelector(`input[name="${name}"]:checked`);
+        return el ? el.value : 'takeaway';
+      };
 
-      if (dtObj && dtObj.requiresAddress) {
-        addrContainer.classList.remove('hidden');
-      } else {
-        addrContainer.classList.add('hidden');
+      const selectedD = getSelectedValue('cart-delivery-types-container-desktop-radio');
+      const dtObjD = deliveryTypes.find(dt => dt.id === selectedD);
+      const addrD = document.getElementById('delivery-address-container-desktop');
+      if (addrD) {
+        if (dtObjD && dtObjD.requiresAddress) addrD.classList.remove('hidden');
+        else addrD.classList.add('hidden');
+      }
+
+      const selectedM = getSelectedValue('cart-delivery-types-container-mobile-radio');
+      const dtObjM = deliveryTypes.find(dt => dt.id === selectedM);
+      const addrM = document.getElementById('delivery-address-container-mobile');
+      if (addrM) {
+        if (dtObjM && dtObjM.requiresAddress) addrM.classList.remove('hidden');
+        else addrM.classList.add('hidden');
       }
     }
 
     function renderCart() {
-      const container = document.getElementById('cart-items');
-      const countEl = document.getElementById('cart-count');
-      const totalEl = document.getElementById('cart-total');
-
-      if (cart.length === 0) {
-        container.innerHTML = `<p class="text-gray-400 text-center py-6">El carrito está vacío</p>`;
-        countEl.textContent = '0.0 kg';
-        totalEl.textContent = '$0';
-        return;
-      }
-
       let total = 0;
       let totalKg = 0;
-      container.innerHTML = '';
 
       cart.forEach(item => {
-        const subtotal = item.price * item.qty;
-        total += subtotal;
+        total += item.price * item.qty;
         totalKg += item.qty;
-
-        container.innerHTML += `
-          <div class="py-2 flex justify-between items-center">
-            <div class="flex-grow pr-2">
-              <p class="font-bold text-xs">${item.name}</p>
-              <p class="text-[10px] text-gray-500">$${item.price.toLocaleString()}/kg x ${item.qty}kg = <strong class="text-gray-800">$${subtotal.toLocaleString()}</strong></p>
-            </div>
-            <div class="flex items-center space-x-1">
-              <button onclick="updateCartQty(${item.id}, -0.5)" class="w-6 h-6 bg-gray-200 hover:bg-gray-300 rounded text-xs font-bold text-red-600">-</button>
-              <span class="text-xs font-bold px-1 min-w-[32px] text-center">${item.qty} kg</span>
-              <button onclick="updateCartQty(${item.id}, 0.5)" class="w-6 h-6 bg-gray-200 hover:bg-gray-300 rounded text-xs font-bold text-green-600">+</button>
-            </div>
-          </div>
-        `;
       });
 
-      countEl.textContent = `${totalKg.toFixed(1)} kg`;
-      totalEl.textContent = `$${total.toLocaleString()}`;
+      // Actualizar FAB Flotante
+      document.getElementById('fab-cart-badge').textContent = `${totalKg.toFixed(1)} kg`;
+      document.getElementById('fab-cart-total').textContent = `$${total.toLocaleString()}`;
+
+      // Render interno escritorio y móvil
+      const renderCartContainer = (itemsContainerId, countId, totalId) => {
+        const container = document.getElementById(itemsContainerId);
+        const countEl = document.getElementById(countId);
+        const totalEl = document.getElementById(totalId);
+
+        if (!container) return;
+
+        if (cart.length === 0) {
+          container.innerHTML = `<p class="text-gray-400 text-center py-6">El carrito está vacío</p>`;
+          if (countEl) countEl.textContent = '0.0 kg';
+          if (totalEl) totalEl.textContent = '$0';
+          return;
+        }
+
+        container.innerHTML = '';
+        cart.forEach(item => {
+          const subtotal = item.price * item.qty;
+          container.innerHTML += `
+            <div class="py-2 flex justify-between items-center">
+              <div class="flex-grow pr-2">
+                <p class="font-bold text-xs">${item.name}</p>
+                <p class="text-[10px] text-gray-500">$${item.price.toLocaleString()}/kg x ${item.qty}kg = <strong class="text-gray-800">$${subtotal.toLocaleString()}</strong></p>
+              </div>
+              <div class="flex items-center space-x-1">
+                <button onclick="updateCartQty(${item.id}, -0.5)" class="w-6 h-6 bg-gray-200 hover:bg-gray-300 rounded text-xs font-bold text-red-600">-</button>
+                <span class="text-xs font-bold px-1 min-w-[32px] text-center">${item.qty} kg</span>
+                <button onclick="updateCartQty(${item.id}, 0.5)" class="w-6 h-6 bg-gray-200 hover:bg-gray-300 rounded text-xs font-bold text-green-600">+</button>
+              </div>
+            </div>
+          `;
+        });
+
+        if (countEl) countEl.textContent = `${totalKg.toFixed(1)} kg`;
+        if (totalEl) totalEl.textContent = `$${total.toLocaleString()}`;
+      };
+
+      renderCartContainer('cart-items-desktop', 'cart-count-desktop', 'cart-total-desktop');
+      renderCartContainer('cart-items-mobile', null, 'cart-total-mobile');
     }
 
     function processOrder() {
       if (cart.length === 0) return alert('El carrito está vacío.');
       if (!currentUser) {
         alert('Por favor regístrate o inicia sesión para enviar tu pedido.');
+        closeMobileCartModal();
         openAuthModal();
         return;
       }
 
-      const deliveryTypeId = document.querySelector('input[name="delivery-type"]:checked').value;
+      // Detectar radio activo (escritorio o mobile)
+      let selectedRadio = document.querySelector('input[name="cart-delivery-types-container-mobile-radio"]:checked');
+      if (!selectedRadio) {
+        selectedRadio = document.querySelector('input[name="cart-delivery-types-container-desktop-radio"]:checked');
+      }
+
+      const deliveryTypeId = selectedRadio ? selectedRadio.value : 'takeaway';
       const dtObj = deliveryTypes.find(dt => dt.id === deliveryTypeId) || { name: deliveryTypeId, requiresAddress: false };
       
-      const address = dtObj.requiresAddress ? document.getElementById('cart-address').value : 'Retiro en Local';
+      let addressInput = document.getElementById('cart-address-mobile').value;
+      if (!dtObj.requiresAddress || !addressInput) {
+        addressInput = document.getElementById('cart-address-desktop').value;
+      }
+      const address = dtObj.requiresAddress ? addressInput : 'Retiro en Local';
 
       if (dtObj.requiresAddress && !address.trim()) {
         return alert('Ingresa una dirección de entrega.');
@@ -1216,6 +1334,7 @@
       cart = [];
       renderCart();
       renderProducts();
+      closeMobileCartModal();
 
       alert('¡Pedido registrado con éxito! Se abrirá WhatsApp para enviarlo al dueño.');
       const cleanPhone = storeSettings.whatsapp.replace(/[^0-9]/g, '');
@@ -1293,15 +1412,15 @@
 
         container.innerHTML += `
           <tr class="hover:bg-gray-50 border-b">
-            <td class="p-3 font-bold text-gray-700">#${o.id.toString().slice(-4)}</td>
-            <td class="p-3 text-gray-500">${dateStr}</td>
-            <td class="p-3 max-w-xs truncate" title="${prodNames}">${prodNames}</td>
-            <td class="p-3 text-center font-bold">${totalKg} kg</td>
-            <td class="p-3"><span class="px-2 py-0.5 rounded bg-gray-200 font-bold">${o.status}</span></td>
-            <td class="p-3 text-right font-extrabold text-red-700">$${o.total.toLocaleString()}</td>
-            <td class="p-3 text-center space-x-1">
-              <button onclick="openOrderDetail(${o.id})" class="bg-blue-600 hover:bg-blue-700 text-white text-[11px] px-2 py-1 rounded font-bold">Ver</button>
-              <button onclick="repeatOrder(${o.id})" class="bg-green-600 hover:bg-green-700 text-white text-[11px] px-2 py-1 rounded font-bold"><i class="fa-solid fa-rotate-left"></i> Repetir</button>
+            <td class="p-2 md:p-3 font-bold text-gray-700">#${o.id.toString().slice(-4)}</td>
+            <td class="p-2 md:p-3 text-gray-500 whitespace-nowrap">${dateStr}</td>
+            <td class="p-2 md:p-3 max-w-xs truncate" title="${prodNames}">${prodNames}</td>
+            <td class="p-2 md:p-3 text-center font-bold">${totalKg} kg</td>
+            <td class="p-2 md:p-3"><span class="px-2 py-0.5 rounded bg-gray-200 font-bold">${o.status}</span></td>
+            <td class="p-2 md:p-3 text-right font-extrabold text-red-700">$${o.total.toLocaleString()}</td>
+            <td class="p-2 md:p-3 text-center space-x-1">
+              <button onclick="openOrderDetail(${o.id})" class="bg-blue-600 hover:bg-blue-700 text-white text-[10px] px-2 py-1 rounded font-bold">Ver</button>
+              <button onclick="repeatOrder(${o.id})" class="bg-green-600 hover:bg-green-700 text-white text-[10px] px-2 py-1 rounded font-bold"><i class="fa-solid fa-rotate-left"></i> Repetir</button>
             </td>
           </tr>
         `;
@@ -1316,22 +1435,22 @@
       
       let itemsHtml = o.items.map(i => `
         <tr class="border-b text-xs">
-          <td class="py-2">${i.name}</td>
-          <td class="py-2 text-center">${i.qty} kg</td>
-          <td class="py-2 text-right">$${i.price.toLocaleString()}</td>
-          <td class="py-2 text-right font-bold">$${(i.price * i.qty).toLocaleString()}</td>
+          <td class="py-1.5">${i.name}</td>
+          <td class="py-1.5 text-center">${i.qty} kg</td>
+          <td class="py-1.5 text-right">$${i.price.toLocaleString()}</td>
+          <td class="py-1.5 text-right font-bold">$${(i.price * i.qty).toLocaleString()}</td>
         </tr>
       `).join('');
 
       document.getElementById('mod-detail-body').innerHTML = `
-        <div class="bg-gray-50 p-3 rounded-lg border text-xs space-y-1">
+        <div class="bg-gray-50 p-2.5 rounded-lg border text-xs space-y-1">
           <p><strong>Cliente:</strong> ${o.user.name} (${o.user.phone})</p>
           <p><strong>Tipo de Entrega:</strong> ${o.type}</p>
           <p><strong>Dirección:</strong> ${o.address}</p>
           <p><strong>Estado Actual:</strong> <span class="font-bold text-red-700">${o.status}</span></p>
           <p><strong>Fecha:</strong> ${new Date(o.date).toLocaleString('es-AR')}</p>
         </div>
-        <table class="w-full text-left mt-3">
+        <table class="w-full text-left mt-2">
           <thead>
             <tr class="border-b text-xs font-bold text-gray-500">
               <th class="py-1">Producto</th>
@@ -1342,16 +1461,16 @@
           </thead>
           <tbody>${itemsHtml}</tbody>
         </table>
-        <div class="text-right pt-2 text-base font-extrabold text-gray-900 border-t">
+        <div class="text-right pt-2 text-sm font-extrabold text-gray-900 border-t">
           Total: $${o.total.toLocaleString()}
         </div>
       `;
 
       document.getElementById('mod-detail-actions').innerHTML = `
-        <button onclick="repeatOrder(${o.id})" class="bg-green-600 hover:bg-green-700 text-white font-bold px-4 py-2 rounded-lg text-xs flex items-center space-x-1">
+        <button onclick="repeatOrder(${o.id})" class="bg-green-600 hover:bg-green-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs flex items-center space-x-1">
           <i class="fa-solid fa-rotate-left"></i> <span>Repetir este Pedido</span>
         </button>
-        <button onclick="closeOrderDetailModal()" class="bg-gray-200 text-gray-800 font-bold px-4 py-2 rounded-lg text-xs">Cerrar</button>
+        <button onclick="closeOrderDetailModal()" class="bg-gray-200 text-gray-800 font-bold px-3 py-1.5 rounded-lg text-xs">Cerrar</button>
       `;
 
       document.getElementById('modal-order-detail').classList.remove('hidden');
@@ -1380,7 +1499,8 @@
       closeOrderDetailModal();
       switchMainView('client');
       renderCart();
-      alert('¡Se han agregado los productos del pedido anterior al carrito!');
+      openMobileCartModal();
+      alert('¡Se agregaron los cortes al carrito!');
     }
 
     function renderClientStats() {
@@ -1410,13 +1530,13 @@
         type: 'bar',
         data: {
           labels: Object.keys(prodKgMap),
-          datasets: [{ label: 'Kilogramos acumulados', data: Object.values(prodKgMap), backgroundColor: '#b91c1c' }]
+          datasets: [{ label: 'Kg acumulados', data: Object.values(prodKgMap), backgroundColor: '#b91c1c' }]
         },
         options: { responsive: true, maintainAspectRatio: false }
       });
     }
 
-    // ==================== PANEL DUEÑO: GESTIÓN DE PEDIDOS Y NOTIFICACIÓN POR ESTADO ====================
+    // ==================== PANEL DUEÑO: GESTIÓN DE PEDIDOS RECIBIDOS ====================
     function toggleAdminSearchPanel() {
       const panel = document.getElementById('admin-search-panel');
       panel.classList.toggle('hidden');
@@ -1430,7 +1550,6 @@
       document.getElementById('admin-f-type').value = 'all';
       document.getElementById('admin-f-date-from').value = '';
       document.getElementById('admin-f-date-to').value = '';
-      document.getElementById('admin-f-min-total').value = '';
       document.getElementById('admin-orders-status-filter').value = 'all';
       renderOrdersAdmin();
     }
@@ -1455,8 +1574,6 @@
       const fType = document.getElementById('admin-f-type').value;
       const fDateFrom = document.getElementById('admin-f-date-from').value;
       const fDateTo = document.getElementById('admin-f-date-to').value;
-      const fMinTotalInput = document.getElementById('admin-f-min-total').value;
-      const fMinTotal = fMinTotalInput !== "" ? parseFloat(fMinTotalInput) : null;
       const fStatus = document.getElementById('admin-orders-status-filter').value;
 
       let filtered = orders.filter(o => {
@@ -1466,7 +1583,6 @@
         if (fWhatsapp && !o.user.phone.includes(fWhatsapp)) return false;
         if (fType !== 'all' && o.typeId !== fType && o.type !== fType) return false;
         if (fStatus !== 'all' && o.status !== fStatus) return false;
-        if (fMinTotal !== null && !isNaN(fMinTotal) && o.total < fMinTotal) return false;
 
         if (fDateFrom) {
           const fromDate = new Date(fDateFrom);
@@ -1498,7 +1614,7 @@
       });
 
       if (filtered.length === 0) {
-        container.innerHTML = `<tr><td colspan="8" class="text-gray-400 text-center py-8">No hay pedidos que coincidan con los filtros seleccionados.</td></tr>`;
+        container.innerHTML = `<tr><td colspan="8" class="text-gray-400 text-center py-6">No hay pedidos registrados.</td></tr>`;
         return;
       }
 
@@ -1513,23 +1629,23 @@
 
         container.innerHTML += `
           <tr class="hover:bg-gray-50 border-b">
-            <td class="p-3 font-bold text-gray-700">#${o.id.toString().slice(-4)}</td>
-            <td class="p-3 text-gray-500 whitespace-nowrap">${dateStr}</td>
-            <td class="p-3 font-semibold text-gray-800">
+            <td class="p-2 md:p-3 font-bold text-gray-700">#${o.id.toString().slice(-4)}</td>
+            <td class="p-2 md:p-3 text-gray-500 whitespace-nowrap">${dateStr}</td>
+            <td class="p-2 md:p-3 font-semibold text-gray-800">
               ${o.user.name}
               <span class="block text-[10px] text-gray-400 font-normal"><i class="fa-brands fa-whatsapp text-green-600"></i> ${o.user.phone}</span>
             </td>
-            <td class="p-3 max-w-xs truncate" title="${prodNames}">${prodNames}</td>
-            <td class="p-3"><span class="px-2 py-0.5 rounded bg-amber-100 text-amber-900 font-bold text-[10px]">${o.type}</span></td>
-            <td class="p-3">
+            <td class="p-2 md:p-3 max-w-xs truncate" title="${prodNames}">${prodNames}</td>
+            <td class="p-2 md:p-3"><span class="px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 font-bold text-[10px]">${o.type}</span></td>
+            <td class="p-2 md:p-3">
               <select onchange="updateOrderStatus(${o.id}, this.value)" class="text-xs border rounded p-1 font-bold bg-white">
                 ${statusOptions}
               </select>
             </td>
-            <td class="p-3 text-right font-extrabold text-red-700">$${o.total.toLocaleString()}</td>
-            <td class="p-3 text-center space-x-1">
-              <button onclick="openOrderDetail(${o.id})" class="bg-blue-600 hover:bg-blue-700 text-white text-[11px] px-2 py-1 rounded font-bold">Detalle</button>
-              <button onclick="sendStatusWhatsAppMessage(${o.id}, '${o.status}')" class="bg-green-600 hover:bg-green-700 text-white text-[11px] px-2 py-1 rounded font-bold" title="Enviar WhatsApp con mensaje del Estado Actual"><i class="fa-brands fa-whatsapp"></i> Avisar</button>
+            <td class="p-2 md:p-3 text-right font-extrabold text-red-700">$${o.total.toLocaleString()}</td>
+            <td class="p-2 md:p-3 text-center space-x-1 whitespace-nowrap">
+              <button onclick="openOrderDetail(${o.id})" class="bg-blue-600 hover:bg-blue-700 text-white text-[10px] px-1.5 py-1 rounded font-bold">Ver</button>
+              <button onclick="sendStatusWhatsAppMessage(${o.id}, '${o.status}')" class="bg-green-600 hover:bg-green-700 text-white text-[10px] px-1.5 py-1 rounded font-bold"><i class="fa-brands fa-whatsapp"></i> Avisar</button>
             </td>
           </tr>
         `;
@@ -1545,7 +1661,6 @@
       saveData();
       renderOrdersAdmin();
 
-      // Enviar mensaje de WhatsApp configurado para este estado si cambió
       if (previousStatus !== newStatus) {
         sendStatusWhatsAppMessage(orderId, newStatus);
       }
@@ -1562,13 +1677,11 @@
       const isDelivery = order.requiresAddress || order.type.toLowerCase().includes('delivery') || order.type.toLowerCase().includes('envío') || order.type.toLowerCase().includes('envio');
       const addressText = isDelivery ? order.address : storeSettings.address;
 
-      // Armar la variable {productos} detallada con peso y monto subtotal por ítem
       const productsFormattedText = order.items.map(i => {
         const subtotal = i.price * i.qty;
         return `- ${i.qty}kg x ${i.name} ($${subtotal.toLocaleString()})`;
       }).join('\n');
 
-      // Reemplazo de variables
       let message = template
         .replace(/\{cliente\}/g, order.user.name)
         .replace(/\{pedido\}/g, orderShortId)
@@ -1618,7 +1731,7 @@
       });
 
       if (filtered.length === 0) {
-        container.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400 text-xs">No se encontraron productos en el catálogo.</td></tr>`;
+        container.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400 text-xs">No se encontraron productos.</td></tr>`;
         return;
       }
 
@@ -1628,14 +1741,14 @@
 
         return `
           <tr class="border-b text-xs hover:bg-gray-50">
-            <td class="p-3"><img src="${p.img}" class="w-10 h-10 object-cover rounded"></td>
-            <td class="p-3 font-bold">
+            <td class="p-2 md:p-3"><img src="${p.img}" class="w-8 h-8 md:w-10 md:h-10 object-cover rounded"></td>
+            <td class="p-2 md:p-3 font-bold">
               ${p.name} 
-              ${outOfStock ? '<span class="text-[10px] bg-red-600 text-white font-extrabold px-1.5 py-0.5 rounded ml-1 shadow-sm">AGOTADO</span>' : ''}
+              ${outOfStock ? '<span class="text-[9px] bg-red-600 text-white font-extrabold px-1 py-0.5 rounded ml-1 shadow-sm">AGOTADO</span>' : ''}
             </td>
-            <td class="p-3">${catObj.name}</td>
-            <td class="p-3 font-bold text-red-700">$${p.price.toLocaleString()} /kg</td>
-            <td class="p-3 space-x-2">
+            <td class="p-2 md:p-3">${catObj.name}</td>
+            <td class="p-2 md:p-3 font-bold text-red-700">$${p.price.toLocaleString()} /kg</td>
+            <td class="p-2 md:p-3 space-x-1 whitespace-nowrap">
               <button onclick="editProduct(${p.id})" class="text-blue-600 font-bold hover:underline">Editar</button>
               <button onclick="deleteProduct(${p.id})" class="text-red-600 font-bold hover:underline">Eliminar</button>
             </td>
@@ -1721,24 +1834,24 @@
         const isOut = isProductOutOfStock(p);
         const isLow = currentStock <= minStock && !isOut;
 
-        let badge = `<span class="bg-green-100 text-green-800 font-bold px-2 py-0.5 rounded text-[10px]">EN STOCK</span>`;
-        if (isOut) badge = `<span class="bg-red-100 text-red-800 font-bold px-2 py-0.5 rounded text-[10px]">AGOTADO</span>`;
-        else if (isLow) badge = `<span class="bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded text-[10px]">⚠️ CRÍTICO</span>`;
+        let badge = `<span class="bg-green-100 text-green-800 font-bold px-1.5 py-0.5 rounded text-[9px]">STOCK</span>`;
+        if (isOut) badge = `<span class="bg-red-100 text-red-800 font-bold px-1.5 py-0.5 rounded text-[9px]">AGOTADO</span>`;
+        else if (isLow) badge = `<span class="bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded text-[9px]">CRÍTICO</span>`;
 
         return `
           <tr class="border-b hover:bg-gray-50">
-            <td class="p-3 font-bold text-gray-800 flex items-center space-x-2">
-              <img src="${p.img}" class="w-8 h-8 rounded object-cover">
+            <td class="p-2 md:p-3 font-bold text-gray-800 flex items-center space-x-2">
+              <img src="${p.img}" class="w-7 h-7 rounded object-cover">
               <span>${p.name}</span>
             </td>
-            <td class="p-3 text-center">
-              <input type="number" step="0.5" value="${currentStock}" onchange="updateStockKg(${p.id}, this.value)" class="w-20 border rounded p-1 text-center font-bold"> kg
+            <td class="p-2 md:p-3 text-center">
+              <input type="number" step="0.5" value="${currentStock}" onchange="updateStockKg(${p.id}, this.value)" class="w-16 border rounded p-1 text-center font-bold"> kg
             </td>
-            <td class="p-3 text-center font-semibold text-gray-500">${minStock} kg</td>
-            <td class="p-3 text-center">${badge}</td>
-            <td class="p-3 text-center">
-              <button onclick="toggleOutOfStockFlag(${p.id})" class="text-xs px-3 py-1 rounded font-bold ${isOut ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-red-600 text-white hover:bg-red-700'} shadow">
-                ${isOut ? 'Marcar En Stock' : 'Marcar Agotado'}
+            <td class="p-2 md:p-3 text-center font-semibold text-gray-500">${minStock} kg</td>
+            <td class="p-2 md:p-3 text-center">${badge}</td>
+            <td class="p-2 md:p-3 text-center">
+              <button onclick="toggleOutOfStockFlag(${p.id})" class="text-[10px] px-2 py-1 rounded font-bold ${isOut ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-red-600 text-white hover:bg-red-700'} shadow whitespace-nowrap">
+                ${isOut ? 'En Stock' : 'Agotado'}
               </button>
             </td>
           </tr>
@@ -1767,10 +1880,8 @@
       const prod = products.find(p => p.id === prodId);
       if (prod) {
         prod.isOutOfStock = !prod.isOutOfStock;
-        if (prod.isOutOfStock && prod.stockKg > 0) {
-          // Mantiene kg o cambia estado
-        } else if (!prod.isOutOfStock && prod.stockKg <= 0) {
-          prod.stockKg = 10; // Asigna stock básico si estaba en 0 kg al reactivar
+        if (!prod.isOutOfStock && prod.stockKg <= 0) {
+          prod.stockKg = 10;
         }
         saveData();
         renderProducts();
@@ -1791,7 +1902,7 @@
       );
 
       if (filteredUsers.length === 0) {
-        container.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400 text-xs">No se encontraron clientes registrados.</td></tr>`;
+        container.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400 text-xs">No se encontraron clientes.</td></tr>`;
         return;
       }
 
@@ -1799,11 +1910,11 @@
         const clientOrdersCount = orders.filter(o => o.user.phone === u.phone).length;
         return `
           <tr class="border-b text-xs hover:bg-gray-50">
-            <td class="p-3 font-bold text-gray-800">${u.name}</td>
-            <td class="p-3 text-gray-600"><i class="fa-brands fa-whatsapp text-green-600 font-bold"></i> ${u.phone}</td>
-            <td class="p-3 text-gray-600">${u.address}</td>
-            <td class="p-3 text-center font-bold text-gray-700">${clientOrdersCount} pedidos</td>
-            <td class="p-3 space-x-2">
+            <td class="p-2 md:p-3 font-bold text-gray-800">${u.name}</td>
+            <td class="p-2 md:p-3 text-gray-600"><i class="fa-brands fa-whatsapp text-green-600 font-bold"></i> ${u.phone}</td>
+            <td class="p-2 md:p-3 text-gray-600">${u.address}</td>
+            <td class="p-2 md:p-3 text-center font-bold text-gray-700">${clientOrdersCount}</td>
+            <td class="p-2 md:p-3 space-x-1 whitespace-nowrap">
               <button onclick="editClientAdmin(${u.id})" class="text-blue-600 font-bold hover:underline">Editar</button>
               <button onclick="deleteClientAdmin(${u.id})" class="text-red-600 font-bold hover:underline">Eliminar</button>
             </td>
@@ -1860,7 +1971,7 @@
     }
 
     function deleteClientAdmin(id) {
-      if (confirm('¿Eliminar este cliente de la base de datos?')) {
+      if (confirm('¿Eliminar cliente?')) {
         users = users.filter(u => u.id !== id);
         saveData();
         renderABMClients();
@@ -1949,7 +2060,7 @@
     // ==================== CAMPAÑAS DE WHATSAPP ====================
     function populatePromoClientSelect() {
       const select = document.getElementById('promo-client-select');
-      select.innerHTML = '<option value="ALL_CLIENTS">📢 TODOS LOS CLIENTES (Envío Masivo)</option>';
+      select.innerHTML = '<option value="ALL_CLIENTS">📢 TODOS LOS CLIENTES (Masivo)</option>';
       users.forEach(u => {
         select.innerHTML += `<option value="${u.phone}">${u.name} (${u.phone})</option>`;
       });
@@ -1960,12 +2071,12 @@
       const imgUrl = document.getElementById('promo-img-url').value;
       const msg = document.getElementById('promo-msg').value;
 
-      if (users.length === 0) return alert('No hay clientes registrados en la base de datos.');
+      if (users.length === 0) return alert('No hay clientes registrados.');
 
       const fullMessage = `${msg}\n\nMira la promo aquí: ${imgUrl}`;
 
       if (target === 'ALL_CLIENTS') {
-        alert(`Se abrirán las pestañas de WhatsApp para enviar la promo a los ${users.length} clientes registrados.`);
+        alert(`Se abrirán las ventanas para enviar a ${users.length} clientes.`);
         users.forEach(u => {
           const cleanPhone = u.phone.replace(/[^0-9]/g, '');
           window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(fullMessage)}`, '_blank');
@@ -1986,17 +2097,17 @@
 
       saveData();
       applyStoreSettings();
-      alert('¡Configuración del negocio guardada exitosamente!');
+      alert('¡Configuración guardada!');
     }
 
     // ABM Tipos de Entrega
     function renderABMDeliveryTypes() {
       const container = document.getElementById('abm-delivery-types-list');
       container.innerHTML = deliveryTypes.map(dt => `
-        <div class="py-2 flex justify-between items-center">
+        <div class="py-1.5 flex justify-between items-center">
           <div>
             <span class="font-semibold text-gray-800">${dt.name}</span>
-            <span class="block text-[10px] text-gray-400">${dt.requiresAddress ? 'Pide Dirección' : 'Sin Dirección (Retiro)'}</span>
+            <span class="block text-[10px] text-gray-400">${dt.requiresAddress ? 'Pide Dirección' : 'Sin Dirección'}</span>
           </div>
           <button onclick="deleteDeliveryType('${dt.id}')" class="text-red-600 font-bold hover:underline text-xs">Eliminar</button>
         </div>
@@ -2004,12 +2115,12 @@
     }
 
     function addDeliveryTypePrompt() {
-      const name = prompt('Ingrese el nombre del Tipo de Entrega (ej. Envío Exprés, Moto Local):');
+      const name = prompt('Nombre del Tipo de Entrega:');
       if (!name) return;
-      const reqAddr = confirm('¿Este método de entrega requiere pedir dirección al cliente?');
+      const reqAddr = confirm('¿Requiere pedir dirección al cliente?');
       const id = name.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-      if (deliveryTypes.some(dt => dt.id === id)) return alert('Ya existe ese tipo de entrega.');
+      if (deliveryTypes.some(dt => dt.id === id)) return alert('Ya existe.');
 
       deliveryTypes.push({ id, name, requiresAddress: reqAddr });
       saveData();
@@ -2019,7 +2130,7 @@
 
     function deleteDeliveryType(id) {
       if (deliveryTypes.length <= 1) return alert('Debe existir al menos un tipo de entrega.');
-      if (confirm('¿Eliminar este tipo de entrega?')) {
+      if (confirm('¿Eliminar?')) {
         deliveryTypes = deliveryTypes.filter(dt => dt.id !== id);
         saveData();
         populateDeliveryTypeSelects();
@@ -2031,7 +2142,7 @@
     function renderABMCategories() {
       const container = document.getElementById('abm-categories-list');
       container.innerHTML = categories.map(c => `
-        <div class="py-2 flex justify-between items-center">
+        <div class="py-1.5 flex justify-between items-center">
           <span class="font-semibold">${c.name} <span class="text-gray-400 font-normal">(${c.id})</span></span>
           <button onclick="deleteCategory('${c.id}')" class="text-red-600 font-bold hover:underline text-xs">Eliminar</button>
         </div>
@@ -2039,10 +2150,10 @@
     }
 
     function addCategoryPrompt() {
-      const name = prompt('Ingrese el nombre de la nueva categoría:');
+      const name = prompt('Nombre de la categoría:');
       if (!name) return;
       const id = name.toLowerCase().replace(/[^a-z0-9]/g, '');
-      if (categories.some(c => c.id === id)) return alert('Ya existe esa categoría.');
+      if (categories.some(c => c.id === id)) return alert('Ya existe.');
 
       categories.push({ id, name });
       saveData();
@@ -2051,7 +2162,7 @@
     }
 
     function deleteCategory(id) {
-      if (confirm('¿Eliminar esta categoría?')) {
+      if (confirm('¿Eliminar categoría?')) {
         categories = categories.filter(c => c.id !== id);
         saveData();
         populateCategorySelects();
@@ -2059,18 +2170,17 @@
       }
     }
 
-    // ABM Estados de Pedido con Mensajes de WhatsApp
+    // ABM Estados de Pedido
     function renderABMStatuses() {
       const container = document.getElementById('abm-statuses-container');
       container.innerHTML = orderStatuses.map((s, idx) => `
-        <div class="border rounded-xl p-4 bg-gray-50 space-y-2">
+        <div class="border rounded-xl p-3 bg-gray-50 space-y-2">
           <div class="flex justify-between items-center">
-            <span class="font-bold text-gray-800 text-sm"><i class="fa-solid fa-tag text-red-600 mr-2"></i>${s.name}</span>
-            <button onclick="deleteStatus('${s.id}')" class="text-red-600 font-bold hover:underline text-xs">Eliminar Estado</button>
+            <span class="font-bold text-gray-800 text-xs"><i class="fa-solid fa-tag text-red-600 mr-1"></i>${s.name}</span>
+            <button onclick="deleteStatus('${s.id}')" class="text-red-600 font-bold hover:underline text-xs">Eliminar</button>
           </div>
           <div>
-            <label class="block text-[11px] font-bold text-gray-600 mb-1">Mensaje de WhatsApp para este estado:</label>
-            <textarea id="status-msg-${idx}" onchange="updateStatusMessageTemplate('${s.id}', this.value)" class="w-full border rounded-lg p-2 text-xs bg-white" rows="3" placeholder="Plantilla del mensaje...">${s.messageTemplate || ''}</textarea>
+            <textarea id="status-msg-${idx}" onchange="updateStatusMessageTemplate('${s.id}', this.value)" class="w-full border rounded-lg p-2 text-xs bg-white" rows="2">${s.messageTemplate || ''}</textarea>
           </div>
         </div>
       `).join('');
@@ -2085,11 +2195,11 @@
     }
 
     function addStatusPrompt() {
-      const name = prompt('Ingrese el nombre del nuevo estado:');
+      const name = prompt('Nombre del estado:');
       if (!name) return;
-      if (orderStatuses.some(s => s.name.toLowerCase() === name.toLowerCase())) return alert('Ya existe ese estado.');
+      if (orderStatuses.some(s => s.name.toLowerCase() === name.toLowerCase())) return alert('Ya existe.');
 
-      const defaultMsg = `¡Hola {cliente}! El estado de tu pedido #{pedido} es ahora: ${name}.\n\nDetalle del Pedido:\n{productos}\n\nTotal: {total}`;
+      const defaultMsg = `¡Hola {cliente}! El estado de tu pedido #{pedido} es ahora: ${name}.\n\nDetalle:\n{productos}\n\nTotal: {total}`;
       orderStatuses.push({ id: name, name, messageTemplate: defaultMsg });
       saveData();
       populateStatusSelects();
@@ -2097,7 +2207,7 @@
     }
 
     function deleteStatus(id) {
-      if (confirm('¿Eliminar este estado?')) {
+      if (confirm('¿Eliminar estado?')) {
         orderStatuses = orderStatuses.filter(s => s.id !== id);
         saveData();
         populateStatusSelects();

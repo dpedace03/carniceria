@@ -507,7 +507,7 @@
         <div class="bg-white p-5 rounded-xl border border-emerald-200 shadow-sm space-y-4 max-w-2xl bg-gradient-to-r from-emerald-50/50 to-white">
           <div class="flex justify-between items-center border-b border-emerald-100 pb-2">
             <h3 class="text-base font-bold text-emerald-950 flex items-center">
-              <i class="fa-solid fa-database text-emerald-600 mr-2"></i> Conexión Supabase (Esquema: <code class="bg-emerald-100 text-emerald-900 px-1 rounded ml-1">demo_carniceria</code>)
+              <i class="fa-solid fa-database text-emerald-600 mr-2"></i> Conexión Supabase (Tablas: <code class="bg-emerald-100 text-emerald-900 px-1 rounded ml-1">carniceria_*</code>)
             </h3>
             <span id="supabase-status-dot" class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-200 text-gray-700">
               Desconectado
@@ -519,7 +519,7 @@
               <label class="block font-bold text-gray-700 mb-1">Motor de Almacenamiento:</label>
               <select id="cfg-storage-engine" onchange="toggleStorageEngineUI()" class="w-full border rounded p-2 bg-white font-bold text-emerald-900 border-emerald-300">
                 <option value="local">LocalStorage (Local)</option>
-                <option value="supabase">Supabase Database (demo_carniceria)</option>
+                <option value="supabase">Supabase Database (carniceria_*)</option>
               </select>
             </div>
 
@@ -828,9 +828,9 @@
       { id: 6, name: "Combo Parri2026 (Surtido)", category: "promo", price: 18500, stockKg: 15, minStockKg: 3, isOutOfStock: false, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=400&q=80" }
     ];
 
-    let storageEngine = localStorage.getItem('carniceria_storage_engine') || 'local';
-    let supabaseUrl = localStorage.getItem('carniceria_supabase_url') || '';
-    let supabaseKey = localStorage.getItem('carniceria_supabase_key') || '';
+    let storageEngine = localStorage.getItem('carniceria_storage_engine') || 'supabase';
+    let supabaseUrl = localStorage.getItem('carniceria_supabase_url') || '__SUPABASE_URL__';
+    let supabaseKey = localStorage.getItem('carniceria_supabase_key') || '__SUPABASE_ANON_KEY__';
     let supabaseClient = null;
 
     let storeSettings = JSON.parse(localStorage.getItem('carniceria_settings')) || defaultSettings;
@@ -845,13 +845,10 @@
 
     // ==================== INICIALIZACIÓN Y CLIENTE SUPABASE ====================
     function initSupabaseClient() {
-      if (storageEngine === 'supabase' && supabaseUrl && supabaseKey) {
+      if (storageEngine === 'supabase' && supabaseUrl && supabaseKey && supabaseUrl !== '__SUPABASE_URL__') {
         try {
-          // Conexión explícita al esquema demo_carniceria
-          supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey, {
-            db: { schema: 'demo_carniceria' }
-          });
-          updateSupabaseStatusUI(true, 'Conectado a schema: demo_carniceria');
+          supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+          updateSupabaseStatusUI(true, 'Conectado a Supabase (public)');
         } catch (err) {
           updateSupabaseStatusUI(false, 'Error en cliente Supabase');
         }
@@ -878,7 +875,7 @@
       if (headerBadge) {
         if (storageEngine === 'supabase') {
           headerBadge.className = "bg-emerald-200 text-emerald-950 px-2 py-0.5 rounded font-extrabold text-[10px] border border-emerald-300";
-          headerBadge.innerHTML = `<i class="fa-solid fa-cloud mr-1"></i>demo_carniceria`;
+          headerBadge.innerHTML = `<i class="fa-solid fa-cloud mr-1"></i>Supabase DB`;
         } else {
           headerBadge.className = "bg-amber-200 text-amber-950 px-2 py-0.5 rounded font-extrabold text-[10px] border border-amber-300";
           headerBadge.innerHTML = `<i class="fa-solid fa-database mr-1"></i>Local`;
@@ -891,31 +888,31 @@
       if (storageEngine === 'supabase' && supabaseClient) {
         try {
           // 1. Cargar Ajustes
-          const { data: setRes } = await supabaseClient.from('store_settings').select('*').eq('id', 'default').single();
+          const { data: setRes } = await supabaseClient.from('carniceria_store_settings').select('*').eq('id', 'default').single();
           if (setRes) {
             storeSettings = { name: setRes.name, address: setRes.address, hours: setRes.hours, whatsapp: setRes.whatsapp };
           }
 
           // 2. Cargar Categorías
-          const { data: catRes } = await supabaseClient.from('categories').select('*');
+          const { data: catRes } = await supabaseClient.from('carniceria_categories').select('*');
           if (catRes && catRes.length > 0) {
             categories = catRes.map(c => ({ id: c.id, name: c.name }));
           }
 
           // 3. Cargar Tipos de Entrega
-          const { data: dtRes } = await supabaseClient.from('delivery_types').select('*');
+          const { data: dtRes } = await supabaseClient.from('carniceria_delivery_types').select('*');
           if (dtRes && dtRes.length > 0) {
             deliveryTypes = dtRes.map(dt => ({ id: dt.id, name: dt.name, requiresAddress: dt.requires_address }));
           }
 
           // 4. Cargar Estados
-          const { data: stRes } = await supabaseClient.from('order_statuses').select('*');
+          const { data: stRes } = await supabaseClient.from('carniceria_order_statuses').select('*');
           if (stRes && stRes.length > 0) {
             orderStatuses = stRes.map(s => ({ id: s.id, name: s.name, messageTemplate: s.message_template }));
           }
 
           // 5. Cargar Productos
-          const { data: prodRes } = await supabaseClient.from('products').select('*');
+          const { data: prodRes } = await supabaseClient.from('carniceria_products').select('*');
           if (prodRes && prodRes.length > 0) {
             products = prodRes.map(p => ({
               id: Number(p.id),
@@ -930,13 +927,13 @@
           }
 
           // 6. Cargar Clientes
-          const { data: cliRes } = await supabaseClient.from('clients').select('*');
+          const { data: cliRes } = await supabaseClient.from('carniceria_clients').select('*');
           if (cliRes && cliRes.length > 0) {
             users = cliRes.map(u => ({ id: Number(u.id), name: u.name, phone: u.phone, address: u.address }));
           }
 
           // 7. Cargar Pedidos
-          const { data: ordRes } = await supabaseClient.from('orders').select('*');
+          const { data: ordRes } = await supabaseClient.from('carniceria_orders').select('*');
           if (ordRes && ordRes.length > 0) {
             orders = ordRes.map(o => ({
               id: Number(o.id),
@@ -955,7 +952,7 @@
           // Guardar fallback local
           saveDataLocalOnly();
         } catch (e) {
-          console.warn('Error al cargar del esquema demo_carniceria:', e);
+          console.warn('Error al cargar datos desde Supabase:', e);
         }
       }
     }
@@ -978,14 +975,14 @@
       if (storageEngine === 'supabase' && supabaseClient) {
         try {
           // Guardar respaldo JSON global
-          await supabaseClient.from('store_config').upsert({
+          await supabaseClient.from('carniceria_store_config').upsert({
             id: 'main_store_data',
             data: { storeSettings, deliveryTypes, categories, orderStatuses, products, orders, users },
             updated_at: new Date().toISOString()
           });
 
           // Guardar Ajustes
-          await supabaseClient.from('store_settings').upsert({
+          await supabaseClient.from('carniceria_store_settings').upsert({
             id: 'default',
             name: storeSettings.name,
             address: storeSettings.address,
@@ -1027,7 +1024,7 @@
           populateStatusSelects();
           populateDeliveryTypeSelects();
           renderProducts();
-          alert('¡Credenciales guardadas y datos cargados desde el esquema demo_carniceria!');
+          alert('¡Credenciales guardadas y datos cargados desde Supabase!');
         });
       } else {
         alert('Configuración guardada en modo LocalStorage.');
@@ -1041,12 +1038,12 @@
       if (!url || !key) return alert('Por favor ingresa la URL y el Anon Key de Supabase.');
 
       try {
-        const testClient = window.supabase.createClient(url, key, { db: { schema: 'demo_carniceria' } });
-        const { data, error } = await testClient.from('products').select('id').limit(1);
+        const testClient = window.supabase.createClient(url, key);
+        const { data, error } = await testClient.from('carniceria_products').select('id').limit(1);
         if (error) throw error;
-        alert('✅ ¡Conexión exitosa al esquema "demo_carniceria" en Supabase!');
+        alert('✅ ¡Conexión exitosa a Supabase! Las tablas carniceria_* respondieron correctamente.');
       } catch (err) {
-        alert('⚠️ Ocurrió un error al conectar con Supabase: ' + err.message + '\n\nAsegúrate de haber ejecutado el script SQL para crear el esquema demo_carniceria y sus tablas.');
+        alert('⚠️ Ocurrió un error al conectar con Supabase: ' + err.message + '\n\nAsegúrate de haber ejecutado el script SQL para crear las tablas "carniceria_*" en el esquema public.');
       }
     }
 
@@ -1059,19 +1056,19 @@
       try {
         // Upsert Categorías
         for (const c of categories) {
-          await supabaseClient.from('categories').upsert({ id: c.id, name: c.name });
+          await supabaseClient.from('carniceria_categories').upsert({ id: c.id, name: c.name });
         }
         // Upsert Tipos de Entrega
         for (const dt of deliveryTypes) {
-          await supabaseClient.from('delivery_types').upsert({ id: dt.id, name: dt.name, requires_address: dt.requiresAddress });
+          await supabaseClient.from('carniceria_delivery_types').upsert({ id: dt.id, name: dt.name, requires_address: dt.requiresAddress });
         }
         // Upsert Estados
         for (const s of orderStatuses) {
-          await supabaseClient.from('order_statuses').upsert({ id: s.id, name: s.name, message_template: s.messageTemplate });
+          await supabaseClient.from('carniceria_order_statuses').upsert({ id: s.id, name: s.name, message_template: s.messageTemplate });
         }
         // Upsert Productos
         for (const p of products) {
-          await supabaseClient.from('products').upsert({
+          await supabaseClient.from('carniceria_products').upsert({
             id: p.id,
             name: p.name,
             category_id: p.category,
@@ -1084,11 +1081,11 @@
         }
         // Upsert Clientes
         for (const u of users) {
-          await supabaseClient.from('clients').upsert({ id: u.id, name: u.name, phone: u.phone, address: u.address });
+          await supabaseClient.from('carniceria_clients').upsert({ id: u.id, name: u.name, phone: u.phone, address: u.address });
         }
         // Upsert Pedidos
         for (const o of orders) {
-          await supabaseClient.from('orders').upsert({
+          await supabaseClient.from('carniceria_orders').upsert({
             id: o.id,
             date: o.date,
             user_phone: o.user.phone,
@@ -1102,7 +1099,7 @@
         }
 
         await saveData();
-        alert('✅ ¡Todos los datos locales han sido sincronizados e impactados en las tablas relacionales de demo_carniceria!');
+        alert('✅ ¡Todos los datos locales han sido sincronizados e impactados en las tablas relacionales de Supabase!');
       } catch (err) {
         alert('Error durante la migración: ' + err.message);
       }
@@ -1276,7 +1273,7 @@
       currentUser = user;
 
       if (storageEngine === 'supabase' && supabaseClient) {
-        await supabaseClient.from('clients').upsert({ id: user.id, name, phone, address });
+        await supabaseClient.from('carniceria_clients').upsert({ id: user.id, name, phone, address });
       }
 
       saveData();
@@ -1542,7 +1539,7 @@
           if (prod.stockKg <= 0) prod.isOutOfStock = true;
 
           if (storageEngine === 'supabase' && supabaseClient) {
-            await supabaseClient.from('products').update({
+            await supabaseClient.from('carniceria_products').update({
               stock_kg: prod.stockKg,
               is_out_of_stock: prod.isOutOfStock
             }).eq('id', prod.id);
@@ -1554,7 +1551,7 @@
 
       // Guardar Pedido en Supabase
       if (storageEngine === 'supabase' && supabaseClient) {
-        await supabaseClient.from('orders').insert({
+        await supabaseClient.from('carniceria_orders').insert({
           id: newOrderId,
           date: orderDateIso,
           user_phone: currentUser.phone,
@@ -1980,7 +1977,7 @@
       order.status = newStatus;
 
       if (storageEngine === 'supabase' && supabaseClient) {
-        await supabaseClient.from('orders').update({ status: newStatus }).eq('id', orderId);
+        await supabaseClient.from('carniceria_orders').update({ status: newStatus }).eq('id', orderId);
       }
 
       saveData();
@@ -2136,7 +2133,7 @@
       }
 
       if (storageEngine === 'supabase' && supabaseClient) {
-        await supabaseClient.from('products').upsert({
+        await supabaseClient.from('carniceria_products').upsert({
           id: prodId,
           name: name,
           category_id: category,
@@ -2159,7 +2156,7 @@
       if (confirm('¿Eliminar este producto?')) {
         products = products.filter(p => p.id !== id);
         if (storageEngine === 'supabase' && supabaseClient) {
-          await supabaseClient.from('products').delete().eq('id', id);
+          await supabaseClient.from('carniceria_products').delete().eq('id', id);
         }
         saveData();
         renderProducts();
@@ -2210,7 +2207,7 @@
         prod.isOutOfStock = valNum <= 0;
 
         if (storageEngine === 'supabase' && supabaseClient) {
-          await supabaseClient.from('products').update({
+          await supabaseClient.from('carniceria_products').update({
             stock_kg: valNum,
             is_out_of_stock: prod.isOutOfStock
           }).eq('id', prodId);
@@ -2232,7 +2229,7 @@
         }
 
         if (storageEngine === 'supabase' && supabaseClient) {
-          await supabaseClient.from('products').update({
+          await supabaseClient.from('carniceria_products').update({
             stock_kg: prod.stockKg,
             is_out_of_stock: prod.isOutOfStock
           }).eq('id', prodId);
@@ -2322,7 +2319,7 @@
       }
 
       if (storageEngine === 'supabase' && supabaseClient) {
-        await supabaseClient.from('clients').upsert({ id: clientId, name, phone, address });
+        await supabaseClient.from('carniceria_clients').upsert({ id: clientId, name, phone, address });
       }
 
       saveData();
@@ -2335,7 +2332,7 @@
       if (confirm('¿Eliminar cliente?')) {
         users = users.filter(u => u.id !== id);
         if (storageEngine === 'supabase' && supabaseClient) {
-          await supabaseClient.from('clients').delete().eq('id', id);
+          await supabaseClient.from('carniceria_clients').delete().eq('id', id);
         }
         saveData();
         renderABMClients();
@@ -2460,7 +2457,7 @@
       storeSettings.whatsapp = document.getElementById('cfg-whatsapp').value;
 
       if (storageEngine === 'supabase' && supabaseClient) {
-        await supabaseClient.from('store_settings').upsert({
+        await supabaseClient.from('carniceria_store_settings').upsert({
           id: 'default',
           name: storeSettings.name,
           address: storeSettings.address,
@@ -2499,7 +2496,7 @@
       deliveryTypes.push({ id, name, requiresAddress: reqAddr });
 
       if (storageEngine === 'supabase' && supabaseClient) {
-        await supabaseClient.from('delivery_types').upsert({ id, name, requires_address: reqAddr });
+        await supabaseClient.from('carniceria_delivery_types').upsert({ id, name, requires_address: reqAddr });
       }
 
       saveData();
@@ -2512,7 +2509,7 @@
       if (confirm('¿Eliminar?')) {
         deliveryTypes = deliveryTypes.filter(dt => dt.id !== id);
         if (storageEngine === 'supabase' && supabaseClient) {
-          await supabaseClient.from('delivery_types').delete().eq('id', id);
+          await supabaseClient.from('carniceria_delivery_types').delete().eq('id', id);
         }
         saveData();
         populateDeliveryTypeSelects();
@@ -2540,7 +2537,7 @@
       categories.push({ id, name });
 
       if (storageEngine === 'supabase' && supabaseClient) {
-        await supabaseClient.from('categories').upsert({ id, name });
+        await supabaseClient.from('carniceria_categories').upsert({ id, name });
       }
 
       saveData();
@@ -2552,7 +2549,7 @@
       if (confirm('¿Eliminar categoría?')) {
         categories = categories.filter(c => c.id !== id);
         if (storageEngine === 'supabase' && supabaseClient) {
-          await supabaseClient.from('categories').delete().eq('id', id);
+          await supabaseClient.from('carniceria_categories').delete().eq('id', id);
         }
         saveData();
         populateCategorySelects();
@@ -2581,7 +2578,7 @@
       if (st) {
         st.messageTemplate = newTemplate;
         if (storageEngine === 'supabase' && supabaseClient) {
-          await supabaseClient.from('order_statuses').update({ message_template: newTemplate }).eq('id', statusId);
+          await supabaseClient.from('carniceria_order_statuses').update({ message_template: newTemplate }).eq('id', statusId);
         }
         saveData();
       }
@@ -2596,7 +2593,7 @@
       orderStatuses.push({ id: name, name, messageTemplate: defaultMsg });
 
       if (storageEngine === 'supabase' && supabaseClient) {
-        await supabaseClient.from('order_statuses').upsert({ id: name, name, message_template: defaultMsg });
+        await supabaseClient.from('carniceria_order_statuses').upsert({ id: name, name, message_template: defaultMsg });
       }
 
       saveData();
@@ -2608,7 +2605,7 @@
       if (confirm('¿Eliminar estado?')) {
         orderStatuses = orderStatuses.filter(s => s.id !== id);
         if (storageEngine === 'supabase' && supabaseClient) {
-          await supabaseClient.from('order_statuses').delete().eq('id', id);
+          await supabaseClient.from('carniceria_order_statuses').delete().eq('id', id);
         }
         saveData();
         populateStatusSelects();

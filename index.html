@@ -9,6 +9,7 @@
   <!-- CDN Supabase JS Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="shortcut icon" href="#">
   <style>
     .tab-active { border-bottom: 3px solid #dc2626; color: #dc2626; font-weight: bold; }
     th.sortable { cursor: pointer; user-select: none; }
@@ -828,9 +829,19 @@
       { id: 6, name: "Combo Parri2026 (Surtido)", category: "promo", price: 18500, stockKg: 15, minStockKg: 3, isOutOfStock: false, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=400&q=80" }
     ];
 
-    let storageEngine = localStorage.getItem('carniceria_storage_engine') || 'supabase';
-    let supabaseUrl = localStorage.getItem('carniceria_supabase_url') || '';
-    let supabaseKey = localStorage.getItem('carniceria_supabase_key') || '';
+    // ==================== LECTURA DE CREDENCIALES E INICIALIZACIÓN ====================
+    const buildInjectedUrl = '';
+    const buildInjectedKey = '';
+
+    let supabaseUrl = (buildInjectedUrl && !buildInjectedUrl.includes('__SUPABASE')) 
+                      ? buildInjectedUrl 
+                      : (localStorage.getItem('carniceria_supabase_url') || '');
+
+    let supabaseKey = (buildInjectedKey && !buildInjectedKey.includes('__SUPABASE')) 
+                      ? buildInjectedKey 
+                      : (localStorage.getItem('carniceria_supabase_key') || '');
+
+    let storageEngine = localStorage.getItem('carniceria_storage_engine') || (supabaseUrl ? 'supabase' : 'local');
     let supabaseClient = null;
 
     let storeSettings = JSON.parse(localStorage.getItem('carniceria_settings')) || defaultSettings;
@@ -845,7 +856,7 @@
 
     // ==================== INICIALIZACIÓN Y CLIENTE SUPABASE ====================
     function initSupabaseClient() {
-      if (storageEngine === 'supabase' && supabaseUrl && supabaseKey && supabaseUrl !== '') {
+      if (storageEngine === 'supabase' && supabaseUrl && supabaseKey) {
         try {
           supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
           updateSupabaseStatusUI(true, 'Conectado a Supabase (public)');
@@ -949,7 +960,6 @@
             }));
           }
 
-          // Guardar fallback local
           saveDataLocalOnly();
         } catch (e) {
           console.warn('Error al cargar datos desde Supabase:', e);
@@ -971,17 +981,14 @@
     async function saveData() {
       saveDataLocalOnly();
 
-      // Impactar en Supabase si está activo
       if (storageEngine === 'supabase' && supabaseClient) {
         try {
-          // Guardar respaldo JSON global
           await supabaseClient.from('carniceria_store_config').upsert({
             id: 'main_store_data',
             data: { storeSettings, deliveryTypes, categories, orderStatuses, products, orders, users },
             updated_at: new Date().toISOString()
           });
 
-          // Guardar Ajustes
           await supabaseClient.from('carniceria_store_settings').upsert({
             id: 'default',
             name: storeSettings.name,
@@ -1054,19 +1061,15 @@
       }
 
       try {
-        // Upsert Categorías
         for (const c of categories) {
           await supabaseClient.from('carniceria_categories').upsert({ id: c.id, name: c.name });
         }
-        // Upsert Tipos de Entrega
         for (const dt of deliveryTypes) {
           await supabaseClient.from('carniceria_delivery_types').upsert({ id: dt.id, name: dt.name, requires_address: dt.requiresAddress });
         }
-        // Upsert Estados
         for (const s of orderStatuses) {
           await supabaseClient.from('carniceria_order_statuses').upsert({ id: s.id, name: s.name, message_template: s.messageTemplate });
         }
-        // Upsert Productos
         for (const p of products) {
           await supabaseClient.from('carniceria_products').upsert({
             id: p.id,
@@ -1079,11 +1082,9 @@
             img_url: p.img
           });
         }
-        // Upsert Clientes
         for (const u of users) {
           await supabaseClient.from('carniceria_clients').upsert({ id: u.id, name: u.name, phone: u.phone, address: u.address });
         }
-        // Upsert Pedidos
         for (const o of orders) {
           await supabaseClient.from('carniceria_orders').upsert({
             id: o.id,
@@ -1211,10 +1212,14 @@
       renderDT('cart-delivery-types-container-mobile');
     }
 
-    function switchMainView(view) {
+    async function switchMainView(view) {
       document.getElementById('view-client').classList.add('hidden');
       document.getElementById('view-client-stats').classList.add('hidden');
       document.getElementById('view-admin').classList.add('hidden');
+
+      if (storageEngine === 'supabase' && supabaseClient) {
+        await loadDataFromSupabase();
+      }
 
       if (view === 'client') {
         document.getElementById('view-client').classList.remove('hidden');
@@ -1531,7 +1536,6 @@
         status: orderStatuses[0] ? orderStatuses[0].id : 'Pendiente'
       };
 
-      // Actualizar Stock de Productos
       for (const cartItem of cart) {
         const prod = products.find(p => p.id === cartItem.id);
         if (prod && prod.stockKg !== undefined) {
@@ -1549,7 +1553,6 @@
 
       orders.push(newOrder);
 
-      // Guardar Pedido en Supabase
       if (storageEngine === 'supabase' && supabaseClient) {
         await supabaseClient.from('carniceria_orders').insert({
           id: newOrderId,
@@ -2107,107 +2110,72 @@
       document.getElementById('modal-product').classList.add('flex');
     }
 
-async function switchMainView(view) {
-  document.getElementById('view-client').classList.add('hidden');
-  document.getElementById('view-client-stats').classList.add('hidden');
-  document.getElementById('view-admin').classList.add('hidden');
+    async function saveProduct(e) {
+      e.preventDefault();
+      
+      const id = document.getElementById('prod-id').value;
+      const name = document.getElementById('prod-name').value;
+      const category = document.getElementById('prod-category').value;
+      const price = parseFloat(document.getElementById('prod-price').value);
+      const stockKg = parseFloat(document.getElementById('prod-stock').value);
+      const minStockKg = parseFloat(document.getElementById('prod-min-stock').value);
+      const img = document.getElementById('prod-img').value;
 
-  // Cargar datos frescos de Supabase al cambiar de pantalla
-  if (storageEngine === 'supabase' && supabaseClient) {
-    await loadDataFromSupabase();
-  }
+      let prodId = id ? Number(id) : Date.now();
+      const isOut = stockKg <= 0;
 
-  if (view === 'client') {
-    document.getElementById('view-client').classList.remove('hidden');
-    document.getElementById('floating-cart-fab').classList.remove('hidden');
-    renderProducts();
-  } else if (view === 'admin') {
-    document.getElementById('view-admin').classList.remove('hidden');
-    document.getElementById('floating-cart-fab').classList.add('hidden');
-    renderOrdersAdmin();
-    renderAdminProductsTable();
-    renderAdminStockTable();
-  }
-}
+      const newProductObj = {
+        id: prodId,
+        name: name,
+        category: category,
+        price: price,
+        stockKg: stockKg,
+        minStockKg: minStockKg,
+        isOutOfStock: isOut,
+        img: img
+      };
 
-
-
-async function saveProduct(e) {
-  e.preventDefault();
-  
-  const id = document.getElementById('prod-id').value;
-  const name = document.getElementById('prod-name').value;
-  const category = document.getElementById('prod-category').value;
-  const price = parseFloat(document.getElementById('prod-price').value);
-  const stockKg = parseFloat(document.getElementById('prod-stock').value);
-  const minStockKg = parseFloat(document.getElementById('prod-min-stock').value);
-  const img = document.getElementById('prod-img').value;
-
-  let prodId = id ? Number(id) : Date.now();
-  const isOut = stockKg <= 0;
-
-  const newProductObj = {
-    id: prodId,
-    name: name,
-    category: category,
-    price: price,
-    stockKg: stockKg,
-    minStockKg: minStockKg,
-    isOutOfStock: isOut,
-    img: img
-  };
-
-  // 1. Guardar localmente
-  if (id) {
-    const idx = products.findIndex(p => p.id == id);
-    if (idx !== -1) products[idx] = newProductObj;
-  } else {
-    products.push(newProductObj);
-  }
-
-  // 2. Guardar en Supabase si está activo
-  if (storageEngine === 'supabase' && supabaseClient) {
-    try {
-      const { data, error } = await supabaseClient
-        .from('carniceria_products')
-        .upsert({
-          id: prodId,
-          name: name,
-          category_id: category,
-          price_per_kg: price,
-          stock_kg: stockKg,
-          min_stock_kg: minStockKg,
-          is_out_of_stock: isOut,
-          img_url: img
-        });
-
-      if (error) {
-        console.error('Error Supabase:', error);
-        alert('⚠️ Ocurrió un error al guardar en Supabase: ' + error.message);
-        return;
+      if (id) {
+        const idx = products.findIndex(p => p.id == id);
+        if (idx !== -1) products[idx] = newProductObj;
+      } else {
+        products.push(newProductObj);
       }
-    } catch (err) {
-      console.error('Error de conexión:', err);
-      alert('⚠️ Error de red al conectar con Supabase.');
-      return;
+
+      if (storageEngine === 'supabase' && supabaseClient) {
+        try {
+          const { data, error } = await supabaseClient
+            .from('carniceria_products')
+            .upsert({
+              id: prodId,
+              name: name,
+              category_id: category,
+              price_per_kg: price,
+              stock_kg: stockKg,
+              min_stock_kg: minStockKg,
+              is_out_of_stock: isOut,
+              img_url: img
+            });
+
+          if (error) {
+            console.error('Error Supabase:', error);
+            alert('⚠️ Ocurrió un error al guardar en Supabase: ' + error.message);
+            return;
+          }
+        } catch (err) {
+          console.error('Error de conexión:', err);
+          alert('⚠️ Error de red al conectar con Supabase.');
+          return;
+        }
+      }
+
+      saveDataLocalOnly();
+      closeProductModal();
+      
+      renderProducts();
+      renderAdminProductsTable();
+      renderAdminStockTable();
     }
-  }
-
-  // 3. Persistir y actualizar interfaz
-  saveDataLocalOnly();
-  closeProductModal();
-  
-  renderProducts();
-  renderAdminProductsTable();
-  renderAdminStockTable();
-} 
-
-
-
-
-
-
-
 
     async function deleteProduct(id) {
       if (confirm('¿Eliminar este producto?')) {

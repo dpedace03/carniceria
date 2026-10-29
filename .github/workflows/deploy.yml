@@ -3,35 +3,10 @@ name: Deploy a GitHub Pages
 on:
   push:
     branches:
-      - main # O "master", según el nombre de tu rama principal
-
-      name: Deploy a GitHub Pages
-
-on:
-  push:
-    branches:
-      - main # O "master", según tu rama principal
+      - main # Cambia a "master" si tu rama principal se llama así
 
 permissions:
   contents: write
-
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout del código
-        uses: actions/checkout@v3
-
-      - name: Inyectar variables de entorno en index.html
-        run: |
-          sed -i "s|__SUPABASE_URL__|${{ secrets.SUPABASE_URL }}|g" index.html
-          sed -i "s|__SUPABASE_ANON_KEY__|${{ secrets.SUPABASE_ANON_KEY }}|g" index.html
-
-      - name: Desplegar en GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: .
 
 jobs:
   build-and-deploy:

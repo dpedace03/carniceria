@@ -2107,6 +2107,31 @@
       document.getElementById('modal-product').classList.add('flex');
     }
 
+async function switchMainView(view) {
+  document.getElementById('view-client').classList.add('hidden');
+  document.getElementById('view-client-stats').classList.add('hidden');
+  document.getElementById('view-admin').classList.add('hidden');
+
+  // Cargar datos frescos de Supabase al cambiar de pantalla
+  if (storageEngine === 'supabase' && supabaseClient) {
+    await loadDataFromSupabase();
+  }
+
+  if (view === 'client') {
+    document.getElementById('view-client').classList.remove('hidden');
+    document.getElementById('floating-cart-fab').classList.remove('hidden');
+    renderProducts();
+  } else if (view === 'admin') {
+    document.getElementById('view-admin').classList.remove('hidden');
+    document.getElementById('floating-cart-fab').classList.add('hidden');
+    renderOrdersAdmin();
+    renderAdminProductsTable();
+    renderAdminStockTable();
+  }
+}
+
+
+
 async function saveProduct(e) {
   e.preventDefault();
   

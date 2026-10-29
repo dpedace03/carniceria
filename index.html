@@ -841,7 +841,13 @@
                       ? buildInjectedKey 
                       : (localStorage.getItem('carniceria_supabase_key') || '');
 
-    let storageEngine = localStorage.getItem('carniceria_storage_engine') || (supabaseUrl ? 'supabase' : 'local');
+    // Si el build inyectó credenciales (GitHub Secrets), Supabase es el motor por defecto
+    // aunque el navegador tenga guardado 'local' de una visita anterior.
+    const hasInjectedCreds = !!(buildInjectedUrl && !buildInjectedUrl.includes('__SUPABASE') &&
+                                buildInjectedKey && !buildInjectedKey.includes('__SUPABASE'));
+    let storageEngine = hasInjectedCreds
+                        ? 'supabase'
+                        : (localStorage.getItem('carniceria_storage_engine') || (supabaseUrl ? 'supabase' : 'local'));
     let supabaseClient = null;
 
     let storeSettings = JSON.parse(localStorage.getItem('carniceria_settings')) || defaultSettings;

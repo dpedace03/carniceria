@@ -1,0 +1,2617 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title id="page-title">Carnicería El Corte Supremo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- CDN Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .tab-active { border-bottom: 3px solid #dc2626; color: #dc2626; font-weight: bold; }
+    th.sortable { cursor: pointer; user-select: none; }
+    th.sortable:hover { background-color: #f3f4f6; }
+    
+    .ribbon-wrapper { position: relative; overflow: hidden; }
+    .ribbon-out {
+      position: absolute; top: 22px; right: -35px; transform: rotate(35deg);
+      width: 140px; background-color: #dc2626; color: #ffffff; text-align: center;
+      font-weight: 900; font-size: 11px; letter-spacing: 1px; padding: 4px 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 10; text-transform: uppercase;
+    }
+
+    @keyframes cartBounce {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.18); }
+    }
+    .animate-cart-bounce { animation: cartBounce 0.35s ease-in-out; }
+  </style>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen flex flex-col pb-20 md:pb-0">
+
+  <!-- HEADER RESPONSIVO -->
+  <header class="bg-red-800 text-white shadow-lg sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center space-x-2 cursor-pointer" onclick="switchMainView('client')">
+        <i class="fa-solid fa-drumstick-bite text-2xl text-amber-400"></i>
+        <span class="text-lg md:text-xl font-extrabold tracking-wide" id="header-store-name">El Corte Supremo</span>
+      </div>
+      
+      <nav class="flex items-center space-x-2 md:space-x-3">
+        <button id="nav-client-btn" onclick="switchMainView('client')" class="hover:text-amber-300 font-semibold px-2 py-1 text-xs md:text-sm">
+          <i class="fa-solid fa-store mr-1"></i> Tienda
+        </button>
+        <button id="nav-client-stats-btn" onclick="switchMainView('client-stats')" class="hidden hover:text-amber-300 font-semibold px-2 py-1 text-xs md:text-sm">
+          <i class="fa-solid fa-receipt mr-1"></i> Mis Compras
+        </button>
+        <button id="nav-admin-btn" onclick="switchMainView('admin')" class="bg-red-950 hover:bg-black text-amber-400 font-semibold px-2.5 py-1.5 rounded-lg border border-amber-400/30 text-xs md:text-sm">
+          <i class="fa-solid fa-user-shield mr-1"></i> Panel Dueño
+        </button>
+        <div id="user-auth-badge" class="hidden sm:block text-xs bg-red-900 px-2 py-1 rounded"></div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- BANNER DATOS DEL NEGOCIO & INDICADOR DE ALMACENAMIENTO -->
+  <section class="bg-amber-100 border-b border-amber-200 text-amber-900 text-[11px] md:text-xs py-2 px-4">
+    <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
+      <div class="flex flex-wrap items-center gap-3">
+        <span><i class="fa-solid fa-location-dot text-red-700 mr-1"></i><strong id="info-address">Av. San Martín 1450</strong></span>
+        <span><i class="fa-solid fa-clock text-amber-700 mr-1"></i><span id="info-hours">Lun a Sáb 08:30 - 20:30 hs</span></span>
+      </div>
+      <div class="flex items-center space-x-3">
+        <span><i class="fa-brands fa-whatsapp text-green-700 font-bold mr-1"></i>WhatsApp: <strong id="info-whatsapp">+5491122334455</strong></span>
+        <span id="storage-engine-badge" class="bg-amber-200 text-amber-950 px-2 py-0.5 rounded font-extrabold text-[10px] border border-amber-300">
+          <i class="fa-solid fa-database mr-1"></i>Local
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="max-w-7xl mx-auto px-4 py-4 md:py-6 flex-grow w-full">
+
+    <!-- ==================== VISTA CLIENTE: TIENDA ==================== -->
+    <section id="view-client" class="space-y-4 md:space-y-6">
+      
+      <!-- Card Registro / Perfil -->
+      <div id="client-auth-card" class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row justify-between items-center gap-3">
+        <div>
+          <h2 class="text-base md:text-lg font-bold text-gray-800" id="welcome-text">¡Bienvenido!</h2>
+          <p class="text-xs md:text-sm text-gray-500" id="welcome-sub">Regístrate para realizar pedidos de 0.5kg en adelante y ver tu historial de compras.</p>
+        </div>
+        <button id="auth-action-btn" onclick="openAuthModal()" class="w-full md:w-auto bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg shadow text-xs md:text-sm">
+          Registrarme / Iniciar Sesión
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Catálogo de Productos -->
+        <div class="lg:col-span-2 space-y-4">
+          <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 bg-white p-3 rounded-xl border shadow-sm">
+            
+            <div class="relative flex-1">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400 text-sm"></i>
+              <input type="text" id="client-search" oninput="renderProducts()" placeholder="Buscar por Nombre..." class="w-full pl-9 pr-3 py-1.5 border rounded-lg text-sm">
+            </div>
+
+            <div class="flex flex-wrap gap-2 items-center">
+              <select id="category-filter" onchange="renderProducts()" class="flex-1 sm:flex-none border rounded-lg px-3 py-1.5 text-xs md:text-sm bg-white">
+                <!-- Render dinámico -->
+              </select>
+
+              <select id="catalog-sort" onchange="renderProducts()" class="flex-1 sm:flex-none border rounded-lg px-3 py-1.5 text-xs md:text-sm bg-white font-semibold text-gray-700">
+                <option value="name-asc">Nombre (A-Z)</option>
+                <option value="name-desc">Nombre (Z-A)</option>
+                <option value="cat-asc">Categoría (A-Z)</option>
+                <option value="price-asc">Precio/Kg (Menor a Mayor)</option>
+                <option value="price-desc">Precio/Kg (Mayor a Menor)</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Render dinámico productos -->
+          </div>
+        </div>
+
+        <!-- Carrito de Compras Lateral (Escritorio) -->
+        <div class="hidden lg:block space-y-4">
+          <div class="bg-white p-5 rounded-xl shadow-md border border-gray-200 sticky top-20">
+            <h2 class="text-lg font-bold border-b pb-2 flex items-center justify-between">
+              <span><i class="fa-solid fa-cart-shopping text-red-600 mr-2"></i>Tu Pedido</span>
+              <span id="cart-count-desktop" class="bg-red-100 text-red-800 text-xs px-2 py-0.5 rounded-full font-bold">0.0 kg</span>
+            </h2>
+
+            <div id="cart-items-desktop" class="divide-y my-3 max-h-60 overflow-y-auto text-sm">
+              <p class="text-gray-400 text-center py-6">El carrito está vacío</p>
+            </div>
+
+            <div class="border-t pt-3 space-y-3">
+              <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">Método de entrega:</label>
+                <div id="cart-delivery-types-container-desktop" class="grid grid-cols-1 gap-1.5 text-xs">
+                  <!-- Render dinámico -->
+                </div>
+              </div>
+
+              <div id="delivery-address-container-desktop" class="hidden">
+                <label class="block text-xs font-bold text-gray-700 mb-1">Dirección de envío:</label>
+                <textarea id="cart-address-desktop" class="w-full text-xs border rounded p-2" rows="2" placeholder="Ingresa tu dirección exacta..."></textarea>
+              </div>
+
+              <div class="flex justify-between text-base font-bold text-gray-900 border-t pt-2">
+                <span>Total estimado:</span>
+                <span id="cart-total-desktop">$0</span>
+              </div>
+
+              <button onclick="processOrder()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 rounded-lg shadow flex items-center justify-center space-x-2">
+                <i class="fa-brands fa-whatsapp text-lg"></i>
+                <span>Confirmar por WhatsApp</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VISTA CLIENTE: MIS COMPRAS ==================== -->
+    <section id="view-client-stats" class="hidden space-y-6">
+      <h2 class="text-xl md:text-2xl font-bold text-gray-800">Mis Compras e Historial</h2>
+      
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white p-4 rounded-xl border shadow-sm">
+          <p class="text-xs text-gray-500 font-bold uppercase">Total Invertido</p>
+          <p id="cstat-total-spent" class="text-2xl font-extrabold text-red-600">$0</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border shadow-sm">
+          <p class="text-xs text-gray-500 font-bold uppercase">Pedidos Realizados</p>
+          <p id="cstat-orders-count" class="text-2xl font-extrabold text-gray-800">0</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border shadow-sm">
+          <p class="text-xs text-gray-500 font-bold uppercase">Corte Favorito</p>
+          <p id="cstat-favorite" class="text-lg font-bold text-gray-800 truncate">-</p>
+        </div>
+      </div>
+
+      <div class="bg-white p-4 rounded-xl border space-y-4">
+        <div class="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-3">
+          <h3 class="font-bold text-gray-700 text-sm md:text-base">Historial de Pedidos Realizados</h3>
+          
+          <div class="flex flex-wrap gap-2 items-center">
+            <input type="text" id="client-orders-search" oninput="renderClientOrders()" placeholder="Buscar por producto..." class="border rounded-lg px-3 py-1.5 text-xs md:text-sm flex-1">
+            
+            <div class="flex items-center space-x-1 text-xs">
+              <span class="font-semibold text-gray-500">Desde:</span>
+              <input type="date" id="client-date-from" onchange="renderClientOrders()" class="border rounded p-1 text-xs">
+            </div>
+            
+            <div class="flex items-center space-x-1 text-xs">
+              <span class="font-semibold text-gray-500">Hasta:</span>
+              <input type="date" id="client-date-to" onchange="renderClientOrders()" class="border rounded p-1 text-xs">
+            </div>
+
+            <select id="client-orders-status-filter" onchange="renderClientOrders()" class="border rounded-lg px-2 py-1.5 text-xs bg-white">
+              <option value="all">Todos los estados</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-gray-100 text-xs font-bold text-gray-600 border-b">
+                <th class="p-2 md:p-3 sortable" onclick="sortClientOrders('id')"># Pedido</th>
+                <th class="p-2 md:p-3 sortable" onclick="sortClientOrders('date')">Fecha</th>
+                <th class="p-2 md:p-3 sortable" onclick="sortClientOrders('items')">Productos</th>
+                <th class="p-2 md:p-3 sortable text-center" onclick="sortClientOrders('kg')">Total Kg</th>
+                <th class="p-2 md:p-3 sortable" onclick="sortClientOrders('status')">Estado</th>
+                <th class="p-2 md:p-3 sortable text-right" onclick="sortClientOrders('total')">Monto Total</th>
+                <th class="p-2 md:p-3 text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="client-orders-tbody" class="divide-y text-xs">
+              <!-- Render dinámico -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="bg-white p-4 rounded-xl border shadow-sm">
+        <h3 class="font-bold text-gray-700 text-sm mb-4">Kilogramos Comprados por Producto</h3>
+        <div class="h-64">
+          <canvas id="chartClientProducts"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VISTA ADMIN (DUEÑO) ==================== -->
+    <section id="view-admin" class="hidden space-y-6">
+      <div class="flex flex-wrap border-b border-gray-300 gap-1 md:gap-2 overflow-x-auto">
+        <button onclick="switchAdminTab('orders')" id="atab-orders" class="px-3 py-2 font-bold text-xs md:text-sm tab-active whitespace-nowrap">
+          <i class="fa-solid fa-receipt mr-1"></i> Pedidos
+        </button>
+        <button onclick="switchAdminTab('products')" id="atab-products" class="px-3 py-2 font-bold text-xs md:text-sm text-gray-600 whitespace-nowrap">
+          <i class="fa-solid fa-drumstick-bite mr-1"></i> Productos
+        </button>
+        <button onclick="switchAdminTab('stock')" id="atab-stock" class="px-3 py-2 font-bold text-xs md:text-sm text-gray-600 whitespace-nowrap">
+          <i class="fa-solid fa-boxes-stacked mr-1"></i> Stock (kg)
+        </button>
+        <button onclick="switchAdminTab('clients')" id="atab-clients" class="px-3 py-2 font-bold text-xs md:text-sm text-gray-600 whitespace-nowrap">
+          <i class="fa-solid fa-users mr-1"></i> Clientes
+        </button>
+        <button onclick="switchAdminTab('stats')" id="atab-stats" class="px-3 py-2 font-bold text-xs md:text-sm text-gray-600 whitespace-nowrap">
+          <i class="fa-solid fa-chart-pie mr-1"></i> Estadísticas
+        </button>
+        <button onclick="switchAdminTab('marketing')" id="atab-marketing" class="px-3 py-2 font-bold text-xs md:text-sm text-gray-600 whitespace-nowrap">
+          <i class="fa-solid fa-bullhorn mr-1"></i> Promos
+        </button>
+        <button onclick="switchAdminTab('config')" id="atab-config" class="px-3 py-2 font-bold text-xs md:text-sm text-gray-600 whitespace-nowrap">
+          <i class="fa-solid fa-sliders mr-1"></i> Ajustes / DB Supabase
+        </button>
+      </div>
+
+      <!-- TAB ADMIN: GESTIÓN DE PEDIDOS RECIBIDOS -->
+      <div id="admin-tab-orders" class="space-y-4">
+        <div class="flex justify-between items-center bg-white p-3 rounded-xl border shadow-sm">
+          <h2 class="text-base md:text-lg font-bold text-gray-800">Pedidos Recibidos</h2>
+          <button onclick="toggleAdminSearchPanel()" class="bg-gray-800 hover:bg-black text-amber-300 font-bold px-3 py-1.5 rounded-lg text-xs flex items-center space-x-1 shadow">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <span>Filtrar</span>
+          </button>
+        </div>
+
+        <div id="admin-search-panel" class="hidden bg-white p-4 rounded-xl border shadow-sm space-y-3">
+          <div class="flex justify-between items-center border-b pb-2">
+            <h3 class="text-xs font-bold text-red-700"><i class="fa-solid fa-filter mr-1"></i>Búsqueda Avanzada</h3>
+            <button onclick="clearAdminOrderFilters()" class="text-xs text-red-600 font-bold hover:underline">Limpiar</button>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-xs">
+            <div>
+              <label class="block font-bold text-gray-600 mb-0.5">Cliente:</label>
+              <input type="text" id="admin-f-client" oninput="renderOrdersAdmin()" placeholder="Ej. Juan" class="w-full border rounded p-1.5">
+            </div>
+
+            <div>
+              <label class="block font-bold text-gray-600 mb-0.5">Producto:</label>
+              <input type="text" id="admin-f-product" oninput="renderOrdersAdmin()" placeholder="Ej. Asado" class="w-full border rounded p-1.5">
+            </div>
+
+            <div>
+              <label class="block font-bold text-gray-600 mb-0.5">Domicilio:</label>
+              <input type="text" id="admin-f-address" oninput="renderOrdersAdmin()" placeholder="Calle..." class="w-full border rounded p-1.5">
+            </div>
+
+            <div>
+              <label class="block font-bold text-gray-600 mb-0.5">WhatsApp:</label>
+              <input type="text" id="admin-f-whatsapp" oninput="renderOrdersAdmin()" placeholder="Teléfono..." class="w-full border rounded p-1.5">
+            </div>
+
+            <div>
+              <label class="block font-bold text-gray-600 mb-0.5">Tipo Entrega:</label>
+              <select id="admin-f-type" onchange="renderOrdersAdmin()" class="w-full border rounded p-1.5 bg-white">
+                <option value="all">Todos</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block font-bold text-gray-600 mb-0.5">Desde:</label>
+              <input type="date" id="admin-f-date-from" onchange="renderOrdersAdmin()" class="w-full border rounded p-1.5">
+            </div>
+
+            <div>
+              <label class="block font-bold text-gray-600 mb-0.5">Hasta:</label>
+              <input type="date" id="admin-f-date-to" onchange="renderOrdersAdmin()" class="w-full border rounded p-1.5">
+            </div>
+
+            <div>
+              <label class="block font-bold text-gray-600 mb-0.5">Estado:</label>
+              <select id="admin-orders-status-filter" onchange="renderOrdersAdmin()" class="w-full border rounded p-1.5 bg-white">
+                <option value="all">Todos</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-gray-100 text-xs font-bold text-gray-600 border-b">
+                <th class="p-3 sortable" onclick="sortAdminOrders('id')"># Pedido</th>
+                <th class="p-3 sortable" onclick="sortAdminOrders('date')">Fecha</th>
+                <th class="p-3 sortable" onclick="sortAdminOrders('client')">Cliente</th>
+                <th class="p-3 sortable" onclick="sortAdminOrders('items')">Productos</th>
+                <th class="p-3 sortable" onclick="sortAdminOrders('type')">Tipo</th>
+                <th class="p-3 sortable" onclick="sortAdminOrders('status')">Estado</th>
+                <th class="p-3 sortable text-right" onclick="sortAdminOrders('total')">Total</th>
+                <th class="p-3 text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="admin-orders-tbody" class="divide-y text-xs">
+              <!-- Render dinámico pedidos -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB ADMIN: PRODUCTOS -->
+      <div id="admin-tab-products" class="hidden space-y-4">
+        <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+          <h2 class="text-lg font-bold text-gray-800">Catálogo de Productos</h2>
+          
+          <div class="flex flex-wrap items-center gap-2">
+            <input type="text" id="admin-prod-search" oninput="renderAdminProductsTable()" placeholder="Buscar..." class="border rounded-lg px-3 py-1.5 text-xs flex-1">
+            <select id="admin-prod-category-filter" onchange="renderAdminProductsTable()" class="border rounded-lg px-2 py-1.5 text-xs bg-white">
+              <option value="all">Todas</option>
+            </select>
+            <button onclick="openProductModal()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs">
+              + Nuevo
+            </button>
+          </div>
+        </div>
+
+        <div id="admin-products-table-container" class="bg-white rounded-xl shadow-sm border overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-gray-50 border-b text-xs font-bold text-gray-500 uppercase">
+                <th class="p-3">Img</th>
+                <th class="p-3 sortable" onclick="sortAdminProducts('name')">Nombre</th>
+                <th class="p-3 sortable" onclick="sortAdminProducts('category')">Categoría</th>
+                <th class="p-3 sortable" onclick="sortAdminProducts('price')">Precio/Kg</th>
+                <th class="p-3">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="admin-products-tbody">
+              <!-- Render dinámico -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB ADMIN: CONTROL DE STOCK -->
+      <div id="admin-tab-stock" class="hidden space-y-4">
+        <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl flex items-start space-x-2">
+          <i class="fa-solid fa-lightbulb text-amber-600 text-xl mt-0.5"></i>
+          <div class="text-xs text-amber-900">
+            <h3 class="font-bold text-amber-950 mb-0.5">Gestión de Stock de Carne en Kg</h3>
+            <p>Al marcar <strong>"Agotado"</strong>, el producto sigue viéndose en la tienda pero con cinta diagonal de <strong>AGOTADO</strong> sobre la foto.</p>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-gray-50 border-b text-xs font-bold text-gray-500 uppercase">
+                <th class="p-3">Producto</th>
+                <th class="p-3 text-center">Stock (kg)</th>
+                <th class="p-3 text-center">Stock Mín.</th>
+                <th class="p-3 text-center">Estado</th>
+                <th class="p-3 text-center">Acción</th>
+              </tr>
+            </thead>
+            <tbody id="admin-stock-tbody" class="divide-y text-xs">
+              <!-- Render dinámico stock -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB ADMIN: ABM CLIENTES -->
+      <div id="admin-tab-clients" class="hidden space-y-4">
+        <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 bg-white p-3 rounded-xl border shadow-sm">
+          <h2 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-users text-red-600 mr-2"></i>ABM Clientes</h2>
+          
+          <div class="flex items-center gap-2">
+            <input type="text" id="admin-client-search" oninput="renderABMClients()" placeholder="Buscar cliente..." class="w-full sm:w-64 border rounded-lg px-3 py-1.5 text-xs">
+            <button onclick="openClientModal()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs whitespace-nowrap">
+              + Nuevo
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-gray-50 border-b text-xs font-bold text-gray-500 uppercase">
+                <th class="p-3">Nombre</th>
+                <th class="p-3">WhatsApp</th>
+                <th class="p-3">Dirección</th>
+                <th class="p-3 text-center">Pedidos</th>
+                <th class="p-3">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="abm-clients-tbody">
+              <!-- Render dinámico clientes -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB ADMIN: ESTADÍSTICAS -->
+      <div id="admin-tab-stats" class="hidden space-y-6">
+        <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-3 rounded-xl border shadow-sm">
+          <h2 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-chart-line text-red-600 mr-2"></i>Estadísticas</h2>
+          
+          <div class="flex flex-wrap items-center gap-2 text-xs">
+            <span class="font-bold text-gray-600">Período:</span>
+            <input type="date" id="stats-date-from" onchange="renderAdminStats()" class="border rounded p-1">
+            <span>-</span>
+            <input type="date" id="stats-date-to" onchange="renderAdminStats()" class="border rounded p-1">
+            <button onclick="resetStatsDates()" class="bg-gray-200 hover:bg-gray-300 font-bold px-2 py-1 rounded">Ver Todo</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="bg-white p-4 rounded-xl border shadow-sm">
+            <p class="text-xs text-gray-500 font-bold uppercase">Monto Venta Total</p>
+            <p id="astat-total-sales" class="text-2xl font-extrabold text-green-600">$0</p>
+          </div>
+          <div class="bg-white p-4 rounded-xl border shadow-sm">
+            <p class="text-xs text-gray-500 font-bold uppercase">Pedidos Total</p>
+            <p id="astat-total-orders" class="text-2xl font-extrabold text-blue-600">0</p>
+          </div>
+          <div class="bg-white p-4 rounded-xl border shadow-sm">
+            <p class="text-xs text-gray-500 font-bold uppercase">Clientes</p>
+            <p id="astat-total-clients" class="text-2xl font-extrabold text-purple-600">0</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="bg-white p-4 rounded-xl border shadow-sm space-y-2">
+            <h3 class="font-bold text-gray-700 text-xs border-b pb-1">Ventas por Mes ($)</h3>
+            <div class="h-48"><canvas id="chartAdminMonth"></canvas></div>
+          </div>
+          <div class="bg-white p-4 rounded-xl border shadow-sm space-y-2">
+            <h3 class="font-bold text-gray-700 text-xs border-b pb-1">Ventas por Tipo Entrega ($)</h3>
+            <div class="h-48"><canvas id="chartAdminType"></canvas></div>
+          </div>
+          <div class="bg-white p-4 rounded-xl border shadow-sm space-y-2 lg:col-span-2">
+            <h3 class="font-bold text-gray-700 text-xs border-b pb-1">Ventas por Domicilio ($)</h3>
+            <div class="h-56"><canvas id="chartAdminAddress"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB ADMIN: CAMPAÑAS PROMO -->
+      <div id="admin-tab-marketing" class="hidden space-y-6">
+        <h2 class="text-lg font-bold text-gray-800">Promociones por WhatsApp</h2>
+        <div class="bg-white p-5 rounded-xl border shadow-sm max-w-xl space-y-3">
+          <div>
+            <label class="block text-xs font-bold text-gray-700 mb-1">URL Imagen Promo:</label>
+            <input type="text" id="promo-img-url" class="w-full border rounded-lg p-2 text-xs" value="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-700 mb-1">Mensaje Promocional:</label>
+            <textarea id="promo-msg" class="w-full border rounded-lg p-2 text-xs" rows="3">🔥 ¡OFERTA ESPECIAL DE LA SEMANA! Llevando 2kg o más de Asado de Tira obtén un 15% de descuento. ¡Haz tu pedido ahora!</textarea>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-700 mb-1">Cliente Destino:</label>
+            <select id="promo-client-select" class="w-full border rounded-lg p-2 text-xs bg-white font-bold">
+              <!-- Render clientes -->
+            </select>
+          </div>
+          <button onclick="sendWhatsAppPromo()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow text-xs flex items-center justify-center space-x-2">
+            <i class="fa-brands fa-whatsapp text-base"></i>
+            <span>Enviar Promo por WhatsApp</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- TAB ADMIN: PARAMETRIZACIÓN & CONFIGURACIÓN SUPABASE -->
+      <div id="admin-tab-config" class="hidden space-y-6">
+        
+        <!-- Módulo de Configuración de Base de Datos Supabase -->
+        <div class="bg-white p-5 rounded-xl border border-emerald-200 shadow-sm space-y-4 max-w-2xl bg-gradient-to-r from-emerald-50/50 to-white">
+          <div class="flex justify-between items-center border-b border-emerald-100 pb-2">
+            <h3 class="text-base font-bold text-emerald-950 flex items-center">
+              <i class="fa-solid fa-database text-emerald-600 mr-2"></i> Conexión Supabase (Tablas: <code class="bg-emerald-100 text-emerald-900 px-1 rounded ml-1">carniceria_*</code>)
+            </h3>
+            <span id="supabase-status-dot" class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-200 text-gray-700">
+              Desconectado
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div>
+              <label class="block font-bold text-gray-700 mb-1">Motor de Almacenamiento:</label>
+              <select id="cfg-storage-engine" onchange="toggleStorageEngineUI()" class="w-full border rounded p-2 bg-white font-bold text-emerald-900 border-emerald-300">
+                <option value="local">LocalStorage (Local)</option>
+                <option value="supabase">Supabase Database (carniceria_*)</option>
+              </select>
+            </div>
+
+            <div class="sm:col-span-2 space-y-2 pt-2 border-t border-gray-100" id="supabase-credentials-fields">
+              <div>
+                <label class="block font-bold text-gray-700 mb-1">Supabase Project URL:</label>
+                <input type="text" id="cfg-supabase-url" placeholder="https://xyz.supabase.co" class="w-full border rounded p-2 text-xs">
+              </div>
+              <div>
+                <label class="block font-bold text-gray-700 mb-1">Supabase Anon Key:</label>
+                <input type="password" id="cfg-supabase-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." class="w-full border rounded p-2 text-xs">
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap gap-2 pt-2 border-t">
+            <button onclick="saveStorageSettings(event)" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-4 py-2 rounded-lg text-xs shadow">
+              Guardar Credenciales
+            </button>
+            <button onclick="testSupabaseConnection()" class="bg-gray-800 hover:bg-black text-amber-300 font-bold px-3 py-2 rounded-lg text-xs shadow">
+              <i class="fa-solid fa-plug mr-1"></i> Probar Conexión Esquema
+            </button>
+            <button onclick="syncLocalToSupabase()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-2 rounded-lg text-xs shadow">
+              <i class="fa-solid fa-cloud-arrow-up mr-1"></i> Sincronizar Todo a Supabase
+            </button>
+          </div>
+        </div>
+
+        <!-- Módulo Backup JSON -->
+        <div class="bg-white p-5 rounded-xl border shadow-sm space-y-3 max-w-2xl">
+          <div class="flex justify-between items-center border-b pb-2">
+            <h3 class="text-base font-bold text-gray-800"><i class="fa-solid fa-file-badge text-red-600 mr-2"></i>Copia de Seguridad Integral (JSON)</h3>
+          </div>
+          <p class="text-xs text-gray-600">Exporta o importa todos los datos del negocio (Productos, Stock, Pedidos, Clientes, Configuración y WhatsApp).</p>
+          
+          <div class="flex flex-wrap gap-2 pt-1">
+            <button onclick="exportJSONBackup()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-2 rounded-lg text-xs flex items-center space-x-1 shadow">
+              <i class="fa-solid fa-file-export"></i>
+              <span>Exportar Backup (JSON)</span>
+            </button>
+
+            <label class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-2 rounded-lg text-xs flex items-center space-x-1 shadow cursor-pointer">
+              <i class="fa-solid fa-file-import"></i>
+              <span>Importar Backup (JSON)</span>
+              <input type="file" id="import-json-file" accept=".json" onchange="importJSONBackup(event)" class="hidden">
+            </label>
+          </div>
+        </div>
+
+        <!-- Configuración Datos del Negocio -->
+        <div class="bg-white p-5 rounded-xl border shadow-sm space-y-3 max-w-2xl">
+          <h3 class="text-base font-bold text-gray-800 border-b pb-2"><i class="fa-solid fa-store mr-2 text-red-600"></i>Datos del Negocio</h3>
+          <form onsubmit="saveStoreSettings(event)" class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div>
+              <label class="block font-bold text-gray-700 mb-1">Nombre Carnicería</label>
+              <input type="text" id="cfg-name" required class="w-full border rounded p-1.5">
+            </div>
+            <div>
+              <label class="block font-bold text-gray-700 mb-1">WhatsApp Pedidos</label>
+              <input type="text" id="cfg-whatsapp" required class="w-full border rounded p-1.5">
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block font-bold text-gray-700 mb-1">Dirección</label>
+              <input type="text" id="cfg-address" required class="w-full border rounded p-1.5">
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block font-bold text-gray-700 mb-1">Horarios</label>
+              <input type="text" id="cfg-hours" required class="w-full border rounded p-1.5">
+            </div>
+            <div class="sm:col-span-2 pt-1">
+              <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-xs">Guardar Cambios</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- ABM Tipos Entrega -->
+          <div class="bg-white p-5 rounded-xl border shadow-sm space-y-3">
+            <div class="flex justify-between items-center border-b pb-2">
+              <h3 class="text-sm font-bold text-gray-800">ABM Tipos de Entrega</h3>
+              <button onclick="addDeliveryTypePrompt()" class="bg-green-600 text-white font-bold text-xs px-2 py-1 rounded">+ Agregar</button>
+            </div>
+            <div id="abm-delivery-types-list" class="divide-y text-xs max-h-48 overflow-y-auto"></div>
+          </div>
+
+          <!-- ABM Categorías -->
+          <div class="bg-white p-5 rounded-xl border shadow-sm space-y-3">
+            <div class="flex justify-between items-center border-b pb-2">
+              <h3 class="text-sm font-bold text-gray-800">ABM Categorías</h3>
+              <button onclick="addCategoryPrompt()" class="bg-green-600 text-white font-bold text-xs px-2 py-1 rounded">+ Agregar</button>
+            </div>
+            <div id="abm-categories-list" class="divide-y text-xs max-h-48 overflow-y-auto"></div>
+          </div>
+
+          <!-- ABM Estados de Pedido -->
+          <div class="bg-white p-5 rounded-xl border shadow-sm space-y-3 lg:col-span-2">
+            <div class="flex justify-between items-center border-b pb-2">
+              <div>
+                <h3 class="text-sm font-bold text-gray-800">ABM Estados de Pedido y Plantillas WhatsApp</h3>
+                <p class="text-[11px] text-gray-500">Variables: <code class="text-red-600 font-bold">{cliente}</code>, <code class="text-red-600 font-bold">{pedido}</code>, <code class="text-red-600 font-bold">{tipo}</code>, <code class="text-red-600 font-bold">{direccion}</code>, <code class="text-red-600 font-bold">{total}</code> y <code class="text-red-600 font-bold">{productos}</code>.</p>
+              </div>
+              <button onclick="addStatusPrompt()" class="bg-green-600 text-white font-bold text-xs px-2.5 py-1 rounded">+ Nuevo</button>
+            </div>
+            
+            <div id="abm-statuses-container" class="space-y-3">
+              <!-- Render dinámico -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- BOTÓN FLOTANTE CARRITO -->
+  <div id="floating-cart-fab" class="fixed bottom-4 right-4 z-40 flex items-center gap-2">
+    <button onclick="openMobileCartModal()" id="fab-cart-btn" class="bg-green-600 hover:bg-green-700 text-white p-3.5 rounded-full shadow-2xl flex items-center justify-center relative border-2 border-white">
+      <i class="fa-solid fa-cart-shopping text-xl"></i>
+      <span id="fab-cart-badge" class="absolute -top-2 -right-2 bg-red-600 text-white text-[11px] font-extrabold px-2 py-0.5 rounded-full border border-white shadow">0.0 kg</span>
+    </button>
+    <div onclick="openMobileCartModal()" class="bg-gray-900/90 backdrop-blur text-white px-3 py-1.5 rounded-full text-xs font-extrabold shadow-lg cursor-pointer hidden sm:block border border-gray-700">
+      <span id="fab-cart-total">$0</span>
+    </div>
+  </div>
+
+  <!-- MODAL DE CARRITO FLOTANTE -->
+  <div id="modal-mobile-cart" class="fixed inset-0 bg-black/60 hidden items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+    <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-lg w-full p-5 space-y-4 relative max-h-[90vh] flex flex-col justify-between">
+      <div>
+        <div class="flex justify-between items-center border-b pb-3">
+          <h3 class="text-lg font-bold text-gray-800 flex items-center">
+            <i class="fa-solid fa-cart-shopping text-red-600 mr-2"></i> Tu Pedido
+          </h3>
+          <button onclick="closeMobileCartModal()" class="text-gray-400 hover:text-gray-600 text-xl font-bold p-1"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div id="cart-items-mobile" class="divide-y my-3 max-h-60 overflow-y-auto text-sm">
+          <p class="text-gray-400 text-center py-6">El carrito está vacío</p>
+        </div>
+      </div>
+
+      <div class="border-t pt-3 space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-1">Método de entrega:</label>
+          <div id="cart-delivery-types-container-mobile" class="grid grid-cols-1 gap-1.5 text-xs">
+            <!-- Render dinámico -->
+          </div>
+        </div>
+
+        <div id="delivery-address-container-mobile" class="hidden">
+          <label class="block text-xs font-bold text-gray-700 mb-1">Dirección de envío:</label>
+          <textarea id="cart-address-mobile" class="w-full text-xs border rounded p-2" rows="2" placeholder="Ingresa tu dirección exacta..."></textarea>
+        </div>
+
+        <div class="flex justify-between text-base font-bold text-gray-900 border-t pt-2">
+          <span>Total estimado:</span>
+          <span id="cart-total-mobile">$0</span>
+        </div>
+
+        <button onclick="processOrder()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow flex items-center justify-center space-x-2 text-sm">
+          <i class="fa-brands fa-whatsapp text-xl"></i>
+          <span>Confirmar por WhatsApp</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: DETALLE DE PEDIDO -->
+  <div id="modal-order-detail" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-lg w-full p-5 space-y-4 relative">
+      <button onclick="closeOrderDetailModal()" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+      <h3 class="text-lg font-bold text-gray-800 border-b pb-2" id="mod-detail-title">Detalle del Pedido</h3>
+      
+      <div id="mod-detail-body" class="space-y-3 text-xs text-gray-700 max-h-96 overflow-y-auto"></div>
+
+      <div class="flex justify-end gap-2 border-t pt-3" id="mod-detail-actions">
+        <button onclick="closeOrderDetailModal()" class="bg-gray-200 text-gray-800 font-bold px-3 py-1.5 rounded-lg text-xs">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: AUTENTICACIÓN / REGISTRO CLIENTE -->
+  <div id="modal-auth" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-md w-full p-5 space-y-3 relative">
+      <button onclick="closeAuthModal()" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+      <h3 class="text-lg font-bold text-gray-800">Registro / Ingreso de Cliente</h3>
+      <form id="auth-form" onsubmit="handleAuth(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-0.5">Nombre Completo</label>
+          <input type="text" id="reg-name" required class="w-full border rounded p-2 text-xs">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-0.5">WhatsApp (con código de país/área)</label>
+          <input type="tel" id="reg-phone" required placeholder="Ej: 5491122334455" class="w-full border rounded p-2 text-xs">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-0.5">Dirección Predeterminada</label>
+          <input type="text" id="reg-address" required placeholder="Calle 123, Timbre B" class="w-full border rounded p-2 text-xs">
+        </div>
+        <button type="submit" class="w-full bg-red-600 text-white font-bold py-2 rounded-lg hover:bg-red-700 text-xs">Guardar Datos</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: CLIENTE (ADMIN) -->
+  <div id="modal-client-admin" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-md w-full p-5 space-y-3 relative">
+      <button onclick="closeClientAdminModal()" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+      <h3 class="text-lg font-bold text-gray-800" id="client-modal-title">Guardar Cliente</h3>
+      <form onsubmit="saveClientAdmin(event)" class="space-y-3">
+        <input type="hidden" id="admin-cli-id">
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-0.5">Nombre Completo</label>
+          <input type="text" id="admin-cli-name" required class="w-full border rounded p-2 text-xs">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-0.5">WhatsApp</label>
+          <input type="text" id="admin-cli-phone" required placeholder="Ej: 5491122334455" class="w-full border rounded p-2 text-xs">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-0.5">Dirección</label>
+          <input type="text" id="admin-cli-address" required placeholder="Calle 123" class="w-full border rounded p-2 text-xs">
+        </div>
+        <button type="submit" class="w-full bg-red-600 text-white font-bold py-2 rounded-lg text-xs">Guardar Cliente</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: PRODUCTO -->
+  <div id="modal-product" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-md w-full p-5 space-y-3 relative">
+      <button onclick="closeProductModal()" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+      <h3 class="text-lg font-bold text-gray-800" id="product-modal-title">Cargar Producto</h3>
+      <form id="product-form" onsubmit="saveProduct(event)" class="space-y-3">
+        <input type="hidden" id="prod-id">
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-0.5">Nombre del Corte / Producto</label>
+          <input type="text" id="prod-name" required class="w-full border rounded p-2 text-xs">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-bold text-gray-700 mb-0.5">Categoría</label>
+            <select id="prod-category" class="w-full border rounded p-2 text-xs bg-white"></select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-700 mb-0.5">Precio por Kg ($)</label>
+            <input type="number" id="prod-price" step="0.01" required class="w-full border rounded p-2 text-xs">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-bold text-gray-700 mb-0.5">Stock Inicial (kg)</label>
+            <input type="number" id="prod-stock" step="0.1" value="50" required class="w-full border rounded p-2 text-xs">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-700 mb-0.5">Stock Mínimo (kg)</label>
+            <input type="number" id="prod-min-stock" step="0.1" value="10" required class="w-full border rounded p-2 text-xs">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-0.5">URL Imagen</label>
+          <input type="url" id="prod-img" required class="w-full border rounded p-2 text-xs">
+        </div>
+        <button type="submit" class="w-full bg-red-600 text-white font-bold py-2 rounded-lg text-xs">Guardar Producto</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // ==================== VALORES POR DEFECTO ====================
+    const defaultSettings = {
+      name: "El Corte Supremo",
+      address: "Av. San Martín 1450, CABA",
+      hours: "Lun a Sáb 08:30 - 20:30 hs",
+      whatsapp: "+5491122334455"
+    };
+
+    const defaultDeliveryTypes = [
+      { id: "takeaway", name: "Retiro en Local (Take Away)", requiresAddress: false },
+      { id: "delivery", name: "Envío a Domicilio (Delivery)", requiresAddress: true }
+    ];
+
+    const defaultCategories = [
+      { id: "vacuno", name: "Carne Vacuna" },
+      { id: "cerdo", name: "Cerdo" },
+      { id: "pollo", name: "Pollo" },
+      { id: "embutidos", name: "Embutidos / Achuras" },
+      { id: "promo", name: "Promociones" }
+    ];
+
+    const defaultStatuses = [
+      { id: "Pendiente", name: "Pendiente", messageTemplate: "¡Hola {cliente}! Recibimos tu pedido #{pedido}.\n\n🛒 Detalle:\n{productos}\n\nTotal: {total}. Ya lo estamos registrando." },
+      { id: "En Preparación", name: "En Preparación", messageTemplate: "¡Hola {cliente}! Tu pedido #{pedido} de {total} ya se está preparando en la carnicería.\n\n🛒 Ítems:\n{productos}" },
+      { id: "Listo para Entregar", name: "Listo para Entregar", messageTemplate: "¡Hola {cliente}! Tu pedido #{pedido} está LISTO para {tipo}.\nDirección: {direccion}.\n\n🛒 Detalle del pedido:\n{productos}\n\nTotal a abonar: {total}. ¡Muchas gracias!" },
+      { id: "Entregado", name: "Entregado", messageTemplate: "¡Hola {cliente}! Tu pedido #{pedido} por {total} ha sido entregado exitosamente. ¡Que lo disfrutes mucho! 🥩🔥" }
+    ];
+
+    const defaultProducts = [
+      { id: 1, name: "Asado de Tira", category: "vacuno", price: 8500, stockKg: 45, minStockKg: 10, isOutOfStock: false, img: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=400&q=80" },
+      { id: 2, name: "Bife de Chorizo", category: "vacuno", price: 9200, stockKg: 30, minStockKg: 8, isOutOfStock: false, img: "https://images.unsplash.com/photo-1603048588665-791ca8aea617?auto=format&fit=crop&w=400&q=80" },
+      { id: 3, name: "Pechuga de Pollo", category: "pollo", price: 4500, stockKg: 60, minStockKg: 15, isOutOfStock: false, img: "https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&w=400&q=80" },
+      { id: 4, name: "Bondiola de Cerdo", category: "cerdo", price: 6800, stockKg: 25, minStockKg: 5, isOutOfStock: false, img: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=400&q=80" },
+      { id: 5, name: "Chorizo Artesanal", category: "embutidos", price: 5200, stockKg: 40, minStockKg: 10, isOutOfStock: false, img: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?auto=format&fit=crop&w=400&q=80" },
+      { id: 6, name: "Combo Parri2026 (Surtido)", category: "promo", price: 18500, stockKg: 15, minStockKg: 3, isOutOfStock: false, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=400&q=80" }
+    ];
+
+    let storageEngine = localStorage.getItem('carniceria_storage_engine') || 'supabase';
+    let supabaseUrl = localStorage.getItem('carniceria_supabase_url') || '';
+    let supabaseKey = localStorage.getItem('carniceria_supabase_key') || '';
+    let supabaseClient = null;
+
+    let storeSettings = JSON.parse(localStorage.getItem('carniceria_settings')) || defaultSettings;
+    let deliveryTypes = JSON.parse(localStorage.getItem('carniceria_delivery_types')) || defaultDeliveryTypes;
+    let categories = JSON.parse(localStorage.getItem('carniceria_categories')) || defaultCategories;
+    let orderStatuses = JSON.parse(localStorage.getItem('carniceria_statuses')) || defaultStatuses;
+    let products = JSON.parse(localStorage.getItem('carniceria_products')) || defaultProducts;
+    let orders = JSON.parse(localStorage.getItem('carniceria_orders')) || [];
+    let users = JSON.parse(localStorage.getItem('carniceria_users')) || [];
+    let currentUser = JSON.parse(localStorage.getItem('carniceria_current_user')) || null;
+    let cart = [];
+
+    // ==================== INICIALIZACIÓN Y CLIENTE SUPABASE ====================
+    function initSupabaseClient() {
+      if (storageEngine === 'supabase' && supabaseUrl && supabaseKey && supabaseUrl !== '') {
+        try {
+          supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+          updateSupabaseStatusUI(true, 'Conectado a Supabase (public)');
+        } catch (err) {
+          updateSupabaseStatusUI(false, 'Error en cliente Supabase');
+        }
+      } else {
+        supabaseClient = null;
+        updateSupabaseStatusUI(false, 'LocalStorage Activo');
+      }
+    }
+
+    function updateSupabaseStatusUI(isConnected, text) {
+      const badge = document.getElementById('supabase-status-dot');
+      const headerBadge = document.getElementById('storage-engine-badge');
+
+      if (badge) {
+        if (isConnected) {
+          badge.className = "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-800";
+          badge.innerHTML = `<i class="fa-solid fa-circle text-[7px] mr-1 text-green-600"></i> ${text}`;
+        } else {
+          badge.className = "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800";
+          badge.innerHTML = `<i class="fa-solid fa-circle text-[7px] mr-1 text-amber-600"></i> ${text}`;
+        }
+      }
+
+      if (headerBadge) {
+        if (storageEngine === 'supabase') {
+          headerBadge.className = "bg-emerald-200 text-emerald-950 px-2 py-0.5 rounded font-extrabold text-[10px] border border-emerald-300";
+          headerBadge.innerHTML = `<i class="fa-solid fa-cloud mr-1"></i>Supabase DB`;
+        } else {
+          headerBadge.className = "bg-amber-200 text-amber-950 px-2 py-0.5 rounded font-extrabold text-[10px] border border-amber-300";
+          headerBadge.innerHTML = `<i class="fa-solid fa-database mr-1"></i>Local`;
+        }
+      }
+    }
+
+    // ==================== CARGAR Y GUARDAR EN TABLAS RELACIONALES DE SUPABASE ====================
+    async function loadDataFromSupabase() {
+      if (storageEngine === 'supabase' && supabaseClient) {
+        try {
+          // 1. Cargar Ajustes
+          const { data: setRes } = await supabaseClient.from('carniceria_store_settings').select('*').eq('id', 'default').single();
+          if (setRes) {
+            storeSettings = { name: setRes.name, address: setRes.address, hours: setRes.hours, whatsapp: setRes.whatsapp };
+          }
+
+          // 2. Cargar Categorías
+          const { data: catRes } = await supabaseClient.from('carniceria_categories').select('*');
+          if (catRes && catRes.length > 0) {
+            categories = catRes.map(c => ({ id: c.id, name: c.name }));
+          }
+
+          // 3. Cargar Tipos de Entrega
+          const { data: dtRes } = await supabaseClient.from('carniceria_delivery_types').select('*');
+          if (dtRes && dtRes.length > 0) {
+            deliveryTypes = dtRes.map(dt => ({ id: dt.id, name: dt.name, requiresAddress: dt.requires_address }));
+          }
+
+          // 4. Cargar Estados
+          const { data: stRes } = await supabaseClient.from('carniceria_order_statuses').select('*');
+          if (stRes && stRes.length > 0) {
+            orderStatuses = stRes.map(s => ({ id: s.id, name: s.name, messageTemplate: s.message_template }));
+          }
+
+          // 5. Cargar Productos
+          const { data: prodRes } = await supabaseClient.from('carniceria_products').select('*');
+          if (prodRes && prodRes.length > 0) {
+            products = prodRes.map(p => ({
+              id: Number(p.id),
+              name: p.name,
+              category: p.category_id,
+              price: parseFloat(p.price_per_kg),
+              stockKg: parseFloat(p.stock_kg),
+              minStockKg: parseFloat(p.min_stock_kg),
+              isOutOfStock: p.is_out_of_stock,
+              img: p.img_url
+            }));
+          }
+
+          // 6. Cargar Clientes
+          const { data: cliRes } = await supabaseClient.from('carniceria_clients').select('*');
+          if (cliRes && cliRes.length > 0) {
+            users = cliRes.map(u => ({ id: Number(u.id), name: u.name, phone: u.phone, address: u.address }));
+          }
+
+          // 7. Cargar Pedidos
+          const { data: ordRes } = await supabaseClient.from('carniceria_orders').select('*');
+          if (ordRes && ordRes.length > 0) {
+            orders = ordRes.map(o => ({
+              id: Number(o.id),
+              date: o.date,
+              user: { name: o.user_name, phone: o.user_phone },
+              items: o.items,
+              type: o.delivery_type,
+              typeId: o.delivery_type,
+              requiresAddress: o.address && o.address !== 'Retiro en Local',
+              address: o.address,
+              total: parseFloat(o.total),
+              status: o.status
+            }));
+          }
+
+          // Guardar fallback local
+          saveDataLocalOnly();
+        } catch (e) {
+          console.warn('Error al cargar datos desde Supabase:', e);
+        }
+      }
+    }
+
+    function saveDataLocalOnly() {
+      localStorage.setItem('carniceria_settings', JSON.stringify(storeSettings));
+      localStorage.setItem('carniceria_delivery_types', JSON.stringify(deliveryTypes));
+      localStorage.setItem('carniceria_categories', JSON.stringify(categories));
+      localStorage.setItem('carniceria_statuses', JSON.stringify(orderStatuses));
+      localStorage.setItem('carniceria_products', JSON.stringify(products));
+      localStorage.setItem('carniceria_orders', JSON.stringify(orders));
+      localStorage.setItem('carniceria_users', JSON.stringify(users));
+      localStorage.setItem('carniceria_current_user', JSON.stringify(currentUser));
+    }
+
+    async function saveData() {
+      saveDataLocalOnly();
+
+      // Impactar en Supabase si está activo
+      if (storageEngine === 'supabase' && supabaseClient) {
+        try {
+          // Guardar respaldo JSON global
+          await supabaseClient.from('carniceria_store_config').upsert({
+            id: 'main_store_data',
+            data: { storeSettings, deliveryTypes, categories, orderStatuses, products, orders, users },
+            updated_at: new Date().toISOString()
+          });
+
+          // Guardar Ajustes
+          await supabaseClient.from('carniceria_store_settings').upsert({
+            id: 'default',
+            name: storeSettings.name,
+            address: storeSettings.address,
+            hours: storeSettings.hours,
+            whatsapp: storeSettings.whatsapp,
+            updated_at: new Date().toISOString()
+          });
+        } catch (e) {
+          console.warn('Error al guardar en Supabase:', e);
+        }
+      }
+    }
+
+    function toggleStorageEngineUI() {
+      const engine = document.getElementById('cfg-storage-engine').value;
+      const creds = document.getElementById('supabase-credentials-fields');
+      if (engine === 'supabase') {
+        creds.classList.remove('hidden');
+      } else {
+        creds.classList.add('hidden');
+      }
+    }
+
+    function saveStorageSettings(e) {
+      if (e) e.preventDefault();
+      storageEngine = document.getElementById('cfg-storage-engine').value;
+      supabaseUrl = document.getElementById('cfg-supabase-url').value.trim();
+      supabaseKey = document.getElementById('cfg-supabase-key').value.trim();
+
+      localStorage.setItem('carniceria_storage_engine', storageEngine);
+      localStorage.setItem('carniceria_supabase_url', supabaseUrl);
+      localStorage.setItem('carniceria_supabase_key', supabaseKey);
+
+      initSupabaseClient();
+      if (storageEngine === 'supabase') {
+        loadDataFromSupabase().then(() => {
+          applyStoreSettings();
+          populateCategorySelects();
+          populateStatusSelects();
+          populateDeliveryTypeSelects();
+          renderProducts();
+          alert('¡Credenciales guardadas y datos cargados desde Supabase!');
+        });
+      } else {
+        alert('Configuración guardada en modo LocalStorage.');
+      }
+    }
+
+    async function testSupabaseConnection() {
+      const url = document.getElementById('cfg-supabase-url').value.trim();
+      const key = document.getElementById('cfg-supabase-key').value.trim();
+
+      if (!url || !key) return alert('Por favor ingresa la URL y el Anon Key de Supabase.');
+
+      try {
+        const testClient = window.supabase.createClient(url, key);
+        const { data, error } = await testClient.from('carniceria_products').select('id').limit(1);
+        if (error) throw error;
+        alert('✅ ¡Conexión exitosa a Supabase! Las tablas carniceria_* respondieron correctamente.');
+      } catch (err) {
+        alert('⚠️ Ocurrió un error al conectar con Supabase: ' + err.message + '\n\nAsegúrate de haber ejecutado el script SQL para crear las tablas "carniceria_*" en el esquema public.');
+      }
+    }
+
+    async function syncLocalToSupabase() {
+      if (!supabaseClient) {
+        initSupabaseClient();
+        if (!supabaseClient) return alert('Configura e inicia la conexión con Supabase primero.');
+      }
+
+      try {
+        // Upsert Categorías
+        for (const c of categories) {
+          await supabaseClient.from('carniceria_categories').upsert({ id: c.id, name: c.name });
+        }
+        // Upsert Tipos de Entrega
+        for (const dt of deliveryTypes) {
+          await supabaseClient.from('carniceria_delivery_types').upsert({ id: dt.id, name: dt.name, requires_address: dt.requiresAddress });
+        }
+        // Upsert Estados
+        for (const s of orderStatuses) {
+          await supabaseClient.from('carniceria_order_statuses').upsert({ id: s.id, name: s.name, message_template: s.messageTemplate });
+        }
+        // Upsert Productos
+        for (const p of products) {
+          await supabaseClient.from('carniceria_products').upsert({
+            id: p.id,
+            name: p.name,
+            category_id: p.category,
+            price_per_kg: p.price,
+            stock_kg: p.stockKg,
+            min_stock_kg: p.minStockKg,
+            is_out_of_stock: p.isOutOfStock,
+            img_url: p.img
+          });
+        }
+        // Upsert Clientes
+        for (const u of users) {
+          await supabaseClient.from('carniceria_clients').upsert({ id: u.id, name: u.name, phone: u.phone, address: u.address });
+        }
+        // Upsert Pedidos
+        for (const o of orders) {
+          await supabaseClient.from('carniceria_orders').upsert({
+            id: o.id,
+            date: o.date,
+            user_phone: o.user.phone,
+            user_name: o.user.name,
+            delivery_type: o.type,
+            address: o.address,
+            total: o.total,
+            status: o.status,
+            items: o.items
+          });
+        }
+
+        await saveData();
+        alert('✅ ¡Todos los datos locales han sido sincronizados e impactados en las tablas relacionales de Supabase!');
+      } catch (err) {
+        alert('Error durante la migración: ' + err.message);
+      }
+    }
+
+    function isProductOutOfStock(p) {
+      if (!p) return false;
+      return (p.isOutOfStock === true) || (p.stockKg !== undefined && parseFloat(p.stockKg) <= 0);
+    }
+
+    let clientSortField = 'date';
+    let clientSortAsc = false;
+    let adminOrderSortField = 'date';
+    let adminOrderSortAsc = false;
+    let adminProdSortField = 'name';
+    let adminProdSortAsc = true;
+
+    let chartClient = null;
+    let chartAdminMonth = null;
+    let chartAdminType = null;
+    let chartAdminAddress = null;
+
+    // ==================== INICIALIZACIÓN DE LA APLICACIÓN ====================
+    window.onload = async () => {
+      document.getElementById('cfg-storage-engine').value = storageEngine;
+      document.getElementById('cfg-supabase-url').value = supabaseUrl;
+      document.getElementById('cfg-supabase-key').value = supabaseKey;
+      toggleStorageEngineUI();
+      initSupabaseClient();
+
+      if (storageEngine === 'supabase') {
+        await loadDataFromSupabase();
+      }
+
+      applyStoreSettings();
+      populateCategorySelects();
+      populateStatusSelects();
+      populateDeliveryTypeSelects();
+      updateAuthUI();
+      renderProducts();
+      renderCart();
+      renderOrdersAdmin();
+    };
+
+    function applyStoreSettings() {
+      document.getElementById('page-title').textContent = storeSettings.name;
+      document.getElementById('header-store-name').textContent = storeSettings.name;
+      document.getElementById('info-address').textContent = storeSettings.address;
+      document.getElementById('info-hours').textContent = storeSettings.hours;
+      document.getElementById('info-whatsapp').textContent = storeSettings.whatsapp;
+
+      document.getElementById('cfg-name').value = storeSettings.name;
+      document.getElementById('cfg-address').value = storeSettings.address;
+      document.getElementById('cfg-hours').value = storeSettings.hours;
+      document.getElementById('cfg-whatsapp').value = storeSettings.whatsapp;
+    }
+
+    function populateCategorySelects() {
+      const catFilter = document.getElementById('category-filter');
+      const prodCatSelect = document.getElementById('prod-category');
+      const adminCatFilter = document.getElementById('admin-prod-category-filter');
+
+      let optionsFilter = `<option value="all">Todas las categorías</option>`;
+      let optionsForm = ``;
+
+      categories.forEach(c => {
+        optionsFilter += `<option value="${c.id}">${c.name}</option>`;
+        optionsForm += `<option value="${c.id}">${c.name}</option>`;
+      });
+
+      catFilter.innerHTML = optionsFilter;
+      adminCatFilter.innerHTML = optionsFilter;
+      prodCatSelect.innerHTML = optionsForm;
+    }
+
+    function populateStatusSelects() {
+      const clientStatusFilter = document.getElementById('client-orders-status-filter');
+      const adminStatusFilter = document.getElementById('admin-orders-status-filter');
+
+      let options = `<option value="all">Todos los estados</option>`;
+      orderStatuses.forEach(s => {
+        options += `<option value="${s.id}">${s.name}</option>`;
+      });
+
+      clientStatusFilter.innerHTML = options;
+      adminStatusFilter.innerHTML = options;
+    }
+
+    function populateDeliveryTypeSelects() {
+      const adminTypeFilter = document.getElementById('admin-f-type');
+      let options = `<option value="all">Todos</option>`;
+      deliveryTypes.forEach(dt => {
+        options += `<option value="${dt.id}">${dt.name}</option>`;
+      });
+      adminTypeFilter.innerHTML = options;
+
+      const renderDT = (containerId) => {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        container.innerHTML = deliveryTypes.map((dt, idx) => `
+          <label class="border rounded-lg p-2 cursor-pointer flex items-center space-x-2 bg-gray-50 hover:bg-white">
+            <input type="radio" name="${containerId}-radio" value="${dt.id}" ${idx === 0 ? 'checked' : ''} onchange="toggleDeliveryOptions()">
+            <span class="font-semibold text-gray-700 text-xs">${dt.name}</span>
+          </label>
+        `).join('');
+      };
+
+      renderDT('cart-delivery-types-container-desktop');
+      renderDT('cart-delivery-types-container-mobile');
+    }
+
+    function switchMainView(view) {
+      document.getElementById('view-client').classList.add('hidden');
+      document.getElementById('view-client-stats').classList.add('hidden');
+      document.getElementById('view-admin').classList.add('hidden');
+
+      if (view === 'client') {
+        document.getElementById('view-client').classList.remove('hidden');
+        document.getElementById('floating-cart-fab').classList.remove('hidden');
+        renderProducts();
+      } else if (view === 'client-stats') {
+        document.getElementById('view-client-stats').classList.remove('hidden');
+        document.getElementById('floating-cart-fab').classList.add('hidden');
+        renderClientStats();
+        renderClientOrders();
+      } else if (view === 'admin') {
+        document.getElementById('view-admin').classList.remove('hidden');
+        document.getElementById('floating-cart-fab').classList.add('hidden');
+        renderOrdersAdmin();
+        renderAdminProductsTable();
+        renderAdminStockTable();
+        renderABMClients();
+        renderAdminStats();
+        populatePromoClientSelect();
+        renderABMDeliveryTypes();
+        renderABMCategories();
+        renderABMStatuses();
+      }
+    }
+
+    function switchAdminTab(tab) {
+      ['orders', 'products', 'stock', 'clients', 'stats', 'marketing', 'config'].forEach(t => {
+        document.getElementById(`admin-tab-${t}`).classList.add('hidden');
+        document.getElementById(`atab-${t}`).classList.remove('tab-active');
+        document.getElementById(`atab-${t}`).classList.add('text-gray-600');
+      });
+      document.getElementById(`admin-tab-${tab}`).classList.remove('hidden');
+      document.getElementById(`atab-${tab}`).classList.add('tab-active');
+      document.getElementById(`atab-${tab}`).classList.remove('text-gray-600');
+    }
+
+    // ==================== AUTENTICACIÓN Y PERFIL CLIENTE ====================
+    function openAuthModal() { document.getElementById('modal-auth').classList.remove('hidden'); document.getElementById('modal-auth').classList.add('flex'); }
+    function closeAuthModal() { document.getElementById('modal-auth').classList.add('hidden'); document.getElementById('modal-auth').classList.remove('flex'); }
+
+    async function handleAuth(e) {
+      e.preventDefault();
+      const name = document.getElementById('reg-name').value;
+      const phone = document.getElementById('reg-phone').value;
+      const address = document.getElementById('reg-address').value;
+
+      let user = users.find(u => u.phone === phone);
+      if (!user) {
+        user = { id: Date.now(), name, phone, address };
+        users.push(user);
+      } else {
+        user.name = name;
+        user.address = address;
+      }
+
+      currentUser = user;
+
+      if (storageEngine === 'supabase' && supabaseClient) {
+        await supabaseClient.from('carniceria_clients').upsert({ id: user.id, name, phone, address });
+      }
+
+      saveData();
+      closeAuthModal();
+      updateAuthUI();
+    }
+
+    function updateAuthUI() {
+      const badge = document.getElementById('user-auth-badge');
+      const welcomeText = document.getElementById('welcome-text');
+      const welcomeSub = document.getElementById('welcome-sub');
+      const authBtn = document.getElementById('auth-action-btn');
+      const statsBtn = document.getElementById('nav-client-stats-btn');
+      const cartAddrD = document.getElementById('cart-address-desktop');
+      const cartAddrM = document.getElementById('cart-address-mobile');
+
+      if (currentUser) {
+        badge.textContent = `Cliente: ${currentUser.name}`;
+        welcomeText.textContent = `¡Hola, ${currentUser.name}! 👋`;
+        welcomeSub.textContent = `Teléfono: ${currentUser.phone} | Dirección: ${currentUser.address}`;
+        authBtn.textContent = "Editar Datos";
+        statsBtn.classList.remove('hidden');
+        if (cartAddrD) cartAddrD.value = currentUser.address;
+        if (cartAddrM) cartAddrM.value = currentUser.address;
+      } else {
+        badge.textContent = "Invitado";
+        welcomeText.textContent = "¡Bienvenido a nuestra carnicería!";
+        welcomeSub.textContent = "Regístrate para realizar pedidos en pasos de 0.5kg y ver tu historial de compras.";
+        authBtn.textContent = "Registrarme / Iniciar Sesión";
+        statsBtn.classList.add('hidden');
+      }
+    }
+
+    // ==================== CATÁLOGO Y CARRITO ====================
+    function renderProducts() {
+      const search = document.getElementById('client-search').value.toLowerCase();
+      const cat = document.getElementById('category-filter').value;
+      const sortVal = document.getElementById('catalog-sort').value;
+      const grid = document.getElementById('product-grid');
+      grid.innerHTML = '';
+
+      let filtered = products.filter(p => {
+        const matchesCat = (cat === 'all' || p.category === cat);
+        const matchesSearch = p.name.toLowerCase().includes(search);
+        return matchesCat && matchesSearch;
+      });
+
+      filtered.sort((a, b) => {
+        if (sortVal === 'name-asc') return a.name.localeCompare(b.name);
+        if (sortVal === 'name-desc') return b.name.localeCompare(a.name);
+        if (sortVal === 'cat-asc') return a.category.localeCompare(b.category);
+        if (sortVal === 'price-asc') return a.price - b.price;
+        if (sortVal === 'price-desc') return b.price - a.price;
+        return 0;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<p class="col-span-2 text-center text-gray-500 py-6">No se encontraron cortes o productos.</p>`;
+        return;
+      }
+
+      filtered.forEach(p => {
+        const catObj = categories.find(c => c.id === p.category) || { name: p.category };
+        const outOfStock = isProductOutOfStock(p);
+
+        grid.innerHTML += `
+          <div class="bg-white rounded-xl shadow-sm border overflow-hidden flex flex-col justify-between ${outOfStock ? 'opacity-85 bg-gray-50' : ''}">
+            <div class="relative ribbon-wrapper h-36 w-full">
+              <img src="${p.img}" alt="${p.name}" class="h-full w-full object-cover ${outOfStock ? 'grayscale contrast-125' : ''}">
+              ${outOfStock ? `<div class="ribbon-out">AGOTADO</div>` : ''}
+            </div>
+            <div class="p-3 flex-grow flex flex-col justify-between space-y-2">
+              <div>
+                <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 bg-gray-100 text-gray-600 rounded">${catObj.name}</span>
+                <h3 class="font-bold text-gray-800 text-sm mt-1">${p.name}</h3>
+              </div>
+              <div class="flex justify-between items-center pt-2 border-t">
+                <div>
+                  <span class="text-[10px] text-gray-400 block">Precio/Kg</span>
+                  <span class="text-sm md:text-base font-extrabold text-red-700">$${p.price.toLocaleString()} /kg</span>
+                </div>
+                <button onclick="addToCart(${p.id})" ${outOfStock ? 'disabled' : ''} class="${outOfStock ? 'bg-gray-400 cursor-not-allowed text-gray-100' : 'bg-red-600 hover:bg-red-700 text-white'} text-xs px-2.5 py-1.5 rounded-lg font-bold flex items-center space-x-1 shadow">
+                  <i class="fa-solid ${outOfStock ? 'fa-ban' : 'fa-cart-plus'} text-xs"></i>
+                  <span>${outOfStock ? 'Agotado' : '+ Agregar'}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function addToCart(prodId) {
+      const prod = products.find(p => p.id === prodId);
+      if (isProductOutOfStock(prod)) return alert('Este producto está agotado por el momento.');
+
+      const item = cart.find(i => i.id === prodId);
+      if (item) {
+        item.qty += 0.5;
+      } else {
+        cart.push({ ...prod, qty: 0.5 });
+      }
+      renderCart();
+      animateCartFAB();
+    }
+
+    function updateCartQty(prodId, delta) {
+      const item = cart.find(i => i.id === prodId);
+      if (item) {
+        item.qty += delta;
+        if (item.qty <= 0) {
+          cart = cart.filter(i => i.id !== prodId);
+        } else {
+          item.qty = Math.round(item.qty * 10) / 10;
+        }
+      }
+      renderCart();
+      animateCartFAB();
+    }
+
+    function openMobileCartModal() {
+      renderCart();
+      document.getElementById('modal-mobile-cart').classList.remove('hidden');
+      document.getElementById('modal-mobile-cart').classList.add('flex');
+    }
+
+    function closeMobileCartModal() {
+      document.getElementById('modal-mobile-cart').classList.add('hidden');
+      document.getElementById('modal-mobile-cart').classList.remove('flex');
+    }
+
+    function animateCartFAB() {
+      const btn = document.getElementById('fab-cart-btn');
+      btn.classList.remove('animate-cart-bounce');
+      void btn.offsetWidth;
+      btn.classList.add('animate-cart-bounce');
+    }
+
+    function toggleDeliveryOptions() {
+      const getSelectedValue = (name) => {
+        const el = document.querySelector(`input[name="${name}"]:checked`);
+        return el ? el.value : 'takeaway';
+      };
+
+      const selectedD = getSelectedValue('cart-delivery-types-container-desktop-radio');
+      const dtObjD = deliveryTypes.find(dt => dt.id === selectedD);
+      const addrD = document.getElementById('delivery-address-container-desktop');
+      if (addrD) {
+        if (dtObjD && dtObjD.requiresAddress) addrD.classList.remove('hidden');
+        else addrD.classList.add('hidden');
+      }
+
+      const selectedM = getSelectedValue('cart-delivery-types-container-mobile-radio');
+      const dtObjM = deliveryTypes.find(dt => dt.id === selectedM);
+      const addrM = document.getElementById('delivery-address-container-mobile');
+      if (addrM) {
+        if (dtObjM && dtObjM.requiresAddress) addrM.classList.remove('hidden');
+        else addrM.classList.add('hidden');
+      }
+    }
+
+    function renderCart() {
+      let total = 0;
+      let totalKg = 0;
+
+      cart.forEach(item => {
+        total += item.price * item.qty;
+        totalKg += item.qty;
+      });
+
+      document.getElementById('fab-cart-badge').textContent = `${totalKg.toFixed(1)} kg`;
+      document.getElementById('fab-cart-total').textContent = `$${total.toLocaleString()}`;
+
+      const renderCartContainer = (itemsContainerId, countId, totalId) => {
+        const container = document.getElementById(itemsContainerId);
+        const countEl = document.getElementById(countId);
+        const totalEl = document.getElementById(totalId);
+
+        if (!container) return;
+
+        if (cart.length === 0) {
+          container.innerHTML = `<p class="text-gray-400 text-center py-6">El carrito está vacío</p>`;
+          if (countEl) countEl.textContent = '0.0 kg';
+          if (totalEl) totalEl.textContent = '$0';
+          return;
+        }
+
+        container.innerHTML = '';
+        cart.forEach(item => {
+          const subtotal = item.price * item.qty;
+          container.innerHTML += `
+            <div class="py-2 flex justify-between items-center">
+              <div class="flex-grow pr-2">
+                <p class="font-bold text-xs">${item.name}</p>
+                <p class="text-[10px] text-gray-500">$${item.price.toLocaleString()}/kg x ${item.qty}kg = <strong class="text-gray-800">$${subtotal.toLocaleString()}</strong></p>
+              </div>
+              <div class="flex items-center space-x-1">
+                <button onclick="updateCartQty(${item.id}, -0.5)" class="w-6 h-6 bg-gray-200 hover:bg-gray-300 rounded text-xs font-bold text-red-600">-</button>
+                <span class="text-xs font-bold px-1 min-w-[32px] text-center">${item.qty} kg</span>
+                <button onclick="updateCartQty(${item.id}, 0.5)" class="w-6 h-6 bg-gray-200 hover:bg-gray-300 rounded text-xs font-bold text-green-600">+</button>
+              </div>
+            </div>
+          `;
+        });
+
+        if (countEl) countEl.textContent = `${totalKg.toFixed(1)} kg`;
+        if (totalEl) totalEl.textContent = `$${total.toLocaleString()}`;
+      };
+
+      renderCartContainer('cart-items-desktop', 'cart-count-desktop', 'cart-total-desktop');
+      renderCartContainer('cart-items-mobile', null, 'cart-total-mobile');
+    }
+
+    async function processOrder() {
+      if (cart.length === 0) return alert('El carrito está vacío.');
+      if (!currentUser) {
+        alert('Por favor regístrate o inicia sesión para enviar tu pedido.');
+        closeMobileCartModal();
+        openAuthModal();
+        return;
+      }
+
+      let selectedRadio = document.querySelector('input[name="cart-delivery-types-container-mobile-radio"]:checked');
+      if (!selectedRadio) {
+        selectedRadio = document.querySelector('input[name="cart-delivery-types-container-desktop-radio"]:checked');
+      }
+
+      const deliveryTypeId = selectedRadio ? selectedRadio.value : 'takeaway';
+      const dtObj = deliveryTypes.find(dt => dt.id === deliveryTypeId) || { name: deliveryTypeId, requiresAddress: false };
+      
+      let addressInput = document.getElementById('cart-address-mobile').value;
+      if (!dtObj.requiresAddress || !addressInput) {
+        addressInput = document.getElementById('cart-address-desktop').value;
+      }
+      const address = dtObj.requiresAddress ? addressInput : 'Retiro en Local';
+
+      if (dtObj.requiresAddress && !address.trim()) {
+        return alert('Ingresa una dirección de entrega.');
+      }
+
+      const orderTotal = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
+      const newOrderId = Date.now();
+      const orderDateIso = new Date().toISOString();
+
+      const newOrder = {
+        id: newOrderId,
+        date: orderDateIso,
+        user: currentUser,
+        items: [...cart],
+        type: dtObj.name,
+        typeId: dtObj.id,
+        requiresAddress: dtObj.requiresAddress,
+        address: address,
+        total: orderTotal,
+        status: orderStatuses[0] ? orderStatuses[0].id : 'Pendiente'
+      };
+
+      // Actualizar Stock de Productos
+      for (const cartItem of cart) {
+        const prod = products.find(p => p.id === cartItem.id);
+        if (prod && prod.stockKg !== undefined) {
+          prod.stockKg = Math.max(0, prod.stockKg - cartItem.qty);
+          if (prod.stockKg <= 0) prod.isOutOfStock = true;
+
+          if (storageEngine === 'supabase' && supabaseClient) {
+            await supabaseClient.from('carniceria_products').update({
+              stock_kg: prod.stockKg,
+              is_out_of_stock: prod.isOutOfStock
+            }).eq('id', prod.id);
+          }
+        }
+      }
+
+      orders.push(newOrder);
+
+      // Guardar Pedido en Supabase
+      if (storageEngine === 'supabase' && supabaseClient) {
+        await supabaseClient.from('carniceria_orders').insert({
+          id: newOrderId,
+          date: orderDateIso,
+          user_phone: currentUser.phone,
+          user_name: currentUser.name,
+          delivery_type: dtObj.name,
+          address: address,
+          total: orderTotal,
+          status: newOrder.status,
+          items: cart
+        });
+      }
+
+      saveData();
+
+      let itemsMsg = cart.map(i => `- ${i.qty}kg x ${i.name} ($${(i.price * i.qty).toLocaleString()})`).join('\n');
+      let text = `*NUEVO PEDIDO EN ${storeSettings.name.toUpperCase()}*\n\n` +
+                 `*Cliente:* ${currentUser.name}\n` +
+                 `*Teléfono:* ${currentUser.phone}\n` +
+                 `*Método:* ${dtObj.name}\n` +
+                 (dtObj.requiresAddress ? `*Dirección:* ${address}\n` : '') +
+                 `\n*Detalle del Pedido:*\n${itemsMsg}\n\n` +
+                 `*TOTAL ESTIMADO:* $${orderTotal.toLocaleString()}`;
+
+      cart = [];
+      renderCart();
+      renderProducts();
+      closeMobileCartModal();
+
+      alert('¡Pedido registrado con éxito! Se abrirá WhatsApp para enviarlo al dueño.');
+      const cleanPhone = storeSettings.whatsapp.replace(/[^0-9]/g, '');
+      window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`, '_blank');
+    }
+
+    // ==================== COPIA DE SEGURIDAD JSON ====================
+    function exportJSONBackup() {
+      const backupData = {
+        version: "1.0",
+        exportDate: new Date().toISOString(),
+        storeSettings: storeSettings,
+        deliveryTypes: deliveryTypes,
+        categories: categories,
+        orderStatuses: orderStatuses,
+        products: products,
+        orders: orders,
+        users: users
+      };
+
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+      const downloadAnchor = document.createElement('a');
+      const filename = `backup_carniceria_${new Date().toISOString().slice(0, 10)}.json`;
+
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", filename);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function importJSONBackup(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+
+          if (!imported.storeSettings || !imported.products || !imported.orders) {
+            return alert('Error: El archivo JSON no posee la estructura de respaldo requerida.');
+          }
+
+          if (confirm('⚠️ ¿Deseas restaurar la copia de seguridad? Se reemplazarán los datos actuales.')) {
+            storeSettings = imported.storeSettings || defaultSettings;
+            deliveryTypes = imported.deliveryTypes || defaultDeliveryTypes;
+            categories = imported.categories || defaultCategories;
+            orderStatuses = imported.orderStatuses || defaultStatuses;
+            products = imported.products || defaultProducts;
+            orders = imported.orders || [];
+            users = imported.users || [];
+
+            await syncLocalToSupabase();
+            applyStoreSettings();
+            populateCategorySelects();
+            populateStatusSelects();
+            populateDeliveryTypeSelects();
+            renderProducts();
+            renderCart();
+            renderOrdersAdmin();
+            renderAdminProductsTable();
+            renderAdminStockTable();
+            renderABMClients();
+            renderAdminStats();
+            renderABMDeliveryTypes();
+            renderABMCategories();
+            renderABMStatuses();
+
+            alert('¡Copia de seguridad restaurada con éxito!');
+          }
+        } catch (err) {
+          alert('Error al procesar el archivo JSON: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
+
+    // ==================== PANEL CLIENTE: MIS COMPRAS ====================
+    function sortClientOrders(field) {
+      if (clientSortField === field) {
+        clientSortAsc = !clientSortAsc;
+      } else {
+        clientSortField = field;
+        clientSortAsc = true;
+      }
+      renderClientOrders();
+    }
+
+    function renderClientOrders() {
+      if (!currentUser) return;
+
+      const container = document.getElementById('client-orders-tbody');
+      const search = document.getElementById('client-orders-search').value.toLowerCase();
+      const dateFrom = document.getElementById('client-date-from').value;
+      const dateTo = document.getElementById('client-date-to').value;
+      const status = document.getElementById('client-orders-status-filter').value;
+
+      let myOrders = orders.filter(o => o.user.phone === currentUser.phone);
+
+      if (search) {
+        myOrders = myOrders.filter(o => 
+          o.id.toString().includes(search) || 
+          o.items.some(i => i.name.toLowerCase().includes(search))
+        );
+      }
+
+      if (status !== 'all') {
+        myOrders = myOrders.filter(o => o.status === status);
+      }
+
+      if (dateFrom) {
+        const fromDate = new Date(dateFrom);
+        fromDate.setHours(0,0,0,0);
+        myOrders = myOrders.filter(o => new Date(o.date) >= fromDate);
+      }
+      if (dateTo) {
+        const toDate = new Date(dateTo);
+        toDate.setHours(23,59,59,999);
+        myOrders = myOrders.filter(o => new Date(o.date) <= toDate);
+      }
+
+      myOrders.sort((a, b) => {
+        let valA, valB;
+        if (clientSortField === 'id') { valA = a.id; valB = b.id; }
+        else if (clientSortField === 'date') { valA = new Date(a.date); valB = new Date(b.date); }
+        else if (clientSortField === 'items') { valA = a.items.map(i=>i.name).join(', '); valB = b.items.map(i=>i.name).join(', '); }
+        else if (clientSortField === 'kg') { valA = a.items.reduce((acc,i)=>acc+i.qty,0); valB = b.items.reduce((acc,i)=>acc+i.qty,0); }
+        else if (clientSortField === 'status') { valA = a.status; valB = b.status; }
+        else if (clientSortField === 'total') { valA = a.total; valB = b.total; }
+
+        if (valA < valB) return clientSortAsc ? -1 : 1;
+        if (valA > valB) return clientSortAsc ? 1 : -1;
+        return 0;
+      });
+
+      if (myOrders.length === 0) {
+        container.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-gray-400">No se encontraron compras con los filtros seleccionados.</td></tr>`;
+        return;
+      }
+
+      container.innerHTML = '';
+      myOrders.forEach(o => {
+        const dateStr = new Date(o.date).toLocaleString('es-AR');
+        const prodNames = o.items.map(i => `${i.qty}kg ${i.name}`).join(', ');
+        const totalKg = o.items.reduce((acc, i) => acc + i.qty, 0).toFixed(1);
+
+        container.innerHTML += `
+          <tr class="hover:bg-gray-50 border-b">
+            <td class="p-2 md:p-3 font-bold text-gray-700">#${o.id.toString().slice(-4)}</td>
+            <td class="p-2 md:p-3 text-gray-500 whitespace-nowrap">${dateStr}</td>
+            <td class="p-2 md:p-3 max-w-xs truncate" title="${prodNames}">${prodNames}</td>
+            <td class="p-2 md:p-3 text-center font-bold">${totalKg} kg</td>
+            <td class="p-2 md:p-3"><span class="px-2 py-0.5 rounded bg-gray-200 font-bold">${o.status}</span></td>
+            <td class="p-2 md:p-3 text-right font-extrabold text-red-700">$${o.total.toLocaleString()}</td>
+            <td class="p-2 md:p-3 text-center space-x-1">
+              <button onclick="openOrderDetail(${o.id})" class="bg-blue-600 hover:bg-blue-700 text-white text-[10px] px-2 py-1 rounded font-bold">Ver</button>
+              <button onclick="repeatOrder(${o.id})" class="bg-green-600 hover:bg-green-700 text-white text-[10px] px-2 py-1 rounded font-bold"><i class="fa-solid fa-rotate-left"></i> Repetir</button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    function openOrderDetail(orderId) {
+      const o = orders.find(ord => ord.id === orderId);
+      if (!o) return;
+
+      document.getElementById('mod-detail-title').textContent = `Detalle de Pedido #${o.id.toString().slice(-4)}`;
+      
+      let itemsHtml = o.items.map(i => `
+        <tr class="border-b text-xs">
+          <td class="py-1.5">${i.name}</td>
+          <td class="py-1.5 text-center">${i.qty} kg</td>
+          <td class="py-1.5 text-right">$${i.price.toLocaleString()}</td>
+          <td class="py-1.5 text-right font-bold">$${(i.price * i.qty).toLocaleString()}</td>
+        </tr>
+      `).join('');
+
+      document.getElementById('mod-detail-body').innerHTML = `
+        <div class="bg-gray-50 p-2.5 rounded-lg border text-xs space-y-1">
+          <p><strong>Cliente:</strong> ${o.user.name} (${o.user.phone})</p>
+          <p><strong>Tipo de Entrega:</strong> ${o.type}</p>
+          <p><strong>Dirección:</strong> ${o.address}</p>
+          <p><strong>Estado Actual:</strong> <span class="font-bold text-red-700">${o.status}</span></p>
+          <p><strong>Fecha:</strong> ${new Date(o.date).toLocaleString('es-AR')}</p>
+        </div>
+        <table class="w-full text-left mt-2">
+          <thead>
+            <tr class="border-b text-xs font-bold text-gray-500">
+              <th class="py-1">Producto</th>
+              <th class="py-1 text-center">Cant (Kg)</th>
+              <th class="py-1 text-right">Precio/Kg</th>
+              <th class="py-1 text-right">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>${itemsHtml}</tbody>
+        </table>
+        <div class="text-right pt-2 text-sm font-extrabold text-gray-900 border-t">
+          Total: $${o.total.toLocaleString()}
+        </div>
+      `;
+
+      document.getElementById('mod-detail-actions').innerHTML = `
+        <button onclick="repeatOrder(${o.id})" class="bg-green-600 hover:bg-green-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs flex items-center space-x-1">
+          <i class="fa-solid fa-rotate-left"></i> <span>Repetir este Pedido</span>
+        </button>
+        <button onclick="closeOrderDetailModal()" class="bg-gray-200 text-gray-800 font-bold px-3 py-1.5 rounded-lg text-xs">Cerrar</button>
+      `;
+
+      document.getElementById('modal-order-detail').classList.remove('hidden');
+      document.getElementById('modal-order-detail').classList.add('flex');
+    }
+
+    function closeOrderDetailModal() {
+      document.getElementById('modal-order-detail').classList.add('hidden');
+      document.getElementById('modal-order-detail').classList.remove('flex');
+    }
+
+    function repeatOrder(orderId) {
+      const o = orders.find(ord => ord.id === orderId);
+      if (!o) return;
+
+      o.items.forEach(item => {
+        const prod = products.find(p => p.id === item.id) || item;
+        const cartItem = cart.find(i => i.id === prod.id);
+        if (cartItem) {
+          cartItem.qty += item.qty;
+        } else {
+          cart.push({ ...prod, qty: item.qty });
+        }
+      });
+
+      closeOrderDetailModal();
+      switchMainView('client');
+      renderCart();
+      openMobileCartModal();
+      alert('¡Se agregaron los cortes al carrito!');
+    }
+
+    function renderClientStats() {
+      if (!currentUser) return;
+      const myOrders = orders.filter(o => o.user.phone === currentUser.phone);
+      const totalSpent = myOrders.reduce((acc, o) => acc + o.total, 0);
+
+      document.getElementById('cstat-total-spent').textContent = `$${totalSpent.toLocaleString()}`;
+      document.getElementById('cstat-orders-count').textContent = myOrders.length;
+
+      const prodKgMap = {};
+      myOrders.forEach(o => {
+        o.items.forEach(i => {
+          prodKgMap[i.name] = (prodKgMap[i.name] || 0) + i.qty;
+        });
+      });
+
+      let favProd = '-';
+      let maxKg = 0;
+      for (const [prod, kg] of Object.entries(prodKgMap)) {
+        if (kg > maxKg) { maxKg = kg; favProd = prod; }
+      }
+      document.getElementById('cstat-favorite').textContent = favProd;
+
+      if (chartClient) chartClient.destroy();
+      chartClient = new Chart(document.getElementById('chartClientProducts'), {
+        type: 'bar',
+        data: {
+          labels: Object.keys(prodKgMap),
+          datasets: [{ label: 'Kg acumulados', data: Object.values(prodKgMap), backgroundColor: '#b91c1c' }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+    }
+
+    // ==================== PANEL DUEÑO: GESTIÓN DE PEDIDOS RECIBIDOS ====================
+    function toggleAdminSearchPanel() {
+      const panel = document.getElementById('admin-search-panel');
+      panel.classList.toggle('hidden');
+    }
+
+    function clearAdminOrderFilters() {
+      document.getElementById('admin-f-client').value = '';
+      document.getElementById('admin-f-product').value = '';
+      document.getElementById('admin-f-address').value = '';
+      document.getElementById('admin-f-whatsapp').value = '';
+      document.getElementById('admin-f-type').value = 'all';
+      document.getElementById('admin-f-date-from').value = '';
+      document.getElementById('admin-f-date-to').value = '';
+      document.getElementById('admin-orders-status-filter').value = 'all';
+      renderOrdersAdmin();
+    }
+
+    function sortAdminOrders(field) {
+      if (adminOrderSortField === field) {
+        adminOrderSortAsc = !adminOrderSortAsc;
+      } else {
+        adminOrderSortField = field;
+        adminOrderSortAsc = true;
+      }
+      renderOrdersAdmin();
+    }
+
+    function renderOrdersAdmin() {
+      const container = document.getElementById('admin-orders-tbody');
+      
+      const fClient = document.getElementById('admin-f-client').value.toLowerCase();
+      const fProduct = document.getElementById('admin-f-product').value.toLowerCase();
+      const fAddress = document.getElementById('admin-f-address').value.toLowerCase();
+      const fWhatsapp = document.getElementById('admin-f-whatsapp').value.trim();
+      const fType = document.getElementById('admin-f-type').value;
+      const fDateFrom = document.getElementById('admin-f-date-from').value;
+      const fDateTo = document.getElementById('admin-f-date-to').value;
+      const fStatus = document.getElementById('admin-orders-status-filter').value;
+
+      let filtered = orders.filter(o => {
+        if (fClient && !o.user.name.toLowerCase().includes(fClient)) return false;
+        if (fProduct && !o.items.some(i => i.name.toLowerCase().includes(fProduct))) return false;
+        if (fAddress && !o.address.toLowerCase().includes(fAddress)) return false;
+        if (fWhatsapp && !o.user.phone.includes(fWhatsapp)) return false;
+        if (fType !== 'all' && o.typeId !== fType && o.type !== fType) return false;
+        if (fStatus !== 'all' && o.status !== fStatus) return false;
+
+        if (fDateFrom) {
+          const fromDate = new Date(fDateFrom);
+          fromDate.setHours(0,0,0,0);
+          if (new Date(o.date) < fromDate) return false;
+        }
+        if (fDateTo) {
+          const toDate = new Date(fDateTo);
+          toDate.setHours(23,59,59,999);
+          if (new Date(o.date) > toDate) return false;
+        }
+
+        return true;
+      });
+
+      filtered.sort((a, b) => {
+        let valA, valB;
+        if (adminOrderSortField === 'id') { valA = a.id; valB = b.id; }
+        else if (adminOrderSortField === 'date') { valA = new Date(a.date); valB = new Date(b.date); }
+        else if (adminOrderSortField === 'client') { valA = a.user.name.toLowerCase(); valB = b.user.name.toLowerCase(); }
+        else if (adminOrderSortField === 'items') { valA = a.items.map(i=>i.name).join(', '); valB = b.items.map(i=>i.name).join(', '); }
+        else if (adminOrderSortField === 'type') { valA = a.type; valB = b.type; }
+        else if (adminOrderSortField === 'status') { valA = a.status; valB = b.status; }
+        else if (adminOrderSortField === 'total') { valA = a.total; valB = b.total; }
+
+        if (valA < valB) return adminOrderSortAsc ? -1 : 1;
+        if (valA > valB) return adminOrderSortAsc ? 1 : -1;
+        return 0;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<tr><td colspan="8" class="text-gray-400 text-center py-6">No hay pedidos registrados.</td></tr>`;
+        return;
+      }
+
+      container.innerHTML = '';
+      filtered.forEach(o => {
+        const dateStr = new Date(o.date).toLocaleString('es-AR');
+        const prodNames = o.items.map(i => `${i.qty}kg ${i.name}`).join(', ');
+
+        let statusOptions = orderStatuses.map(s => 
+          `<option value="${s.id}" ${o.status === s.id ? 'selected' : ''}>${s.name}</option>`
+        ).join('');
+
+        container.innerHTML += `
+          <tr class="hover:bg-gray-50 border-b">
+            <td class="p-2 md:p-3 font-bold text-gray-700">#${o.id.toString().slice(-4)}</td>
+            <td class="p-2 md:p-3 text-gray-500 whitespace-nowrap">${dateStr}</td>
+            <td class="p-2 md:p-3 font-semibold text-gray-800">
+              ${o.user.name}
+              <span class="block text-[10px] text-gray-400 font-normal"><i class="fa-brands fa-whatsapp text-green-600"></i> ${o.user.phone}</span>
+            </td>
+            <td class="p-2 md:p-3 max-w-xs truncate" title="${prodNames}">${prodNames}</td>
+            <td class="p-2 md:p-3"><span class="px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 font-bold text-[10px]">${o.type}</span></td>
+            <td class="p-2 md:p-3">
+              <select onchange="updateOrderStatus(${o.id}, this.value)" class="text-xs border rounded p-1 font-bold bg-white">
+                ${statusOptions}
+              </select>
+            </td>
+            <td class="p-2 md:p-3 text-right font-extrabold text-red-700">$${o.total.toLocaleString()}</td>
+            <td class="p-2 md:p-3 text-center space-x-1 whitespace-nowrap">
+              <button onclick="openOrderDetail(${o.id})" class="bg-blue-600 hover:bg-blue-700 text-white text-[10px] px-1.5 py-1 rounded font-bold">Ver</button>
+              <button onclick="sendStatusWhatsAppMessage(${o.id}, '${o.status}')" class="bg-green-600 hover:bg-green-700 text-white text-[10px] px-1.5 py-1 rounded font-bold"><i class="fa-brands fa-whatsapp"></i> Avisar</button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    async function updateOrderStatus(orderId, newStatus) {
+      const order = orders.find(o => o.id === orderId);
+      if (!order) return;
+
+      const previousStatus = order.status;
+      order.status = newStatus;
+
+      if (storageEngine === 'supabase' && supabaseClient) {
+        await supabaseClient.from('carniceria_orders').update({ status: newStatus }).eq('id', orderId);
+      }
+
+      saveData();
+      renderOrdersAdmin();
+
+      if (previousStatus !== newStatus) {
+        sendStatusWhatsAppMessage(orderId, newStatus);
+      }
+    }
+
+    function sendStatusWhatsAppMessage(orderId, statusId) {
+      const order = orders.find(o => o.id === orderId);
+      if (!order) return;
+
+      const stObj = orderStatuses.find(s => s.id === statusId || s.name === statusId);
+      let template = stObj && stObj.messageTemplate ? stObj.messageTemplate : "¡Hola {cliente}! El estado de tu pedido #{pedido} es: " + statusId + "\n\nDetalle:\n{productos}\n\nTotal: {total}";
+
+      const orderShortId = order.id.toString().slice(-4);
+      const isDelivery = order.requiresAddress || order.type.toLowerCase().includes('delivery') || order.type.toLowerCase().includes('envío') || order.type.toLowerCase().includes('envio');
+      const addressText = isDelivery ? order.address : storeSettings.address;
+
+      const productsFormattedText = order.items.map(i => {
+        const subtotal = i.price * i.qty;
+        return `- ${i.qty}kg x ${i.name} ($${subtotal.toLocaleString()})`;
+      }).join('\n');
+
+      let message = template
+        .replace(/\{cliente\}/g, order.user.name)
+        .replace(/\{pedido\}/g, orderShortId)
+        .replace(/\{tipo\}/g, order.type)
+        .replace(/\{direccion\}/g, addressText)
+        .replace(/\{total\}/g, `$${order.total.toLocaleString()}`)
+        .replace(/\{productos\}/g, productsFormattedText);
+
+      const cleanPhone = order.user.phone.replace(/[^0-9]/g, '');
+      
+      alert(`Se abrirá WhatsApp con el mensaje configurado para el estado "${statusId}".`);
+      window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, '_blank');
+    }
+
+    // ==================== PANEL DUEÑO: PRODUCTOS ====================
+    function sortAdminProducts(field) {
+      if (adminProdSortField === field) {
+        adminProdSortAsc = !adminProdSortAsc;
+      } else {
+        adminProdSortField = field;
+        adminProdSortAsc = true;
+      }
+      renderAdminProductsTable();
+    }
+
+    function renderAdminProductsTable() {
+      const container = document.getElementById('admin-products-tbody');
+      const search = document.getElementById('admin-prod-search').value.toLowerCase();
+      const catFilter = document.getElementById('admin-prod-category-filter').value;
+
+      let filtered = products.filter(p => {
+        const matchesCat = (catFilter === 'all' || p.category === catFilter);
+        const matchesSearch = p.name.toLowerCase().includes(search);
+        return matchesCat && matchesSearch;
+      });
+
+      filtered.sort((a, b) => {
+        let valA, valB;
+        if (adminProdSortField === 'img') { valA = a.img; valB = b.img; }
+        else if (adminProdSortField === 'name') { valA = a.name.toLowerCase(); valB = b.name.toLowerCase(); }
+        else if (adminProdSortField === 'category') { valA = a.category.toLowerCase(); valB = b.category.toLowerCase(); }
+        else if (adminProdSortField === 'price') { valA = a.price; valB = b.price; }
+
+        if (valA < valB) return adminProdSortAsc ? -1 : 1;
+        if (valA > valB) return adminProdSortAsc ? 1 : -1;
+        return 0;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400 text-xs">No se encontraron productos.</td></tr>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(p => {
+        const catObj = categories.find(c => c.id === p.category) || { name: p.category };
+        const outOfStock = isProductOutOfStock(p);
+
+        return `
+          <tr class="border-b text-xs hover:bg-gray-50">
+            <td class="p-2 md:p-3"><img src="${p.img}" class="w-8 h-8 md:w-10 md:h-10 object-cover rounded"></td>
+            <td class="p-2 md:p-3 font-bold">
+              ${p.name} 
+              ${outOfStock ? '<span class="text-[9px] bg-red-600 text-white font-extrabold px-1 py-0.5 rounded ml-1 shadow-sm">AGOTADO</span>' : ''}
+            </td>
+            <td class="p-2 md:p-3">${catObj.name}</td>
+            <td class="p-2 md:p-3 font-bold text-red-700">$${p.price.toLocaleString()} /kg</td>
+            <td class="p-2 md:p-3 space-x-1 whitespace-nowrap">
+              <button onclick="editProduct(${p.id})" class="text-blue-600 font-bold hover:underline">Editar</button>
+              <button onclick="deleteProduct(${p.id})" class="text-red-600 font-bold hover:underline">Eliminar</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function openProductModal() {
+      document.getElementById('product-form').reset();
+      document.getElementById('prod-id').value = '';
+      document.getElementById('product-modal-title').textContent = "Nuevo Producto";
+      document.getElementById('modal-product').classList.remove('hidden');
+      document.getElementById('modal-product').classList.add('flex');
+    }
+
+    function closeProductModal() {
+      document.getElementById('modal-product').classList.add('hidden');
+      document.getElementById('modal-product').classList.remove('flex');
+    }
+
+    function editProduct(id) {
+      const p = products.find(prod => prod.id === id);
+      if (!p) return;
+      document.getElementById('prod-id').value = p.id;
+      document.getElementById('prod-name').value = p.name;
+      document.getElementById('prod-category').value = p.category;
+      document.getElementById('prod-price').value = p.price;
+      document.getElementById('prod-stock').value = p.stockKg !== undefined ? p.stockKg : 50;
+      document.getElementById('prod-min-stock').value = p.minStockKg !== undefined ? p.minStockKg : 10;
+      document.getElementById('prod-img').value = p.img;
+      document.getElementById('product-modal-title').textContent = "Editar Producto";
+      document.getElementById('modal-product').classList.remove('hidden');
+      document.getElementById('modal-product').classList.add('flex');
+    }
+
+    async function saveProduct(e) {
+      e.preventDefault();
+      const id = document.getElementById('prod-id').value;
+      const name = document.getElementById('prod-name').value;
+      const category = document.getElementById('prod-category').value;
+      const price = parseFloat(document.getElementById('prod-price').value);
+      const stockKg = parseFloat(document.getElementById('prod-stock').value);
+      const minStockKg = parseFloat(document.getElementById('prod-min-stock').value);
+      const img = document.getElementById('prod-img').value;
+
+      let prodId = id ? Number(id) : Date.now();
+
+      if (id) {
+        const p = products.find(prod => prod.id == id);
+        p.name = name; 
+        p.category = category; 
+        p.price = price; 
+        p.stockKg = stockKg; 
+        p.minStockKg = minStockKg; 
+        p.img = img;
+        if (stockKg > 0) p.isOutOfStock = false;
+      } else {
+        products.push({ id: prodId, name, category, price, stockKg, minStockKg, isOutOfStock: stockKg <= 0, img });
+      }
+
+      if (storageEngine === 'supabase' && supabaseClient) {
+        await supabaseClient.from('carniceria_products').upsert({
+          id: prodId,
+          name: name,
+          category_id: category,
+          price_per_kg: price,
+          stock_kg: stockKg,
+          min_stock_kg: minStockKg,
+          is_out_of_stock: stockKg <= 0,
+          img_url: img
+        });
+      }
+
+      saveData();
+      closeProductModal();
+      renderProducts();
+      renderAdminProductsTable();
+      renderAdminStockTable();
+    }
+
+    async function deleteProduct(id) {
+      if (confirm('¿Eliminar este producto?')) {
+        products = products.filter(p => p.id !== id);
+        if (storageEngine === 'supabase' && supabaseClient) {
+          await supabaseClient.from('carniceria_products').delete().eq('id', id);
+        }
+        saveData();
+        renderProducts();
+        renderAdminProductsTable();
+        renderAdminStockTable();
+      }
+    }
+
+    // ==================== PANEL DUEÑO: CONTROL DE STOCK ====================
+    function renderAdminStockTable() {
+      const container = document.getElementById('admin-stock-tbody');
+      container.innerHTML = products.map(p => {
+        const currentStock = p.stockKg !== undefined ? parseFloat(p.stockKg) : 0;
+        const minStock = p.minStockKg !== undefined ? parseFloat(p.minStockKg) : 5;
+        const isOut = isProductOutOfStock(p);
+        const isLow = currentStock <= minStock && !isOut;
+
+        let badge = `<span class="bg-green-100 text-green-800 font-bold px-1.5 py-0.5 rounded text-[9px]">STOCK</span>`;
+        if (isOut) badge = `<span class="bg-red-100 text-red-800 font-bold px-1.5 py-0.5 rounded text-[9px]">AGOTADO</span>`;
+        else if (isLow) badge = `<span class="bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded text-[9px]">CRÍTICO</span>`;
+
+        return `
+          <tr class="border-b hover:bg-gray-50">
+            <td class="p-2 md:p-3 font-bold text-gray-800 flex items-center space-x-2">
+              <img src="${p.img}" class="w-7 h-7 rounded object-cover">
+              <span>${p.name}</span>
+            </td>
+            <td class="p-2 md:p-3 text-center">
+              <input type="number" step="0.5" value="${currentStock}" onchange="updateStockKg(${p.id}, this.value)" class="w-16 border rounded p-1 text-center font-bold"> kg
+            </td>
+            <td class="p-2 md:p-3 text-center font-semibold text-gray-500">${minStock} kg</td>
+            <td class="p-2 md:p-3 text-center">${badge}</td>
+            <td class="p-2 md:p-3 text-center">
+              <button onclick="toggleOutOfStockFlag(${p.id})" class="text-[10px] px-2 py-1 rounded font-bold ${isOut ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-red-600 text-white hover:bg-red-700'} shadow whitespace-nowrap">
+                ${isOut ? 'En Stock' : 'Agotado'}
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function updateStockKg(prodId, val) {
+      const prod = products.find(p => p.id === prodId);
+      if (prod) {
+        const valNum = parseFloat(val) || 0;
+        prod.stockKg = valNum;
+        prod.isOutOfStock = valNum <= 0;
+
+        if (storageEngine === 'supabase' && supabaseClient) {
+          await supabaseClient.from('carniceria_products').update({
+            stock_kg: valNum,
+            is_out_of_stock: prod.isOutOfStock
+          }).eq('id', prodId);
+        }
+
+        saveData();
+        renderProducts();
+        renderAdminStockTable();
+        renderAdminProductsTable();
+      }
+    }
+
+    async function toggleOutOfStockFlag(prodId) {
+      const prod = products.find(p => p.id === prodId);
+      if (prod) {
+        prod.isOutOfStock = !prod.isOutOfStock;
+        if (!prod.isOutOfStock && prod.stockKg <= 0) {
+          prod.stockKg = 10;
+        }
+
+        if (storageEngine === 'supabase' && supabaseClient) {
+          await supabaseClient.from('carniceria_products').update({
+            stock_kg: prod.stockKg,
+            is_out_of_stock: prod.isOutOfStock
+          }).eq('id', prodId);
+        }
+
+        saveData();
+        renderProducts();
+        renderAdminStockTable();
+        renderAdminProductsTable();
+      }
+    }
+
+    // ==================== PANEL DUEÑO: ABM CLIENTES ====================
+    function renderABMClients() {
+      const container = document.getElementById('abm-clients-tbody');
+      const search = document.getElementById('admin-client-search') ? document.getElementById('admin-client-search').value.toLowerCase() : '';
+
+      let filteredUsers = users.filter(u => 
+        u.name.toLowerCase().includes(search) || 
+        u.phone.includes(search) || 
+        u.address.toLowerCase().includes(search)
+      );
+
+      if (filteredUsers.length === 0) {
+        container.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400 text-xs">No se encontraron clientes.</td></tr>`;
+        return;
+      }
+
+      container.innerHTML = filteredUsers.map(u => {
+        const clientOrdersCount = orders.filter(o => o.user.phone === u.phone).length;
+        return `
+          <tr class="border-b text-xs hover:bg-gray-50">
+            <td class="p-2 md:p-3 font-bold text-gray-800">${u.name}</td>
+            <td class="p-2 md:p-3 text-gray-600"><i class="fa-brands fa-whatsapp text-green-600 font-bold"></i> ${u.phone}</td>
+            <td class="p-2 md:p-3 text-gray-600">${u.address}</td>
+            <td class="p-2 md:p-3 text-center font-bold text-gray-700">${clientOrdersCount}</td>
+            <td class="p-2 md:p-3 space-x-1 whitespace-nowrap">
+              <button onclick="editClientAdmin(${u.id})" class="text-blue-600 font-bold hover:underline">Editar</button>
+              <button onclick="deleteClientAdmin(${u.id})" class="text-red-600 font-bold hover:underline">Eliminar</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function openClientModal() {
+      document.getElementById('admin-cli-id').value = '';
+      document.getElementById('admin-cli-name').value = '';
+      document.getElementById('admin-cli-phone').value = '';
+      document.getElementById('admin-cli-address').value = '';
+      document.getElementById('client-modal-title').textContent = "Nuevo Cliente";
+      document.getElementById('modal-client-admin').classList.remove('hidden');
+      document.getElementById('modal-client-admin').classList.add('flex');
+    }
+
+    function closeClientAdminModal() {
+      document.getElementById('modal-client-admin').classList.add('hidden');
+      document.getElementById('modal-client-admin').classList.remove('flex');
+    }
+
+    function editClientAdmin(id) {
+      const u = users.find(usr => usr.id === id);
+      if (!u) return;
+      document.getElementById('admin-cli-id').value = u.id;
+      document.getElementById('admin-cli-name').value = u.name;
+      document.getElementById('admin-cli-phone').value = u.phone;
+      document.getElementById('admin-cli-address').value = u.address;
+      document.getElementById('client-modal-title').textContent = "Editar Cliente";
+      document.getElementById('modal-client-admin').classList.remove('hidden');
+      document.getElementById('modal-client-admin').classList.add('flex');
+    }
+
+    async function saveClientAdmin(e) {
+      e.preventDefault();
+      const id = document.getElementById('admin-cli-id').value;
+      const name = document.getElementById('admin-cli-name').value;
+      const phone = document.getElementById('admin-cli-phone').value;
+      const address = document.getElementById('admin-cli-address').value;
+
+      let clientId = id ? Number(id) : Date.now();
+
+      if (id) {
+        const u = users.find(usr => usr.id == id);
+        u.name = name; u.phone = phone; u.address = address;
+      } else {
+        users.push({ id: clientId, name, phone, address });
+      }
+
+      if (storageEngine === 'supabase' && supabaseClient) {
+        await supabaseClient.from('carniceria_clients').upsert({ id: clientId, name, phone, address });
+      }
+
+      saveData();
+      closeClientAdminModal();
+      renderABMClients();
+      populatePromoClientSelect();
+    }
+
+    async function deleteClientAdmin(id) {
+      if (confirm('¿Eliminar cliente?')) {
+        users = users.filter(u => u.id !== id);
+        if (storageEngine === 'supabase' && supabaseClient) {
+          await supabaseClient.from('carniceria_clients').delete().eq('id', id);
+        }
+        saveData();
+        renderABMClients();
+        populatePromoClientSelect();
+      }
+    }
+
+    // ==================== PANEL DUEÑO: ESTADÍSTICAS ====================
+    function resetStatsDates() {
+      document.getElementById('stats-date-from').value = '';
+      document.getElementById('stats-date-to').value = '';
+      renderAdminStats();
+    }
+
+    function renderAdminStats() {
+      const dateFromVal = document.getElementById('stats-date-from').value;
+      const dateToVal = document.getElementById('stats-date-to').value;
+
+      let filteredOrders = orders;
+
+      if (dateFromVal) {
+        const fromDate = new Date(dateFromVal);
+        fromDate.setHours(0,0,0,0);
+        filteredOrders = filteredOrders.filter(o => new Date(o.date) >= fromDate);
+      }
+      if (dateToVal) {
+        const toDate = new Date(dateToVal);
+        toDate.setHours(23,59,59,999);
+        filteredOrders = filteredOrders.filter(o => new Date(o.date) <= toDate);
+      }
+
+      const totalSales = filteredOrders.reduce((acc, o) => acc + o.total, 0);
+      document.getElementById('astat-total-sales').textContent = `$${totalSales.toLocaleString()}`;
+      document.getElementById('astat-total-orders').textContent = filteredOrders.length;
+      document.getElementById('astat-total-clients').textContent = users.length;
+
+      const monthMap = {};
+      filteredOrders.forEach(o => {
+        const d = new Date(o.date);
+        const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+        monthMap[key] = (monthMap[key] || 0) + o.total;
+      });
+
+      const typeMap = {};
+      filteredOrders.forEach(o => {
+        typeMap[o.type] = (typeMap[o.type] || 0) + o.total;
+      });
+
+      const addressMap = {};
+      filteredOrders.forEach(o => {
+        const addrKey = o.address.trim() || 'Retiro en Local';
+        addressMap[addrKey] = (addressMap[addrKey] || 0) + o.total;
+      });
+
+      if (chartAdminMonth) chartAdminMonth.destroy();
+      chartAdminMonth = new Chart(document.getElementById('chartAdminMonth'), {
+        type: 'line',
+        data: {
+          labels: Object.keys(monthMap),
+          datasets: [{ label: 'Ventas por Mes ($)', data: Object.values(monthMap), borderColor: '#dc2626', backgroundColor: '#fca5a5', fill: true }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      if (chartAdminType) chartAdminType.destroy();
+      chartAdminType = new Chart(document.getElementById('chartAdminType'), {
+        type: 'pie',
+        data: {
+          labels: Object.keys(typeMap),
+          datasets: [{ data: Object.values(typeMap), backgroundColor: ['#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'] }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      if (chartAdminAddress) chartAdminAddress.destroy();
+      chartAdminAddress = new Chart(document.getElementById('chartAdminAddress'), {
+        type: 'bar',
+        data: {
+          labels: Object.keys(addressMap),
+          datasets: [{ label: 'Ventas por Domicilio ($)', data: Object.values(addressMap), backgroundColor: '#1e293b' }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+    }
+
+    // ==================== CAMPAÑAS DE WHATSAPP ====================
+    function populatePromoClientSelect() {
+      const select = document.getElementById('promo-client-select');
+      select.innerHTML = '<option value="ALL_CLIENTS">📢 TODOS LOS CLIENTES (Masivo)</option>';
+      users.forEach(u => {
+        select.innerHTML += `<option value="${u.phone}">${u.name} (${u.phone})</option>`;
+      });
+    }
+
+    function sendWhatsAppPromo() {
+      const target = document.getElementById('promo-client-select').value;
+      const imgUrl = document.getElementById('promo-img-url').value;
+      const msg = document.getElementById('promo-msg').value;
+
+      if (users.length === 0) return alert('No hay clientes registrados.');
+
+      const fullMessage = `${msg}\n\nMira la promo aquí: ${imgUrl}`;
+
+      if (target === 'ALL_CLIENTS') {
+        alert(`Se abrirán las ventanas para enviar a ${users.length} clientes.`);
+        users.forEach(u => {
+          const cleanPhone = u.phone.replace(/[^0-9]/g, '');
+          window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(fullMessage)}`, '_blank');
+        });
+      } else {
+        const cleanPhone = target.replace(/[^0-9]/g, '');
+        window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(fullMessage)}`, '_blank');
+      }
+    }
+
+    // ==================== PANEL DUEÑO: CONFIGURACIÓN & ABM GLOBAL ====================
+    async function saveStoreSettings(e) {
+      e.preventDefault();
+      storeSettings.name = document.getElementById('cfg-name').value;
+      storeSettings.address = document.getElementById('cfg-address').value;
+      storeSettings.hours = document.getElementById('cfg-hours').value;
+      storeSettings.whatsapp = document.getElementById('cfg-whatsapp').value;
+
+      if (storageEngine === 'supabase' && supabaseClient) {
+        await supabaseClient.from('carniceria_store_settings').upsert({
+          id: 'default',
+          name: storeSettings.name,
+          address: storeSettings.address,
+          hours: storeSettings.hours,
+          whatsapp: storeSettings.whatsapp
+        });
+      }
+
+      saveData();
+      applyStoreSettings();
+      alert('¡Configuración guardada!');
+    }
+
+    // ABM Tipos de Entrega
+    function renderABMDeliveryTypes() {
+      const container = document.getElementById('abm-delivery-types-list');
+      container.innerHTML = deliveryTypes.map(dt => `
+        <div class="py-1.5 flex justify-between items-center">
+          <div>
+            <span class="font-semibold text-gray-800">${dt.name}</span>
+            <span class="block text-[10px] text-gray-400">${dt.requiresAddress ? 'Pide Dirección' : 'Sin Dirección'}</span>
+          </div>
+          <button onclick="deleteDeliveryType('${dt.id}')" class="text-red-600 font-bold hover:underline text-xs">Eliminar</button>
+        </div>
+      `).join('');
+    }
+
+    async function addDeliveryTypePrompt() {
+      const name = prompt('Nombre del Tipo de Entrega:');
+      if (!name) return;
+      const reqAddr = confirm('¿Requiere pedir dirección al cliente?');
+      const id = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+      if (deliveryTypes.some(dt => dt.id === id)) return alert('Ya existe.');
+
+      deliveryTypes.push({ id, name, requiresAddress: reqAddr });
+
+      if (storageEngine === 'supabase' && supabaseClient) {
+        await supabaseClient.from('carniceria_delivery_types').upsert({ id, name, requires_address: reqAddr });
+      }
+
+      saveData();
+      populateDeliveryTypeSelects();
+      renderABMDeliveryTypes();
+    }
+
+    async function deleteDeliveryType(id) {
+      if (deliveryTypes.length <= 1) return alert('Debe existir al menos un tipo de entrega.');
+      if (confirm('¿Eliminar?')) {
+        deliveryTypes = deliveryTypes.filter(dt => dt.id !== id);
+        if (storageEngine === 'supabase' && supabaseClient) {
+          await supabaseClient.from('carniceria_delivery_types').delete().eq('id', id);
+        }
+        saveData();
+        populateDeliveryTypeSelects();
+        renderABMDeliveryTypes();
+      }
+    }
+
+    // ABM Categorías
+    function renderABMCategories() {
+      const container = document.getElementById('abm-categories-list');
+      container.innerHTML = categories.map(c => `
+        <div class="py-1.5 flex justify-between items-center">
+          <span class="font-semibold">${c.name} <span class="text-gray-400 font-normal">(${c.id})</span></span>
+          <button onclick="deleteCategory('${c.id}')" class="text-red-600 font-bold hover:underline text-xs">Eliminar</button>
+        </div>
+      `).join('');
+    }
+
+    async function addCategoryPrompt() {
+      const name = prompt('Nombre de la categoría:');
+      if (!name) return;
+      const id = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (categories.some(c => c.id === id)) return alert('Ya existe.');
+
+      categories.push({ id, name });
+
+      if (storageEngine === 'supabase' && supabaseClient) {
+        await supabaseClient.from('carniceria_categories').upsert({ id, name });
+      }
+
+      saveData();
+      populateCategorySelects();
+      renderABMCategories();
+    }
+
+    async function deleteCategory(id) {
+      if (confirm('¿Eliminar categoría?')) {
+        categories = categories.filter(c => c.id !== id);
+        if (storageEngine === 'supabase' && supabaseClient) {
+          await supabaseClient.from('carniceria_categories').delete().eq('id', id);
+        }
+        saveData();
+        populateCategorySelects();
+        renderABMCategories();
+      }
+    }
+
+    // ABM Estados de Pedido
+    function renderABMStatuses() {
+      const container = document.getElementById('abm-statuses-container');
+      container.innerHTML = orderStatuses.map((s, idx) => `
+        <div class="border rounded-xl p-3 bg-gray-50 space-y-2">
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-gray-800 text-xs"><i class="fa-solid fa-tag text-red-600 mr-1"></i>${s.name}</span>
+            <button onclick="deleteStatus('${s.id}')" class="text-red-600 font-bold hover:underline text-xs">Eliminar</button>
+          </div>
+          <div>
+            <textarea id="status-msg-${idx}" onchange="updateStatusMessageTemplate('${s.id}', this.value)" class="w-full border rounded-lg p-2 text-xs bg-white" rows="2">${s.messageTemplate || ''}</textarea>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function updateStatusMessageTemplate(statusId, newTemplate) {
+      const st = orderStatuses.find(s => s.id === statusId);
+      if (st) {
+        st.messageTemplate = newTemplate;
+        if (storageEngine === 'supabase' && supabaseClient) {
+          await supabaseClient.from('carniceria_order_statuses').update({ message_template: newTemplate }).eq('id', statusId);
+        }
+        saveData();
+      }
+    }
+
+    async function addStatusPrompt() {
+      const name = prompt('Nombre del estado:');
+      if (!name) return;
+      if (orderStatuses.some(s => s.name.toLowerCase() === name.toLowerCase())) return alert('Ya existe.');
+
+      const defaultMsg = `¡Hola {cliente}! El estado de tu pedido #{pedido} es ahora: ${name}.\n\nDetalle:\n{productos}\n\nTotal: {total}`;
+      orderStatuses.push({ id: name, name, messageTemplate: defaultMsg });
+
+      if (storageEngine === 'supabase' && supabaseClient) {
+        await supabaseClient.from('carniceria_order_statuses').upsert({ id: name, name, message_template: defaultMsg });
+      }
+
+      saveData();
+      populateStatusSelects();
+      renderABMStatuses();
+    }
+
+    async function deleteStatus(id) {
+      if (confirm('¿Eliminar estado?')) {
+        orderStatuses = orderStatuses.filter(s => s.id !== id);
+        if (storageEngine === 'supabase' && supabaseClient) {
+          await supabaseClient.from('carniceria_order_statuses').delete().eq('id', id);
+        }
+        saveData();
+        populateStatusSelects();
+        renderABMStatuses();
+      }
+    }
+  </script>
+</body>
+</html>

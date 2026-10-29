@@ -28,6 +28,69 @@
       50% { transform: scale(1.18); }
     }
     .animate-cart-bounce { animation: cartBounce 0.35s ease-in-out; }
+
+    /* ===== Ajustes móvil ===== */
+    .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    #floating-cart-fab { bottom: calc(1rem + env(safe-area-inset-bottom, 0px)); }
+
+    @media (max-width: 767px) {
+      /* Evita el zoom automático de iOS al tocar un campo (<16px) */
+      input:not([type=checkbox]):not([type=radio]), select, textarea { font-size: 16px !important; }
+      header nav button { min-height: 40px; }
+
+      /* Modales: nunca más altos que la pantalla, con scroll interno */
+      [id^="modal-"] > div { max-height: 92vh; max-height: 92dvh; overflow-y: auto; }
+
+      /* Tablas -> tarjetas */
+      .cards-mobile, .cards-mobile tbody { display: block; width: 100%; }
+      .cards-mobile thead { display: none; }
+      .cards-mobile tr {
+        display: block; margin: .6rem; padding: .5rem .85rem;
+        border: 1px solid #e5e7eb !important; border-radius: .75rem;
+        background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.06);
+      }
+      .cards-mobile td {
+        display: flex; justify-content: space-between; align-items: center; gap: .75rem;
+        padding: .35rem 0 !important; text-align: right !important;
+        max-width: none !important; white-space: normal !important;
+        overflow: visible !important; text-overflow: clip !important;
+        border: 0; font-size: 13px;
+      }
+      .cards-mobile td::before {
+        font-weight: 700; color: #6b7280; font-size: 11px; text-transform: uppercase;
+        text-align: left; flex-shrink: 0;
+      }
+      /* Primera celda = título de la tarjeta; última = acciones */
+      .cards-mobile td:first-child {
+        justify-content: flex-start; text-align: left !important; font-size: 15px;
+        padding-bottom: .5rem !important; margin-bottom: .25rem; border-bottom: 1px dashed #e5e7eb;
+      }
+      .cards-mobile td:last-child { justify-content: flex-end; flex-wrap: wrap; padding-top: .6rem !important; }
+      .cards-mobile td[colspan] { display: block; text-align: center !important; }
+      .cards-mobile td[colspan]::before { content: none !important; }
+      .cards-mobile td button { min-height: 36px; padding: .4rem .8rem !important; font-size: 12px !important; }
+      .cards-mobile td select { max-width: 60%; }
+    #client-orders-tbody td:nth-child(2)::before { content: "Fecha"; }
+    #client-orders-tbody td:nth-child(3)::before { content: "Productos"; }
+    #client-orders-tbody td:nth-child(4)::before { content: "Total Kg"; }
+    #client-orders-tbody td:nth-child(5)::before { content: "Estado"; }
+    #client-orders-tbody td:nth-child(6)::before { content: "Monto"; }
+    #admin-orders-tbody td:nth-child(2)::before { content: "Fecha"; }
+    #admin-orders-tbody td:nth-child(3)::before { content: "Cliente"; }
+    #admin-orders-tbody td:nth-child(4)::before { content: "Productos"; }
+    #admin-orders-tbody td:nth-child(5)::before { content: "Tipo"; }
+    #admin-orders-tbody td:nth-child(6)::before { content: "Estado"; }
+    #admin-orders-tbody td:nth-child(7)::before { content: "Total"; }
+    #admin-products-tbody td:nth-child(3)::before { content: "Categoría"; }
+    #admin-products-tbody td:nth-child(4)::before { content: "Precio"; }
+    #admin-stock-tbody td:nth-child(2)::before { content: "Stock"; }
+    #admin-stock-tbody td:nth-child(3)::before { content: "Stock mín."; }
+    #admin-stock-tbody td:nth-child(4)::before { content: "Estado"; }
+    #abm-clients-tbody td:nth-child(2)::before { content: "WhatsApp"; }
+    #abm-clients-tbody td:nth-child(3)::before { content: "Dirección"; }
+    #abm-clients-tbody td:nth-child(4)::before { content: "Pedidos"; }
+    }
   </style>
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans min-h-screen flex flex-col pb-20 md:pb-0">
@@ -206,7 +269,7 @@
         </div>
 
         <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse">
+          <table class="w-full text-left border-collapse cards-mobile">
             <thead>
               <tr class="bg-gray-100 text-xs font-bold text-gray-600 border-b">
                 <th class="p-2 md:p-3 sortable" onclick="sortClientOrders('id')"># Pedido</th>
@@ -240,7 +303,7 @@
           <i class="fa-solid fa-database mr-1"></i>Local
         </span>
       </div>
-      <div class="flex flex-wrap border-b border-gray-300 gap-1 md:gap-2 overflow-x-auto">
+      <div class="flex flex-nowrap border-b border-gray-300 gap-1 md:gap-2 overflow-x-auto no-scrollbar">
         <button onclick="switchAdminTab('orders')" id="atab-orders" class="px-3 py-2 font-bold text-xs md:text-sm tab-active whitespace-nowrap">
           <i class="fa-solid fa-receipt mr-1"></i> Pedidos
         </button>
@@ -328,7 +391,7 @@
         </div>
 
         <div class="bg-white rounded-xl shadow-sm border overflow-x-auto">
-          <table class="w-full text-left border-collapse">
+          <table class="w-full text-left border-collapse cards-mobile">
             <thead>
               <tr class="bg-gray-100 text-xs font-bold text-gray-600 border-b">
                 <th class="p-3 sortable" onclick="sortAdminOrders('id')"># Pedido</th>
@@ -365,7 +428,7 @@
         </div>
 
         <div id="admin-products-table-container" class="bg-white rounded-xl shadow-sm border overflow-x-auto">
-          <table class="w-full text-left border-collapse">
+          <table class="w-full text-left border-collapse cards-mobile">
             <thead>
               <tr class="bg-gray-50 border-b text-xs font-bold text-gray-500 uppercase">
                 <th class="p-3">Img</th>
@@ -393,7 +456,7 @@
         </div>
 
         <div class="bg-white rounded-xl shadow-sm border overflow-x-auto">
-          <table class="w-full text-left border-collapse">
+          <table class="w-full text-left border-collapse cards-mobile">
             <thead>
               <tr class="bg-gray-50 border-b text-xs font-bold text-gray-500 uppercase">
                 <th class="p-3">Producto</th>
@@ -424,7 +487,7 @@
         </div>
 
         <div class="bg-white rounded-xl shadow-sm border overflow-x-auto">
-          <table class="w-full text-left border-collapse">
+          <table class="w-full text-left border-collapse cards-mobile">
             <thead>
               <tr class="bg-gray-50 border-b text-xs font-bold text-gray-500 uppercase">
                 <th class="p-3">Nombre</th>
@@ -711,6 +774,22 @@
       <div class="flex justify-end gap-2 border-t pt-3" id="mod-detail-actions">
         <button onclick="closeOrderDetailModal()" class="bg-gray-200 text-gray-800 font-bold px-3 py-1.5 rounded-lg text-xs">Cerrar</button>
       </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CLAVE PANEL DUEÑO -->
+  <div id="modal-admin-pass" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-sm w-full p-5 space-y-3 relative">
+      <button onclick="closeAdminPassModal()" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+      <h3 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-lock text-red-600 mr-2"></i>Acceso Panel Dueño</h3>
+      <form onsubmit="submitAdminPass(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-0.5">Ingresá la clave</label>
+          <input type="password" id="admin-pass-input" autocomplete="off" required class="w-full border rounded p-2 text-xs">
+          <p id="admin-pass-error" class="hidden text-xs text-red-600 font-bold mt-1">Clave incorrecta.</p>
+        </div>
+        <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-lg shadow text-sm">Ingresar</button>
+      </form>
     </div>
   </div>
 
@@ -1228,7 +1307,40 @@
       renderDT('cart-delivery-types-container-mobile');
     }
 
+    // ==================== CLAVE DEL PANEL DUEÑO ====================
+    // OJO: esto corre en el navegador, así que cualquiera que abra el código fuente puede ver la clave.
+    // Sirve para que un cliente no entre por curiosidad, no como seguridad real de los datos.
+    const ADMIN_PASSWORD = '123';
+    let adminUnlocked = false;
+    try { adminUnlocked = sessionStorage.getItem('carniceria_admin_ok') === '1'; } catch (e) {}
+
+    function openAdminPassModal() {
+      const m = document.getElementById('modal-admin-pass');
+      document.getElementById('admin-pass-input').value = '';
+      document.getElementById('admin-pass-error').classList.add('hidden');
+      m.classList.remove('hidden'); m.classList.add('flex');
+      setTimeout(() => document.getElementById('admin-pass-input').focus(), 50);
+    }
+    function closeAdminPassModal() {
+      const m = document.getElementById('modal-admin-pass');
+      m.classList.add('hidden'); m.classList.remove('flex');
+    }
+    function submitAdminPass(e) {
+      e.preventDefault();
+      const input = document.getElementById('admin-pass-input');
+      if (input.value === ADMIN_PASSWORD) {
+        adminUnlocked = true;
+        try { sessionStorage.setItem('carniceria_admin_ok', '1'); } catch (err) {}
+        closeAdminPassModal();
+        switchMainView('admin');
+      } else {
+        document.getElementById('admin-pass-error').classList.remove('hidden');
+        input.select();
+      }
+    }
+
     async function switchMainView(view) {
+      if (view === 'admin' && !adminUnlocked) { openAdminPassModal(); return; }
       document.getElementById('view-client').classList.add('hidden');
       document.getElementById('view-client-stats').classList.add('hidden');
       document.getElementById('view-admin').classList.add('hidden');
@@ -1270,6 +1382,8 @@
       document.getElementById(`admin-tab-${tab}`).classList.remove('hidden');
       document.getElementById(`atab-${tab}`).classList.add('tab-active');
       document.getElementById(`atab-${tab}`).classList.remove('text-gray-600');
+      const activeTab = document.getElementById(`atab-${tab}`);
+      if (activeTab.scrollIntoView) activeTab.scrollIntoView({ inline: 'center', block: 'nearest' });
     }
 
     // ==================== AUTENTICACIÓN Y PERFIL CLIENTE ====================

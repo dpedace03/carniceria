@@ -6,43 +6,27 @@
   <title id="page-title">Carnicería El Corte Supremo</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- CDN Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     .tab-active { border-bottom: 3px solid #dc2626; color: #dc2626; font-weight: bold; }
     th.sortable { cursor: pointer; user-select: none; }
     th.sortable:hover { background-color: #f3f4f6; }
     
-    /* Cinta / Banner de AGOTADO sobre la imagen en la tienda */
-    .ribbon-wrapper {
-      position: relative;
-      overflow: hidden;
-    }
+    .ribbon-wrapper { position: relative; overflow: hidden; }
     .ribbon-out {
-      position: absolute;
-      top: 22px;
-      right: -35px;
-      transform: rotate(35deg);
-      width: 140px;
-      background-color: #dc2626;
-      color: #ffffff;
-      text-align: center;
-      font-weight: 900;
-      font-size: 11px;
-      letter-spacing: 1px;
-      padding: 4px 0;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-      z-index: 10;
-      text-transform: uppercase;
+      position: absolute; top: 22px; right: -35px; transform: rotate(35deg);
+      width: 140px; background-color: #dc2626; color: #ffffff; text-align: center;
+      font-weight: 900; font-size: 11px; letter-spacing: 1px; padding: 4px 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 10; text-transform: uppercase;
     }
 
-    /* Animación de rebote para el botón flotante del carrito */
     @keyframes cartBounce {
       0%, 100% { transform: scale(1); }
       50% { transform: scale(1.18); }
     }
-    .animate-cart-bounce {
-      animation: cartBounce 0.35s ease-in-out;
-    }
+    .animate-cart-bounce { animation: cartBounce 0.35s ease-in-out; }
   </style>
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans min-h-screen flex flex-col pb-20 md:pb-0">
@@ -70,15 +54,18 @@
     </div>
   </header>
 
-  <!-- BANNER DATOS DEL NEGOCIO -->
+  <!-- BANNER DATOS DEL NEGOCIO & INDICADOR DE ALMACENAMIENTO -->
   <section class="bg-amber-100 border-b border-amber-200 text-amber-900 text-[11px] md:text-xs py-2 px-4">
     <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
       <div class="flex flex-wrap items-center gap-3">
         <span><i class="fa-solid fa-location-dot text-red-700 mr-1"></i><strong id="info-address">Av. San Martín 1450</strong></span>
         <span><i class="fa-solid fa-clock text-amber-700 mr-1"></i><span id="info-hours">Lun a Sáb 08:30 - 20:30 hs</span></span>
       </div>
-      <div>
+      <div class="flex items-center space-x-3">
         <span><i class="fa-brands fa-whatsapp text-green-700 font-bold mr-1"></i>WhatsApp: <strong id="info-whatsapp">+5491122334455</strong></span>
+        <span id="storage-engine-badge" class="bg-amber-200 text-amber-950 px-2 py-0.5 rounded font-extrabold text-[10px] border border-amber-300">
+          <i class="fa-solid fa-database mr-1"></i>Local
+        </span>
       </div>
     </div>
   </section>
@@ -112,7 +99,7 @@
 
             <div class="flex flex-wrap gap-2 items-center">
               <select id="category-filter" onchange="renderProducts()" class="flex-1 sm:flex-none border rounded-lg px-3 py-1.5 text-xs md:text-sm bg-white">
-                <!-- Render dinámico categorías -->
+                <!-- Render dinámico -->
               </select>
 
               <select id="catalog-sort" onchange="renderProducts()" class="flex-1 sm:flex-none border rounded-lg px-3 py-1.5 text-xs md:text-sm bg-white font-semibold text-gray-700">
@@ -146,7 +133,7 @@
               <div>
                 <label class="block text-xs font-bold text-gray-700 mb-1">Método de entrega:</label>
                 <div id="cart-delivery-types-container-desktop" class="grid grid-cols-1 gap-1.5 text-xs">
-                  <!-- Render dinámico opciones de entrega -->
+                  <!-- Render dinámico -->
                 </div>
               </div>
 
@@ -174,7 +161,6 @@
     <section id="view-client-stats" class="hidden space-y-6">
       <h2 class="text-xl md:text-2xl font-bold text-gray-800">Mis Compras e Historial</h2>
       
-      <!-- Cards de Métricas -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="bg-white p-4 rounded-xl border shadow-sm">
           <p class="text-xs text-gray-500 font-bold uppercase">Total Invertido</p>
@@ -190,7 +176,6 @@
         </div>
       </div>
 
-      <!-- Buscador y Filtros avanzados en Mis Compras -->
       <div class="bg-white p-4 rounded-xl border space-y-4">
         <div class="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-3">
           <h3 class="font-bold text-gray-700 text-sm md:text-base">Historial de Pedidos Realizados</h3>
@@ -264,14 +249,12 @@
           <i class="fa-solid fa-bullhorn mr-1"></i> Promos
         </button>
         <button onclick="switchAdminTab('config')" id="atab-config" class="px-3 py-2 font-bold text-xs md:text-sm text-gray-600 whitespace-nowrap">
-          <i class="fa-solid fa-sliders mr-1"></i> Ajustes / ABM
+          <i class="fa-solid fa-sliders mr-1"></i> Ajustes / DB Supabase
         </button>
       </div>
 
       <!-- TAB ADMIN: GESTIÓN DE PEDIDOS RECIBIDOS -->
       <div id="admin-tab-orders" class="space-y-4">
-        
-        <!-- Botón para Mostrar/Ocultar Panel de Búsqueda y Filtros -->
         <div class="flex justify-between items-center bg-white p-3 rounded-xl border shadow-sm">
           <h2 class="text-base md:text-lg font-bold text-gray-800">Pedidos Recibidos</h2>
           <button onclick="toggleAdminSearchPanel()" class="bg-gray-800 hover:bg-black text-amber-300 font-bold px-3 py-1.5 rounded-lg text-xs flex items-center space-x-1 shadow">
@@ -280,7 +263,6 @@
           </button>
         </div>
 
-        <!-- Panel de Búsqueda y Filtros -->
         <div id="admin-search-panel" class="hidden bg-white p-4 rounded-xl border shadow-sm space-y-3">
           <div class="flex justify-between items-center border-b pb-2">
             <h3 class="text-xs font-bold text-red-700"><i class="fa-solid fa-filter mr-1"></i>Búsqueda Avanzada</h3>
@@ -334,7 +316,6 @@
           </div>
         </div>
 
-        <!-- Tabla de Pedidos -->
         <div class="bg-white rounded-xl shadow-sm border overflow-x-auto">
           <table class="w-full text-left border-collapse">
             <thead>
@@ -519,13 +500,58 @@
         </div>
       </div>
 
-      <!-- TAB ADMIN: PARAMETRIZACIÓN Y CONFIGURACIÓN GLOBAL -->
+      <!-- TAB ADMIN: PARAMETRIZACIÓN & CONFIGURACIÓN SUPABASE -->
       <div id="admin-tab-config" class="hidden space-y-6">
         
+        <!-- Módulo de Configuración de Base de Datos Supabase -->
+        <div class="bg-white p-5 rounded-xl border border-emerald-200 shadow-sm space-y-4 max-w-2xl bg-gradient-to-r from-emerald-50/50 to-white">
+          <div class="flex justify-between items-center border-b border-emerald-100 pb-2">
+            <h3 class="text-base font-bold text-emerald-950 flex items-center">
+              <i class="fa-solid fa-database text-emerald-600 mr-2"></i> Conexión Supabase (Esquema: <code class="bg-emerald-100 text-emerald-900 px-1 rounded ml-1">demo_carniceria</code>)
+            </h3>
+            <span id="supabase-status-dot" class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-200 text-gray-700">
+              Desconectado
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div>
+              <label class="block font-bold text-gray-700 mb-1">Motor de Almacenamiento:</label>
+              <select id="cfg-storage-engine" onchange="toggleStorageEngineUI()" class="w-full border rounded p-2 bg-white font-bold text-emerald-900 border-emerald-300">
+                <option value="local">LocalStorage (Local)</option>
+                <option value="supabase">Supabase Database (demo_carniceria)</option>
+              </select>
+            </div>
+
+            <div class="sm:col-span-2 space-y-2 pt-2 border-t border-gray-100" id="supabase-credentials-fields">
+              <div>
+                <label class="block font-bold text-gray-700 mb-1">Supabase Project URL:</label>
+                <input type="text" id="cfg-supabase-url" placeholder="https://xyz.supabase.co" class="w-full border rounded p-2 text-xs">
+              </div>
+              <div>
+                <label class="block font-bold text-gray-700 mb-1">Supabase Anon Key:</label>
+                <input type="password" id="cfg-supabase-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." class="w-full border rounded p-2 text-xs">
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap gap-2 pt-2 border-t">
+            <button onclick="saveStorageSettings(event)" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-4 py-2 rounded-lg text-xs shadow">
+              Guardar Credenciales
+            </button>
+            <button onclick="testSupabaseConnection()" class="bg-gray-800 hover:bg-black text-amber-300 font-bold px-3 py-2 rounded-lg text-xs shadow">
+              <i class="fa-solid fa-plug mr-1"></i> Probar Conexión Esquema
+            </button>
+            <button onclick="syncLocalToSupabase()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-2 rounded-lg text-xs shadow">
+              <i class="fa-solid fa-cloud-arrow-up mr-1"></i> Sincronizar Todo a Supabase
+            </button>
+          </div>
+        </div>
+
         <!-- Módulo Backup JSON -->
         <div class="bg-white p-5 rounded-xl border shadow-sm space-y-3 max-w-2xl">
           <div class="flex justify-between items-center border-b pb-2">
-            <h3 class="text-base font-bold text-gray-800"><i class="fa-solid fa-database text-red-600 mr-2"></i>Copia de Seguridad (Backup JSON)</h3>
+            <h3 class="text-base font-bold text-gray-800"><i class="fa-solid fa-file-badge text-red-600 mr-2"></i>Copia de Seguridad Integral (JSON)</h3>
           </div>
           <p class="text-xs text-gray-600">Exporta o importa todos los datos del negocio (Productos, Stock, Pedidos, Clientes, Configuración y WhatsApp).</p>
           
@@ -610,7 +636,7 @@
 
   </main>
 
-  <!-- ==================== BOTÓN FLOTANTE CARRITO (MÓVIL / CELULAR) ==================== -->
+  <!-- BOTÓN FLOTANTE CARRITO -->
   <div id="floating-cart-fab" class="fixed bottom-4 right-4 z-40 flex items-center gap-2">
     <button onclick="openMobileCartModal()" id="fab-cart-btn" class="bg-green-600 hover:bg-green-700 text-white p-3.5 rounded-full shadow-2xl flex items-center justify-center relative border-2 border-white">
       <i class="fa-solid fa-cart-shopping text-xl"></i>
@@ -621,7 +647,7 @@
     </div>
   </div>
 
-  <!-- MODAL / DRAWER DE CARRITO DESPLEGABLE EN MÓVIL -->
+  <!-- MODAL DE CARRITO FLOTANTE -->
   <div id="modal-mobile-cart" class="fixed inset-0 bg-black/60 hidden items-end sm:items-center justify-center z-50 p-0 sm:p-4">
     <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-lg w-full p-5 space-y-4 relative max-h-[90vh] flex flex-col justify-between">
       <div>
@@ -765,7 +791,7 @@
   </div>
 
   <script>
-    // ==================== BASE DE DATOS LOCAL ====================
+    // ==================== VALORES POR DEFECTO ====================
     const defaultSettings = {
       name: "El Corte Supremo",
       address: "Av. San Martín 1450, CABA",
@@ -802,6 +828,11 @@
       { id: 6, name: "Combo Parri2026 (Surtido)", category: "promo", price: 18500, stockKg: 15, minStockKg: 3, isOutOfStock: false, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=400&q=80" }
     ];
 
+    let storageEngine = localStorage.getItem('carniceria_storage_engine') || 'local';
+    let supabaseUrl = localStorage.getItem('carniceria_supabase_url') || '';
+    let supabaseKey = localStorage.getItem('carniceria_supabase_key') || '';
+    let supabaseClient = null;
+
     let storeSettings = JSON.parse(localStorage.getItem('carniceria_settings')) || defaultSettings;
     let deliveryTypes = JSON.parse(localStorage.getItem('carniceria_delivery_types')) || defaultDeliveryTypes;
     let categories = JSON.parse(localStorage.getItem('carniceria_categories')) || defaultCategories;
@@ -812,26 +843,124 @@
     let currentUser = JSON.parse(localStorage.getItem('carniceria_current_user')) || null;
     let cart = [];
 
-    function isProductOutOfStock(p) {
-      if (!p) return false;
-      return (p.isOutOfStock === true) || (p.stockKg !== undefined && parseFloat(p.stockKg) <= 0);
+    // ==================== INICIALIZACIÓN Y CLIENTE SUPABASE ====================
+    function initSupabaseClient() {
+      if (storageEngine === 'supabase' && supabaseUrl && supabaseKey) {
+        try {
+          // Conexión explícita al esquema demo_carniceria
+          supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey, {
+            db: { schema: 'demo_carniceria' }
+          });
+          updateSupabaseStatusUI(true, 'Conectado a schema: demo_carniceria');
+        } catch (err) {
+          updateSupabaseStatusUI(false, 'Error en cliente Supabase');
+        }
+      } else {
+        supabaseClient = null;
+        updateSupabaseStatusUI(false, 'LocalStorage Activo');
+      }
     }
 
-    let clientSortField = 'date';
-    let clientSortAsc = false;
+    function updateSupabaseStatusUI(isConnected, text) {
+      const badge = document.getElementById('supabase-status-dot');
+      const headerBadge = document.getElementById('storage-engine-badge');
 
-    let adminOrderSortField = 'date';
-    let adminOrderSortAsc = false;
+      if (badge) {
+        if (isConnected) {
+          badge.className = "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-800";
+          badge.innerHTML = `<i class="fa-solid fa-circle text-[7px] mr-1 text-green-600"></i> ${text}`;
+        } else {
+          badge.className = "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800";
+          badge.innerHTML = `<i class="fa-solid fa-circle text-[7px] mr-1 text-amber-600"></i> ${text}`;
+        }
+      }
 
-    let adminProdSortField = 'name';
-    let adminProdSortAsc = true;
+      if (headerBadge) {
+        if (storageEngine === 'supabase') {
+          headerBadge.className = "bg-emerald-200 text-emerald-950 px-2 py-0.5 rounded font-extrabold text-[10px] border border-emerald-300";
+          headerBadge.innerHTML = `<i class="fa-solid fa-cloud mr-1"></i>demo_carniceria`;
+        } else {
+          headerBadge.className = "bg-amber-200 text-amber-950 px-2 py-0.5 rounded font-extrabold text-[10px] border border-amber-300";
+          headerBadge.innerHTML = `<i class="fa-solid fa-database mr-1"></i>Local`;
+        }
+      }
+    }
 
-    let chartClient = null;
-    let chartAdminMonth = null;
-    let chartAdminType = null;
-    let chartAdminAddress = null;
+    // ==================== CARGAR Y GUARDAR EN TABLAS RELACIONALES DE SUPABASE ====================
+    async function loadDataFromSupabase() {
+      if (storageEngine === 'supabase' && supabaseClient) {
+        try {
+          // 1. Cargar Ajustes
+          const { data: setRes } = await supabaseClient.from('store_settings').select('*').eq('id', 'default').single();
+          if (setRes) {
+            storeSettings = { name: setRes.name, address: setRes.address, hours: setRes.hours, whatsapp: setRes.whatsapp };
+          }
 
-    function saveData() {
+          // 2. Cargar Categorías
+          const { data: catRes } = await supabaseClient.from('categories').select('*');
+          if (catRes && catRes.length > 0) {
+            categories = catRes.map(c => ({ id: c.id, name: c.name }));
+          }
+
+          // 3. Cargar Tipos de Entrega
+          const { data: dtRes } = await supabaseClient.from('delivery_types').select('*');
+          if (dtRes && dtRes.length > 0) {
+            deliveryTypes = dtRes.map(dt => ({ id: dt.id, name: dt.name, requiresAddress: dt.requires_address }));
+          }
+
+          // 4. Cargar Estados
+          const { data: stRes } = await supabaseClient.from('order_statuses').select('*');
+          if (stRes && stRes.length > 0) {
+            orderStatuses = stRes.map(s => ({ id: s.id, name: s.name, messageTemplate: s.message_template }));
+          }
+
+          // 5. Cargar Productos
+          const { data: prodRes } = await supabaseClient.from('products').select('*');
+          if (prodRes && prodRes.length > 0) {
+            products = prodRes.map(p => ({
+              id: Number(p.id),
+              name: p.name,
+              category: p.category_id,
+              price: parseFloat(p.price_per_kg),
+              stockKg: parseFloat(p.stock_kg),
+              minStockKg: parseFloat(p.min_stock_kg),
+              isOutOfStock: p.is_out_of_stock,
+              img: p.img_url
+            }));
+          }
+
+          // 6. Cargar Clientes
+          const { data: cliRes } = await supabaseClient.from('clients').select('*');
+          if (cliRes && cliRes.length > 0) {
+            users = cliRes.map(u => ({ id: Number(u.id), name: u.name, phone: u.phone, address: u.address }));
+          }
+
+          // 7. Cargar Pedidos
+          const { data: ordRes } = await supabaseClient.from('orders').select('*');
+          if (ordRes && ordRes.length > 0) {
+            orders = ordRes.map(o => ({
+              id: Number(o.id),
+              date: o.date,
+              user: { name: o.user_name, phone: o.user_phone },
+              items: o.items,
+              type: o.delivery_type,
+              typeId: o.delivery_type,
+              requiresAddress: o.address && o.address !== 'Retiro en Local',
+              address: o.address,
+              total: parseFloat(o.total),
+              status: o.status
+            }));
+          }
+
+          // Guardar fallback local
+          saveDataLocalOnly();
+        } catch (e) {
+          console.warn('Error al cargar del esquema demo_carniceria:', e);
+        }
+      }
+    }
+
+    function saveDataLocalOnly() {
       localStorage.setItem('carniceria_settings', JSON.stringify(storeSettings));
       localStorage.setItem('carniceria_delivery_types', JSON.stringify(deliveryTypes));
       localStorage.setItem('carniceria_categories', JSON.stringify(categories));
@@ -842,100 +971,172 @@
       localStorage.setItem('carniceria_current_user', JSON.stringify(currentUser));
     }
 
-    // ==================== MODAL DE CARRITO FLOTANTE EN CELULARES ====================
-    function openMobileCartModal() {
-      renderCart();
-      document.getElementById('modal-mobile-cart').classList.remove('hidden');
-      document.getElementById('modal-mobile-cart').classList.add('flex');
-    }
+    async function saveData() {
+      saveDataLocalOnly();
 
-    function closeMobileCartModal() {
-      document.getElementById('modal-mobile-cart').classList.add('hidden');
-      document.getElementById('modal-mobile-cart').classList.remove('flex');
-    }
-
-    function animateCartFAB() {
-      const btn = document.getElementById('fab-cart-btn');
-      btn.classList.remove('animate-cart-bounce');
-      void btn.offsetWidth; // Trigger reflow
-      btn.classList.add('animate-cart-bounce');
-    }
-
-    // ==================== COPIA DE SEGURIDAD (EXPORTAR E IMPORTAR JSON) ====================
-    function exportJSONBackup() {
-      const backupData = {
-        version: "1.0",
-        exportDate: new Date().toISOString(),
-        storeSettings: storeSettings,
-        deliveryTypes: deliveryTypes,
-        categories: categories,
-        orderStatuses: orderStatuses,
-        products: products,
-        orders: orders,
-        users: users
-      };
-
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
-      const downloadAnchor = document.createElement('a');
-      const filename = `backup_carniceria_${new Date().toISOString().slice(0, 10)}.json`;
-
-      downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", filename);
-      document.body.appendChild(downloadAnchor);
-      downloadAnchor.click();
-      downloadAnchor.remove();
-    }
-
-    function importJSONBackup(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = function(e) {
+      // Impactar en Supabase si está activo
+      if (storageEngine === 'supabase' && supabaseClient) {
         try {
-          const imported = JSON.parse(e.target.result);
+          // Guardar respaldo JSON global
+          await supabaseClient.from('store_config').upsert({
+            id: 'main_store_data',
+            data: { storeSettings, deliveryTypes, categories, orderStatuses, products, orders, users },
+            updated_at: new Date().toISOString()
+          });
 
-          if (!imported.storeSettings || !imported.products || !imported.orders) {
-            return alert('Error: El archivo JSON no posee la estructura de respaldo requerida.');
-          }
-
-          if (confirm('⚠️ ¿Deseas restaurar la copia de seguridad? Se reemplazarán los datos actuales.')) {
-            storeSettings = imported.storeSettings || defaultSettings;
-            deliveryTypes = imported.deliveryTypes || defaultDeliveryTypes;
-            categories = imported.categories || defaultCategories;
-            orderStatuses = imported.orderStatuses || defaultStatuses;
-            products = imported.products || defaultProducts;
-            orders = imported.orders || [];
-            users = imported.users || [];
-
-            saveData();
-            applyStoreSettings();
-            populateCategorySelects();
-            populateStatusSelects();
-            populateDeliveryTypeSelects();
-            renderProducts();
-            renderCart();
-            renderOrdersAdmin();
-            renderAdminProductsTable();
-            renderAdminStockTable();
-            renderABMClients();
-            renderAdminStats();
-            renderABMDeliveryTypes();
-            renderABMCategories();
-            renderABMStatuses();
-
-            alert('¡Copia de seguridad restaurada con éxito!');
-          }
-        } catch (err) {
-          alert('Error al procesar el archivo JSON: ' + err.message);
+          // Guardar Ajustes
+          await supabaseClient.from('store_settings').upsert({
+            id: 'default',
+            name: storeSettings.name,
+            address: storeSettings.address,
+            hours: storeSettings.hours,
+            whatsapp: storeSettings.whatsapp,
+            updated_at: new Date().toISOString()
+          });
+        } catch (e) {
+          console.warn('Error al guardar en Supabase:', e);
         }
-      };
-      reader.readAsText(file);
-      event.target.value = '';
+      }
     }
 
-    // ==================== INICIALIZACIÓN ====================
-    window.onload = () => {
+    function toggleStorageEngineUI() {
+      const engine = document.getElementById('cfg-storage-engine').value;
+      const creds = document.getElementById('supabase-credentials-fields');
+      if (engine === 'supabase') {
+        creds.classList.remove('hidden');
+      } else {
+        creds.classList.add('hidden');
+      }
+    }
+
+    function saveStorageSettings(e) {
+      if (e) e.preventDefault();
+      storageEngine = document.getElementById('cfg-storage-engine').value;
+      supabaseUrl = document.getElementById('cfg-supabase-url').value.trim();
+      supabaseKey = document.getElementById('cfg-supabase-key').value.trim();
+
+      localStorage.setItem('carniceria_storage_engine', storageEngine);
+      localStorage.setItem('carniceria_supabase_url', supabaseUrl);
+      localStorage.setItem('carniceria_supabase_key', supabaseKey);
+
+      initSupabaseClient();
+      if (storageEngine === 'supabase') {
+        loadDataFromSupabase().then(() => {
+          applyStoreSettings();
+          populateCategorySelects();
+          populateStatusSelects();
+          populateDeliveryTypeSelects();
+          renderProducts();
+          alert('¡Credenciales guardadas y datos cargados desde el esquema demo_carniceria!');
+        });
+      } else {
+        alert('Configuración guardada en modo LocalStorage.');
+      }
+    }
+
+    async function testSupabaseConnection() {
+      const url = document.getElementById('cfg-supabase-url').value.trim();
+      const key = document.getElementById('cfg-supabase-key').value.trim();
+
+      if (!url || !key) return alert('Por favor ingresa la URL y el Anon Key de Supabase.');
+
+      try {
+        const testClient = window.supabase.createClient(url, key, { db: { schema: 'demo_carniceria' } });
+        const { data, error } = await testClient.from('products').select('id').limit(1);
+        if (error) throw error;
+        alert('✅ ¡Conexión exitosa al esquema "demo_carniceria" en Supabase!');
+      } catch (err) {
+        alert('⚠️ Ocurrió un error al conectar con Supabase: ' + err.message + '\n\nAsegúrate de haber ejecutado el script SQL para crear el esquema demo_carniceria y sus tablas.');
+      }
+    }
+
+    async function syncLocalToSupabase() {
+      if (!supabaseClient) {
+        initSupabaseClient();
+        if (!supabaseClient) return alert('Configura e inicia la conexión con Supabase primero.');
+      }
+
+      try {
+        // Upsert Categorías
+        for (const c of categories) {
+          await supabaseClient.from('categories').upsert({ id: c.id, name: c.name });
+        }
+        // Upsert Tipos de Entrega
+        for (const dt of deliveryTypes) {
+          await supabaseClient.from('delivery_types').upsert({ id: dt.id, name: dt.name, requires_address: dt.requiresAddress });
+        }
+        // Upsert Estados
+        for (const s of orderStatuses) {
+          await supabaseClient.from('order_statuses').upsert({ id: s.id, name: s.name, message_template: s.messageTemplate });
+        }
+        // Upsert Productos
+        for (const p of products) {
+          await supabaseClient.from('products').upsert({
+            id: p.id,
+            name: p.name,
+            category_id: p.category,
+            price_per_kg: p.price,
+            stock_kg: p.stockKg,
+            min_stock_kg: p.minStockKg,
+            is_out_of_stock: p.isOutOfStock,
+            img_url: p.img
+          });
+        }
+        // Upsert Clientes
+        for (const u of users) {
+          await supabaseClient.from('clients').upsert({ id: u.id, name: u.name, phone: u.phone, address: u.address });
+        }
+        // Upsert Pedidos
+        for (const o of orders) {
+          await supabaseClient.from('orders').upsert({
+            id: o.id,
+            date: o.date,
+            user_phone: o.user.phone,
+            user_name: o.user.name,
+            delivery_type: o.type,
+            address: o.address,
+            total: o.total,
+            status: o.status,
+            items: o.items
+          });
+        }
+
+        await saveData();
+        alert('✅ ¡Todos los datos locales han sido sincronizados e impactados en las tablas relacionales de demo_carniceria!');
+      } catch (err) {
+        alert('Error durante la migración: ' + err.message);
+      }
+    }
+
+    function isProductOutOfStock(p) {
+      if (!p) return false;
+      return (p.isOutOfStock === true) || (p.stockKg !== undefined && parseFloat(p.stockKg) <= 0);
+    }
+
+    let clientSortField = 'date';
+    let clientSortAsc = false;
+    let adminOrderSortField = 'date';
+    let adminOrderSortAsc = false;
+    let adminProdSortField = 'name';
+    let adminProdSortAsc = true;
+
+    let chartClient = null;
+    let chartAdminMonth = null;
+    let chartAdminType = null;
+    let chartAdminAddress = null;
+
+    // ==================== INICIALIZACIÓN DE LA APLICACIÓN ====================
+    window.onload = async () => {
+      document.getElementById('cfg-storage-engine').value = storageEngine;
+      document.getElementById('cfg-supabase-url').value = supabaseUrl;
+      document.getElementById('cfg-supabase-key').value = supabaseKey;
+      toggleStorageEngineUI();
+      initSupabaseClient();
+
+      if (storageEngine === 'supabase') {
+        await loadDataFromSupabase();
+      }
+
       applyStoreSettings();
       populateCategorySelects();
       populateStatusSelects();
@@ -1057,7 +1258,7 @@
     function openAuthModal() { document.getElementById('modal-auth').classList.remove('hidden'); document.getElementById('modal-auth').classList.add('flex'); }
     function closeAuthModal() { document.getElementById('modal-auth').classList.add('hidden'); document.getElementById('modal-auth').classList.remove('flex'); }
 
-    function handleAuth(e) {
+    async function handleAuth(e) {
       e.preventDefault();
       const name = document.getElementById('reg-name').value;
       const phone = document.getElementById('reg-phone').value;
@@ -1073,6 +1274,11 @@
       }
 
       currentUser = user;
+
+      if (storageEngine === 'supabase' && supabaseClient) {
+        await supabaseClient.from('clients').upsert({ id: user.id, name, phone, address });
+      }
+
       saveData();
       closeAuthModal();
       updateAuthUI();
@@ -1191,6 +1397,24 @@
       animateCartFAB();
     }
 
+    function openMobileCartModal() {
+      renderCart();
+      document.getElementById('modal-mobile-cart').classList.remove('hidden');
+      document.getElementById('modal-mobile-cart').classList.add('flex');
+    }
+
+    function closeMobileCartModal() {
+      document.getElementById('modal-mobile-cart').classList.add('hidden');
+      document.getElementById('modal-mobile-cart').classList.remove('flex');
+    }
+
+    function animateCartFAB() {
+      const btn = document.getElementById('fab-cart-btn');
+      btn.classList.remove('animate-cart-bounce');
+      void btn.offsetWidth;
+      btn.classList.add('animate-cart-bounce');
+    }
+
     function toggleDeliveryOptions() {
       const getSelectedValue = (name) => {
         const el = document.querySelector(`input[name="${name}"]:checked`);
@@ -1223,11 +1447,9 @@
         totalKg += item.qty;
       });
 
-      // Actualizar FAB Flotante
       document.getElementById('fab-cart-badge').textContent = `${totalKg.toFixed(1)} kg`;
       document.getElementById('fab-cart-total').textContent = `$${total.toLocaleString()}`;
 
-      // Render interno escritorio y móvil
       const renderCartContainer = (itemsContainerId, countId, totalId) => {
         const container = document.getElementById(itemsContainerId);
         const countEl = document.getElementById(countId);
@@ -1268,7 +1490,7 @@
       renderCartContainer('cart-items-mobile', null, 'cart-total-mobile');
     }
 
-    function processOrder() {
+    async function processOrder() {
       if (cart.length === 0) return alert('El carrito está vacío.');
       if (!currentUser) {
         alert('Por favor regístrate o inicia sesión para enviar tu pedido.');
@@ -1277,7 +1499,6 @@
         return;
       }
 
-      // Detectar radio activo (escritorio o mobile)
       let selectedRadio = document.querySelector('input[name="cart-delivery-types-container-mobile-radio"]:checked');
       if (!selectedRadio) {
         selectedRadio = document.querySelector('input[name="cart-delivery-types-container-desktop-radio"]:checked');
@@ -1297,10 +1518,12 @@
       }
 
       const orderTotal = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
+      const newOrderId = Date.now();
+      const orderDateIso = new Date().toISOString();
 
       const newOrder = {
-        id: Date.now(),
-        date: new Date().toISOString(),
+        id: newOrderId,
+        date: orderDateIso,
         user: currentUser,
         items: [...cart],
         type: dtObj.name,
@@ -1311,15 +1534,39 @@
         status: orderStatuses[0] ? orderStatuses[0].id : 'Pendiente'
       };
 
-      cart.forEach(cartItem => {
+      // Actualizar Stock de Productos
+      for (const cartItem of cart) {
         const prod = products.find(p => p.id === cartItem.id);
         if (prod && prod.stockKg !== undefined) {
           prod.stockKg = Math.max(0, prod.stockKg - cartItem.qty);
           if (prod.stockKg <= 0) prod.isOutOfStock = true;
+
+          if (storageEngine === 'supabase' && supabaseClient) {
+            await supabaseClient.from('products').update({
+              stock_kg: prod.stockKg,
+              is_out_of_stock: prod.isOutOfStock
+            }).eq('id', prod.id);
+          }
         }
-      });
+      }
 
       orders.push(newOrder);
+
+      // Guardar Pedido en Supabase
+      if (storageEngine === 'supabase' && supabaseClient) {
+        await supabaseClient.from('orders').insert({
+          id: newOrderId,
+          date: orderDateIso,
+          user_phone: currentUser.phone,
+          user_name: currentUser.name,
+          delivery_type: dtObj.name,
+          address: address,
+          total: orderTotal,
+          status: newOrder.status,
+          items: cart
+        });
+      }
+
       saveData();
 
       let itemsMsg = cart.map(i => `- ${i.qty}kg x ${i.name} ($${(i.price * i.qty).toLocaleString()})`).join('\n');
@@ -1339,6 +1586,79 @@
       alert('¡Pedido registrado con éxito! Se abrirá WhatsApp para enviarlo al dueño.');
       const cleanPhone = storeSettings.whatsapp.replace(/[^0-9]/g, '');
       window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`, '_blank');
+    }
+
+    // ==================== COPIA DE SEGURIDAD JSON ====================
+    function exportJSONBackup() {
+      const backupData = {
+        version: "1.0",
+        exportDate: new Date().toISOString(),
+        storeSettings: storeSettings,
+        deliveryTypes: deliveryTypes,
+        categories: categories,
+        orderStatuses: orderStatuses,
+        products: products,
+        orders: orders,
+        users: users
+      };
+
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+      const downloadAnchor = document.createElement('a');
+      const filename = `backup_carniceria_${new Date().toISOString().slice(0, 10)}.json`;
+
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", filename);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function importJSONBackup(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+
+          if (!imported.storeSettings || !imported.products || !imported.orders) {
+            return alert('Error: El archivo JSON no posee la estructura de respaldo requerida.');
+          }
+
+          if (confirm('⚠️ ¿Deseas restaurar la copia de seguridad? Se reemplazarán los datos actuales.')) {
+            storeSettings = imported.storeSettings || defaultSettings;
+            deliveryTypes = imported.deliveryTypes || defaultDeliveryTypes;
+            categories = imported.categories || defaultCategories;
+            orderStatuses = imported.orderStatuses || defaultStatuses;
+            products = imported.products || defaultProducts;
+            orders = imported.orders || [];
+            users = imported.users || [];
+
+            await syncLocalToSupabase();
+            applyStoreSettings();
+            populateCategorySelects();
+            populateStatusSelects();
+            populateDeliveryTypeSelects();
+            renderProducts();
+            renderCart();
+            renderOrdersAdmin();
+            renderAdminProductsTable();
+            renderAdminStockTable();
+            renderABMClients();
+            renderAdminStats();
+            renderABMDeliveryTypes();
+            renderABMCategories();
+            renderABMStatuses();
+
+            alert('¡Copia de seguridad restaurada con éxito!');
+          }
+        } catch (err) {
+          alert('Error al procesar el archivo JSON: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
     }
 
     // ==================== PANEL CLIENTE: MIS COMPRAS ====================
@@ -1652,12 +1972,17 @@
       });
     }
 
-    function updateOrderStatus(orderId, newStatus) {
+    async function updateOrderStatus(orderId, newStatus) {
       const order = orders.find(o => o.id === orderId);
       if (!order) return;
 
       const previousStatus = order.status;
       order.status = newStatus;
+
+      if (storageEngine === 'supabase' && supabaseClient) {
+        await supabaseClient.from('orders').update({ status: newStatus }).eq('id', orderId);
+      }
+
       saveData();
       renderOrdersAdmin();
 
@@ -1785,7 +2110,7 @@
       document.getElementById('modal-product').classList.add('flex');
     }
 
-    function saveProduct(e) {
+    async function saveProduct(e) {
       e.preventDefault();
       const id = document.getElementById('prod-id').value;
       const name = document.getElementById('prod-name').value;
@@ -1794,6 +2119,8 @@
       const stockKg = parseFloat(document.getElementById('prod-stock').value);
       const minStockKg = parseFloat(document.getElementById('prod-min-stock').value);
       const img = document.getElementById('prod-img').value;
+
+      let prodId = id ? Number(id) : Date.now();
 
       if (id) {
         const p = products.find(prod => prod.id == id);
@@ -1805,7 +2132,20 @@
         p.img = img;
         if (stockKg > 0) p.isOutOfStock = false;
       } else {
-        products.push({ id: Date.now(), name, category, price, stockKg, minStockKg, isOutOfStock: stockKg <= 0, img });
+        products.push({ id: prodId, name, category, price, stockKg, minStockKg, isOutOfStock: stockKg <= 0, img });
+      }
+
+      if (storageEngine === 'supabase' && supabaseClient) {
+        await supabaseClient.from('products').upsert({
+          id: prodId,
+          name: name,
+          category_id: category,
+          price_per_kg: price,
+          stock_kg: stockKg,
+          min_stock_kg: minStockKg,
+          is_out_of_stock: stockKg <= 0,
+          img_url: img
+        });
       }
 
       saveData();
@@ -1815,9 +2155,12 @@
       renderAdminStockTable();
     }
 
-    function deleteProduct(id) {
+    async function deleteProduct(id) {
       if (confirm('¿Eliminar este producto?')) {
         products = products.filter(p => p.id !== id);
+        if (storageEngine === 'supabase' && supabaseClient) {
+          await supabaseClient.from('products').delete().eq('id', id);
+        }
         saveData();
         renderProducts();
         renderAdminProductsTable();
@@ -1859,16 +2202,20 @@
       }).join('');
     }
 
-    function updateStockKg(prodId, val) {
+    async function updateStockKg(prodId, val) {
       const prod = products.find(p => p.id === prodId);
       if (prod) {
         const valNum = parseFloat(val) || 0;
         prod.stockKg = valNum;
-        if (valNum <= 0) {
-          prod.isOutOfStock = true;
-        } else {
-          prod.isOutOfStock = false;
+        prod.isOutOfStock = valNum <= 0;
+
+        if (storageEngine === 'supabase' && supabaseClient) {
+          await supabaseClient.from('products').update({
+            stock_kg: valNum,
+            is_out_of_stock: prod.isOutOfStock
+          }).eq('id', prodId);
         }
+
         saveData();
         renderProducts();
         renderAdminStockTable();
@@ -1876,13 +2223,21 @@
       }
     }
 
-    function toggleOutOfStockFlag(prodId) {
+    async function toggleOutOfStockFlag(prodId) {
       const prod = products.find(p => p.id === prodId);
       if (prod) {
         prod.isOutOfStock = !prod.isOutOfStock;
         if (!prod.isOutOfStock && prod.stockKg <= 0) {
           prod.stockKg = 10;
         }
+
+        if (storageEngine === 'supabase' && supabaseClient) {
+          await supabaseClient.from('products').update({
+            stock_kg: prod.stockKg,
+            is_out_of_stock: prod.isOutOfStock
+          }).eq('id', prodId);
+        }
+
         saveData();
         renderProducts();
         renderAdminStockTable();
@@ -1950,18 +2305,24 @@
       document.getElementById('modal-client-admin').classList.add('flex');
     }
 
-    function saveClientAdmin(e) {
+    async function saveClientAdmin(e) {
       e.preventDefault();
       const id = document.getElementById('admin-cli-id').value;
       const name = document.getElementById('admin-cli-name').value;
       const phone = document.getElementById('admin-cli-phone').value;
       const address = document.getElementById('admin-cli-address').value;
 
+      let clientId = id ? Number(id) : Date.now();
+
       if (id) {
         const u = users.find(usr => usr.id == id);
         u.name = name; u.phone = phone; u.address = address;
       } else {
-        users.push({ id: Date.now(), name, phone, address });
+        users.push({ id: clientId, name, phone, address });
+      }
+
+      if (storageEngine === 'supabase' && supabaseClient) {
+        await supabaseClient.from('clients').upsert({ id: clientId, name, phone, address });
       }
 
       saveData();
@@ -1970,9 +2331,12 @@
       populatePromoClientSelect();
     }
 
-    function deleteClientAdmin(id) {
+    async function deleteClientAdmin(id) {
       if (confirm('¿Eliminar cliente?')) {
         users = users.filter(u => u.id !== id);
+        if (storageEngine === 'supabase' && supabaseClient) {
+          await supabaseClient.from('clients').delete().eq('id', id);
+        }
         saveData();
         renderABMClients();
         populatePromoClientSelect();
@@ -2088,12 +2452,22 @@
     }
 
     // ==================== PANEL DUEÑO: CONFIGURACIÓN & ABM GLOBAL ====================
-    function saveStoreSettings(e) {
+    async function saveStoreSettings(e) {
       e.preventDefault();
       storeSettings.name = document.getElementById('cfg-name').value;
       storeSettings.address = document.getElementById('cfg-address').value;
       storeSettings.hours = document.getElementById('cfg-hours').value;
       storeSettings.whatsapp = document.getElementById('cfg-whatsapp').value;
+
+      if (storageEngine === 'supabase' && supabaseClient) {
+        await supabaseClient.from('store_settings').upsert({
+          id: 'default',
+          name: storeSettings.name,
+          address: storeSettings.address,
+          hours: storeSettings.hours,
+          whatsapp: storeSettings.whatsapp
+        });
+      }
 
       saveData();
       applyStoreSettings();
@@ -2114,7 +2488,7 @@
       `).join('');
     }
 
-    function addDeliveryTypePrompt() {
+    async function addDeliveryTypePrompt() {
       const name = prompt('Nombre del Tipo de Entrega:');
       if (!name) return;
       const reqAddr = confirm('¿Requiere pedir dirección al cliente?');
@@ -2123,15 +2497,23 @@
       if (deliveryTypes.some(dt => dt.id === id)) return alert('Ya existe.');
 
       deliveryTypes.push({ id, name, requiresAddress: reqAddr });
+
+      if (storageEngine === 'supabase' && supabaseClient) {
+        await supabaseClient.from('delivery_types').upsert({ id, name, requires_address: reqAddr });
+      }
+
       saveData();
       populateDeliveryTypeSelects();
       renderABMDeliveryTypes();
     }
 
-    function deleteDeliveryType(id) {
+    async function deleteDeliveryType(id) {
       if (deliveryTypes.length <= 1) return alert('Debe existir al menos un tipo de entrega.');
       if (confirm('¿Eliminar?')) {
         deliveryTypes = deliveryTypes.filter(dt => dt.id !== id);
+        if (storageEngine === 'supabase' && supabaseClient) {
+          await supabaseClient.from('delivery_types').delete().eq('id', id);
+        }
         saveData();
         populateDeliveryTypeSelects();
         renderABMDeliveryTypes();
@@ -2149,21 +2531,29 @@
       `).join('');
     }
 
-    function addCategoryPrompt() {
+    async function addCategoryPrompt() {
       const name = prompt('Nombre de la categoría:');
       if (!name) return;
       const id = name.toLowerCase().replace(/[^a-z0-9]/g, '');
       if (categories.some(c => c.id === id)) return alert('Ya existe.');
 
       categories.push({ id, name });
+
+      if (storageEngine === 'supabase' && supabaseClient) {
+        await supabaseClient.from('categories').upsert({ id, name });
+      }
+
       saveData();
       populateCategorySelects();
       renderABMCategories();
     }
 
-    function deleteCategory(id) {
+    async function deleteCategory(id) {
       if (confirm('¿Eliminar categoría?')) {
         categories = categories.filter(c => c.id !== id);
+        if (storageEngine === 'supabase' && supabaseClient) {
+          await supabaseClient.from('categories').delete().eq('id', id);
+        }
         saveData();
         populateCategorySelects();
         renderABMCategories();
@@ -2186,29 +2576,40 @@
       `).join('');
     }
 
-    function updateStatusMessageTemplate(statusId, newTemplate) {
+    async function updateStatusMessageTemplate(statusId, newTemplate) {
       const st = orderStatuses.find(s => s.id === statusId);
       if (st) {
         st.messageTemplate = newTemplate;
+        if (storageEngine === 'supabase' && supabaseClient) {
+          await supabaseClient.from('order_statuses').update({ message_template: newTemplate }).eq('id', statusId);
+        }
         saveData();
       }
     }
 
-    function addStatusPrompt() {
+    async function addStatusPrompt() {
       const name = prompt('Nombre del estado:');
       if (!name) return;
       if (orderStatuses.some(s => s.name.toLowerCase() === name.toLowerCase())) return alert('Ya existe.');
 
       const defaultMsg = `¡Hola {cliente}! El estado de tu pedido #{pedido} es ahora: ${name}.\n\nDetalle:\n{productos}\n\nTotal: {total}`;
       orderStatuses.push({ id: name, name, messageTemplate: defaultMsg });
+
+      if (storageEngine === 'supabase' && supabaseClient) {
+        await supabaseClient.from('order_statuses').upsert({ id: name, name, message_template: defaultMsg });
+      }
+
       saveData();
       populateStatusSelects();
       renderABMStatuses();
     }
 
-    function deleteStatus(id) {
+    async function deleteStatus(id) {
       if (confirm('¿Eliminar estado?')) {
         orderStatuses = orderStatuses.filter(s => s.id !== id);
+        if (storageEngine === 'supabase' && supabaseClient) {
+          await supabaseClient.from('order_statuses').delete().eq('id', id);
+        }
         saveData();
         populateStatusSelects();
         renderABMStatuses();
